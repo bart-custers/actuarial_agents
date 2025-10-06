@@ -24,22 +24,61 @@ class BaseAgent:
 # ----------------------------
 # LLM-based agent
 # ----------------------------
-class LLMBaseAgent(BaseAgent):  # inherit BaseAgent for consistent interface
+# class LLMBaseAgent(BaseAgent):  # inherit BaseAgent for consistent interface
+#     def __init__(self, name, hub, llm):
+#         super().__init__(name, hub)
+#         self.llm = llm
+
+#     def receive(self, content, sender):
+#         """Use LLM to process message."""
+#         prompt = self.create_prompt(content)
+#         llm_output = self.llm(prompt)
+#         try:
+#             output = json.loads(llm_output)
+#         except json.JSONDecodeError:
+#             output = {"error": "failed to parse LLM output", "raw": llm_output}
+#         self.log_memory(output)
+#         return output
+
+#     def create_prompt(self, content):
+#         raise NotImplementedError("LLM agents must implement create_prompt()")
+
+import json
+import datetime
+
+class LLMBaseAgent(BaseAgent):
+    """Generic LLM-powered agent with structured prompt/response cycle."""
+
     def __init__(self, name, hub, llm):
         super().__init__(name, hub)
         self.llm = llm
 
     def receive(self, content, sender):
-        """Use LLM to process message."""
+        """Main entrypoint: process input through LLM."""
         prompt = self.create_prompt(content)
+
+        # Log prompt before LLM call
+        self.hub.log_message(sender, self.name, {"prompt": prompt})
+
+        # Call LLM
         llm_output = self.llm(prompt)
+        parsed = self.safe_parse_output(llm_output)
+
+        # Log LLM response
+        self.hub.log_message(self.name, "Hub", {"response": parsed})
+
+        # Store in central memory (optional)
+        key = f"{self.name.lower().replace(' ', '_')}_output"
+        self.hub.update_memory(key, parsed)
+
+        return parsed
+
+    def safe_parse_output(self, llm_output):
+        """Ensure consistent structured output."""
         try:
-            output = json.loads(llm_output)
+            return json.loads(llm_output)
         except json.JSONDecodeError:
-            output = {"error": "failed to parse LLM output", "raw": llm_output}
-        self.log_memory(output)
-        return output
+            return {"error": "Failed to parse LLM output", "raw_text": llm_output}
 
     def create_prompt(self, content):
         raise NotImplementedError("LLM agents must implement create_prompt()")
-
