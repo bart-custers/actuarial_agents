@@ -11,6 +11,10 @@ drive.mount("/content/drive", force_remount=False)
 model_cache_dir = "/content/drive/MyDrive/Thesis/model_cache"
 os.makedirs(model_cache_dir, exist_ok=True)
 
+from dotenv import load_dotenv
+load_dotenv("/content/drive/MyDrive/Thesis/.env")
+hf_token = os.getenv("HF_TOKEN")
+
 class LLMWrapper:
     def __init__(
         self,
