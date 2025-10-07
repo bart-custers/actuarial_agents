@@ -21,7 +21,7 @@ class LLMWrapper:
         hf_token=None,
     ):
         """
-        backend: one of ["openai", "phi3mini", "llama3b", "mock"]
+        backend: one of ["openai", "phi3mini", "llama7b", "mock"]
         """
         self.backend = backend
         self.hf_token = hf_token or os.getenv("HF_TOKEN")
@@ -37,8 +37,8 @@ class LLMWrapper:
         elif backend == "phi3mini":
             self.llm = self._init_phi3_mini()
 
-        elif backend == "llama3b":
-            self.llm = self._init_llama3b()
+        elif backend == "llama7b":
+            self.llm = self._init_llama7b()
 
         elif backend == "mock":
             self.llm = llm or (lambda prompt: '{"mock_output": "simulated response"}')
@@ -55,7 +55,7 @@ class LLMWrapper:
             msg = HumanMessage(content=prompt)
             response = self.llm([msg])
             return response.content
-        elif self.backend in ["phi3mini", "llama3b"]:
+        elif self.backend in ["phi3mini", "llama7b"]:
             return self.llm(prompt)
         elif self.backend == "mock":
             return self.llm(prompt)
@@ -97,17 +97,20 @@ class LLMWrapper:
         return lambda prompt: hf_llm.invoke(prompt)
 
     # ------------------------------------------------------------
-    # Hugging Face: LLaMA 3 (3B or 8B Instruct)
+    # Hugging Face: LLaMA 7B
     # ------------------------------------------------------------
-    def _init_llama3b(self):
-        model_name = "meta-llama/Meta-Llama-3-8B-Instruct"
+    def _init_llama7b(self):
+        model_name = "meta-llama/Llama-2-7b-chat-hf"
         model_path = os.path.join(model_cache_dir, model_name.replace("/", "_"))
         os.makedirs(model_path, exist_ok=True)
 
         print(f"Loading {model_name} ... (using cache at {model_path})")
 
         tokenizer = AutoTokenizer.from_pretrained(
-            model_name, token=self.hf_token, cache_dir=model_path
+            model_name,
+            token=self.hf_token,
+            cache_dir=model_path,
+            use_fast=True,
         )
         model = AutoModelForCausalLM.from_pretrained(
             model_name,
