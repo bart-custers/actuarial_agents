@@ -1,11 +1,15 @@
 from dotenv import load_dotenv
 load_dotenv()   # this loads .env variables into environment
 import os
+from google.colab import drive
 from langchain_openai import ChatOpenAI
 from langchain.schema import HumanMessage
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 from langchain.llms import HuggingFacePipeline
 
+drive.mount("/content/drive", force_remount=False)
+model_cache_dir = "/content/drive/MyDrive/Thesis/model_cache"
+os.makedirs(model_cache_dir, exist_ok=True)
 
 class LLMWrapper:
     def __init__(
@@ -63,8 +67,14 @@ class LLMWrapper:
     # ------------------------------------------------------------
     def _init_phi3_mini(self):
         model_name = "microsoft/phi-3-mini-128k-instruct"
-        print(f"Loading {model_name} ... (this may take 1–2 minutes the first time)")
-        tokenizer = AutoTokenizer.from_pretrained(model_name, token=self.hf_token)
+        model_path = os.path.join(model_cache_dir, model_name.replace("/", "_"))
+        os.makedirs(model_path, exist_ok=True)
+
+        print(f"Loading {model_name} ... (using cache at {model_path})")
+
+        tokenizer = AutoTokenizer.from_pretrained(
+            model_name, token=self.hf_token, cache_dir=model_path
+        )
         model = AutoModelForCausalLM.from_pretrained(
             model_name,
             device_map="auto",
@@ -72,6 +82,7 @@ class LLMWrapper:
             load_in_4bit=True,
             offload_folder="offload",
             token=self.hf_token,
+            cache_dir=model_path,
         )
 
         text_gen = pipeline(
@@ -86,18 +97,25 @@ class LLMWrapper:
         return lambda prompt: hf_llm.invoke(prompt)
 
     # ------------------------------------------------------------
-    # Hugging Face: Llama 3 Instruct (3B)
+    # Hugging Face: LLaMA 3 (3B or 8B Instruct)
     # ------------------------------------------------------------
     def _init_llama3b(self):
-        model_name = "meta-llama/Meta-Llama-3-8B-Instruct"  # or "Meta-Llama-3-3B-Instruct" if available
-        print(f"Loading {model_name} ...")
-        tokenizer = AutoTokenizer.from_pretrained(model_name, token=self.hf_token)
+        model_name = "meta-llama/Meta-Llama-3-8B-Instruct"
+        model_path = os.path.join(model_cache_dir, model_name.replace("/", "_"))
+        os.makedirs(model_path, exist_ok=True)
+
+        print(f"Loading {model_name} ... (using cache at {model_path})")
+
+        tokenizer = AutoTokenizer.from_pretrained(
+            model_name, token=self.hf_token, cache_dir=model_path
+        )
         model = AutoModelForCausalLM.from_pretrained(
             model_name,
             device_map="auto",
             torch_dtype="auto",
             load_in_4bit=True,
             token=self.hf_token,
+            cache_dir=model_path,
         )
 
         text_gen = pipeline(

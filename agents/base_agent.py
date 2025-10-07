@@ -18,7 +18,7 @@ class BaseAgent:
     def log_memory(self, message):
         """Store memory and log to central hub."""
         self.memory.update(message)
-        self.hub.log_message(self.name, message)
+        self.hub.log_message(sender=self.name, receiver="Hub", content=json.dumps(message))
 
 
 # ----------------------------
