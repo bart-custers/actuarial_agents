@@ -1,5 +1,3 @@
-from dotenv import load_dotenv
-load_dotenv()   # this loads .env variables into environment
 import os
 from google.colab import drive
 from langchain_openai import ChatOpenAI
@@ -14,6 +12,10 @@ os.makedirs(model_cache_dir, exist_ok=True)
 from dotenv import load_dotenv
 load_dotenv("/content/drive/MyDrive/Thesis/.env")
 hf_token = os.getenv("HF_TOKEN")
+
+os.environ["HF_HOME"] = "/content/drive/MyDrive/Thesis/model_cache"
+os.environ["HF_DATASETS_CACHE"] = "/content/drive/MyDrive/Thesis/model_cache"
+os.environ["TRANSFORMERS_CACHE"] = "/content/drive/MyDrive/Thesis/model_cache"
 
 class LLMWrapper:
     def __init__(
@@ -74,19 +76,22 @@ class LLMWrapper:
         model_path = os.path.join(model_cache_dir, model_name.replace("/", "_"))
         os.makedirs(model_path, exist_ok=True)
 
-        print(f"Loading {model_name} ... (using cache at {model_path})")
+        #print(f"Loading {model_name} ... (using cache at {model_path})")
 
+        # tokenizer = AutoTokenizer.from_pretrained(
+        #     model_path, use_auth_token=self.hf_token, cache_dir=model_path
+        # )
         tokenizer = AutoTokenizer.from_pretrained(
-            model_path, use_auth_token=self.hf_token, cache_dir=model_path
+            model_name, use_auth_token=self.hf_token
         )
         model = AutoModelForCausalLM.from_pretrained(
-            model_path,
+            model_name,
             device_map="auto",
             torch_dtype="auto",
             load_in_4bit=True,
             offload_folder="offload",
             use_auth_token=self.hf_token,
-            cache_dir=model_path,
+            #cache_dir=model_path,
         )
 
         text_gen = pipeline(
