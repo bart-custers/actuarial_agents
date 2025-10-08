@@ -14,7 +14,7 @@ class DataPrepAgent(BaseAgent):
 
     def handle_message(self, message: Message) -> Message:
         print(f"[{self.name}] Starting deterministic cleaning pipeline...")
-        dataset_path = message.metadata.get("dataset_path", "data/insurance_raw.csv")
+        dataset_path = message.metadata.get("dataset_path", "data/raw/freMTPL2freq.csv")
 
         try:
             data = pd.read_csv(dataset_path)

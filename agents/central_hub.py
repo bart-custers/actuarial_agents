@@ -5,7 +5,7 @@ from agents.modelling_agent import ModellingAgent
 from agents.review_agent import ReviewingAgent
 from agents.explanation_agent import ExplanationAgent
 
-class Hub:
+class CentralHub:
     def __init__(self):
         self.agents = {
             "dataprep": DataPrepAgent("dataprep"),
