@@ -1,13 +1,13 @@
 from dotenv import load_dotenv
 load_dotenv()   # this loads .env variables into environment
 import os
-from google.colab import drive
+#from google.colab import drive
 from langchain_openai import ChatOpenAI
 from langchain.schema import HumanMessage
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 from langchain.llms import HuggingFacePipeline
 
-drive.mount("/content/drive", force_remount=False)
+# drive.mount("/content/drive", force_remount=False)
 model_cache_dir = "/content/drive/MyDrive/Thesis/model_cache"
 os.makedirs(model_cache_dir, exist_ok=True)
 

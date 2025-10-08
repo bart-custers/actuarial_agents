@@ -1,4 +1,3 @@
-# hub.py
 from utils.message_types import Message
 from agents.data_prep_agent import DataPrepAgent
 from agents.modelling_agent import ModellingAgent
