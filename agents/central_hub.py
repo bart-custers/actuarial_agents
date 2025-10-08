@@ -28,7 +28,7 @@ class CentralHub:
             recipient="dataprep",
             type="task",
             content="Clean dataset and summarize.",
-            metadata={"dataset_name": "insurance_claims.csv"}
+            metadata={"dataset_name": "freMTPL2freq.csv"}
         )
         r1 = self.send(msg)
         r2 = self.send(Message(sender="hub", recipient="modelling", type="task", content="Train predictive model."))

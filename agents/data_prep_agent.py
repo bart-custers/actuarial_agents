@@ -1,7 +1,7 @@
-from agents.base_agent import BaseAgent
-from utils.message_types import Message
-
+import os
+import joblib
 import pandas as pd
+from datetime import datetime
 from agents.base_agent import BaseAgent
 from agents.data_pipeline import DataPipeline
 from utils.message_types import Message
@@ -14,43 +14,93 @@ class DataPrepAgent(BaseAgent):
 
     def handle_message(self, message: Message) -> Message:
         print(f"[{self.name}] Starting deterministic cleaning pipeline...")
-        dataset_path = message.metadata.get("dataset_path", "data/raw/freMTPL2freq.csv")
 
+        dataset_path = message.metadata.get("dataset_path", "data/raw/freMTPL2freq.csv")
+        processed_dir = "data/processed"
+        artifacts_dir = "data/artifacts"
+        logs_dir = "data/logs"
+
+        os.makedirs(processed_dir, exist_ok=True)
+        os.makedirs(artifacts_dir, exist_ok=True)
+        os.makedirs(logs_dir, exist_ok=True)
+
+        # --- Load dataset ---
         try:
             data = pd.read_csv(dataset_path)
         except Exception as e:
-            return Message(sender=self.name, recipient=message.sender, type="error", content=f"Failed to load dataset: {e}")
+            return Message(
+                sender=self.name,
+                recipient=message.sender,
+                type="error",
+                content=f"Failed to load dataset: {e}",
+            )
 
-        # Run the predefined cleaning pipeline
+        # --- Run deterministic cleaning ---
         pipeline = DataPipeline()
         results = pipeline.clean(data)
         summary_text = pipeline.summary()
 
-        # Optionally use LLM to produce a natural-language explanation of what was done
-        explain_prompt = f"""
-        You are an AI assistant helping to summarize a data cleaning pipeline for actuaries.
-        Describe these steps in clear professional language:
+        # --- Save processed datasets ---
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        base_name = os.path.splitext(os.path.basename(dataset_path))[0]
 
+        X_train_path = os.path.join(processed_dir, f"{base_name}_X_train_{timestamp}.csv")
+        X_test_path = os.path.join(processed_dir, f"{base_name}_X_test_{timestamp}.csv")
+        y_train_path = os.path.join(processed_dir, f"{base_name}_y_train_{timestamp}.csv")
+        y_test_path = os.path.join(processed_dir, f"{base_name}_y_test_{timestamp}.csv")
+
+        # Save the split sets
+        pd.DataFrame(results["X_train"], columns=results["feature_names"]).to_csv(X_train_path, index=False)
+        pd.DataFrame(results["X_test"], columns=results["feature_names"]).to_csv(X_test_path, index=False)
+        results["y_train"].to_csv(y_train_path, index=False)
+        results["y_test"].to_csv(y_test_path, index=False)
+
+        # --- Save preprocessing artifacts ---
+        preproc_path = os.path.join(artifacts_dir, f"preprocessor_{timestamp}.pkl")
+        features_path = os.path.join(artifacts_dir, f"feature_names_{timestamp}.pkl")
+
+        joblib.dump(results["feature_names"], features_path)
+        joblib.dump(pipeline.preprocessor, preproc_path)
+
+        # --- Log summary ---
+        log_path = os.path.join(logs_dir, f"dataprep_summary_{timestamp}.txt")
+        with open(log_path, "w") as f:
+            f.write("=== DATA PREPARATION SUMMARY ===\n")
+            f.write(summary_text + "\n\n")
+            f.write(f"Processed data saved to: {processed_dir}\n")
+            f.write(f"Artifacts saved to: {artifacts_dir}\n")
+
+        # --- LLM-generated explanation ---
+        explain_prompt = f"""
+        You are an AI assistant summarizing a data preprocessing pipeline for an actuarial audience.
+        Write a clear explanation of the following cleaning steps and why they are important:
         {summary_text}
         """
         explanation = self.llm(explain_prompt)
 
-        # Return outputs
-        cleaned_path = dataset_path.replace("_raw", "_cleaned")
-        data.to_csv(cleaned_path, index=False)
+        # --- Return structured output message ---
+        metadata = {
+            "status": "success",
+            "summary_log": log_path,
+            "llm_explanation": explanation,
+            "processed_paths": {
+                "X_train": X_train_path,
+                "X_test": X_test_path,
+                "y_train": y_train_path,
+                "y_test": y_test_path,
+            },
+            "artifacts": {
+                "preprocessor": preproc_path,
+                "feature_names": features_path,
+            },
+        }
 
         return Message(
             sender=self.name,
             recipient=message.sender,
             type="response",
-            content="Data cleaning completed successfully.",
-            metadata={
-                "status": "success",
-                "summary": summary_text,
-                "llm_explanation": explanation,
-                "output_path": cleaned_path,
-                "feature_names": results["feature_names"],
-            },
+            content="Data cleaning and preprocessing completed successfully.",
+            metadata=metadata,
         )
 
 # import os
