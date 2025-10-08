@@ -113,21 +113,27 @@ class LLMWrapper:
         model_path = os.path.join(model_cache_dir, model_name.replace("/", "_"))
         os.makedirs(model_path, exist_ok=True)
 
-        print(f"Loading {model_name} ... (using cache at {model_path})")
+        #print(f"Loading {model_name} ... (using cache at {model_path})")
 
+        # tokenizer = AutoTokenizer.from_pretrained(
+        #     model_path,
+        #     use_auth_token=self.hf_token,
+        #     cache_dir=model_path,
+        #     use_fast=True,
+        # )
         tokenizer = AutoTokenizer.from_pretrained(
-            model_path,
+            model_name,
             use_auth_token=self.hf_token,
-            cache_dir=model_path,
+            #cache_dir=model_path,
             use_fast=True,
         )
         model = AutoModelForCausalLM.from_pretrained(
-            model_path,
+            model_name,
             device_map="auto",
             torch_dtype="auto",
             load_in_4bit=True,
             use_auth_token=self.hf_token,
-            cache_dir=model_path,
+            #cache_dir=model_path,
         )
 
         text_gen = pipeline(
