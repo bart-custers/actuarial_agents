@@ -77,10 +77,10 @@ class LLMWrapper:
         print(f"Loading {model_name} ... (using cache at {model_path})")
 
         tokenizer = AutoTokenizer.from_pretrained(
-            model_name, token=self.hf_token, cache_dir=model_path
+            model_path, token=self.hf_token, cache_dir=model_path
         )
         model = AutoModelForCausalLM.from_pretrained(
-            model_name,
+            model_path,
             device_map="auto",
             torch_dtype="auto",
             load_in_4bit=True,
@@ -111,17 +111,17 @@ class LLMWrapper:
         print(f"Loading {model_name} ... (using cache at {model_path})")
 
         tokenizer = AutoTokenizer.from_pretrained(
-            model_name,
-            token=self.hf_token,
+            model_path,
+            use_auth_token=self.hf_token,
             cache_dir=model_path,
             use_fast=True,
         )
         model = AutoModelForCausalLM.from_pretrained(
-            model_name,
+            model_path,
             device_map="auto",
             torch_dtype="auto",
             load_in_4bit=True,
-            token=self.hf_token,
+            use_auth_token=self.hf_token,
             cache_dir=model_path,
         )
 
@@ -135,67 +135,3 @@ class LLMWrapper:
 
         hf_llm = HuggingFacePipeline(pipeline=text_gen)
         return lambda prompt: hf_llm.invoke(prompt)
-
-# from langchain_openai import ChatOpenAI
-# from langchain.schema import HumanMessage
-# from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
-# from langchain.llms import HuggingFacePipeline
-
-# class LLMWrapper:
-#     def __init__(self, backend="mock", llm=None, openai_model="gpt-4o-mini", openai_api_key=None):
-#         self.backend = backend
-
-#         if backend == "openai":
-#             self.llm = ChatOpenAI(
-#                 model=openai_model,
-#                 temperature=0,
-#                 openai_api_key=openai_api_key
-#             )
-
-#         elif backend == "mock":
-#             # simple string-returning lambda
-#             self.llm = llm or (lambda prompt: '{"message": "mocked output", "confidence": 0.9}')
-
-#         elif backend == "llama7b":
-#             self.llm = self._init_llama7b()
-
-#         else:
-#             raise ValueError(f"Unknown backend '{backend}'")
-
-#     def __call__(self, prompt):
-#         """Uniform interface: return plain string response"""
-#         if self.backend == "openai":
-#             msg = HumanMessage(content=prompt)
-#             response = self.llm([msg])
-#             return response.content
-#         elif self.backend in ["mock", "llama7b"]:
-#             return self.llm(prompt)
-#         else:
-#             raise ValueError("Unsupported backend")
-
-#     def _init_llama7b(self):
-#         """Load a 7B LLaMA chat model from Hugging Face."""
-#         model_name = "meta-llama/Llama-2-7b-chat-hf"
-#         HF_TOKEN = "hf_your_token_here"  # You can move this to env vars
-
-#         tokenizer = AutoTokenizer.from_pretrained(model_name, use_auth_token=HF_TOKEN)
-#         model = AutoModelForCausalLM.from_pretrained(
-#             model_name,
-#             device_map="auto",
-#             load_in_4bit=True,
-#             torch_dtype="auto",
-#             use_auth_token=HF_TOKEN
-#         )
-
-#         text_gen = pipeline(
-#             "text-generation",
-#             model=model,
-#             tokenizer=tokenizer,
-#             max_new_tokens=512,
-#             do_sample=False
-#         )
-
-#         hf_llm = HuggingFacePipeline(pipeline=text_gen)
-
-#         # Return a callable that extracts the .invoke output consistently
-#         return lambda prompt: hf_llm.invoke(prompt)
