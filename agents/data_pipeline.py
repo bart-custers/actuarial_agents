@@ -58,7 +58,7 @@ class DataPipeline:
         self.preprocessor = ColumnTransformer(
             transformers=[
                 ('num', StandardScaler(), numerical_features),
-                ('cat', OneHotEncoder(handle_unknown='ignore'), categorical_features)
+                ('cat', OneHotEncoder(handle_unknown='ignore', sparse_output=False), categorical_features)
             ]
         )
         X_train_prep = self.preprocessor.fit_transform(X_train)
@@ -68,6 +68,9 @@ class DataPipeline:
         cat_feature_names = self.preprocessor.named_transformers_['cat'].get_feature_names_out(categorical_features).tolist()
         self.feature_names = numerical_features + cat_feature_names
         self.actions_log.append(f"Generated {len(self.feature_names)} feature columns after encoding.")
+
+        X_train_prep = np.asarray(X_train_prep)
+        X_test_prep = np.asarray(X_test_prep)
 
         # Return all relevant components
         return {
