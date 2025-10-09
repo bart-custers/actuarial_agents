@@ -25,6 +25,7 @@ class LLMWrapper:
         openai_model="gpt-4o-mini",
         openai_api_key=None,
         hf_token=None,
+        system_prompt="You are a helpful assistant that writes concise, professional explanations for technical tasks.",
     ):
         """
         backend: one of ["openai", "phi3mini", "llama7b", "mock"]
@@ -169,10 +170,10 @@ class LLMWrapper:
 
     # Add LLaMA chat-format wrapper
         def llama_chat(prompt):
-            system_prompt = (
-                "You are a helpful assistant that summarizes and explains technical content clearly."
-            )
-            formatted_prompt = f"<s>[INST] <<SYS>>\n{system_prompt}\n<</SYS>>\n{prompt}\n[/INST]"
+            # system_prompt = (
+            #     "You are a helpful assistant that summarizes and explains technical content clearly."
+            # )
+            formatted_prompt = f"<s>[INST] <<SYS>>\n{self.system_prompt}\n<</SYS>>\n{prompt}\n[/INST]"
             out = hf_llm.invoke(formatted_prompt)
             # Extract text safely
             if isinstance(out, str):

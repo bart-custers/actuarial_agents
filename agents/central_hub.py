@@ -5,12 +5,36 @@ from agents.review_agent import ReviewingAgent
 from agents.explanation_agent import ExplanationAgent
 
 class CentralHub:
+    # def __init__(self):
+    #     self.agents = {
+    #         "dataprep": DataPrepAgent("dataprep"),
+    #         "modelling": ModellingAgent("modelling"),
+    #         "reviewing": ReviewingAgent("reviewing"),
+    #         "explanation": ExplanationAgent("explanation"),
+    #     }
+    
     def __init__(self):
         self.agents = {
-            "dataprep": DataPrepAgent("dataprep"),
-            "modelling": ModellingAgent("modelling"),
-            "reviewing": ReviewingAgent("reviewing"),
-            "explanation": ExplanationAgent("explanation"),
+            "dataprep": DataPrepAgent(
+                "dataprep",
+                llm_backend="llama7b",
+                system_prompt="You are a meticulous data-preparation specialist who cleans insurance datasets and documents every step clearly and reproducibly."
+            ),
+            "modelling": ModellingAgent(
+                "modelling",
+                llm_backend="llama7b",
+                system_prompt="You are an actuarial modeller who builds and evaluates predictive models with precision, explaining trade-offs clearly."
+            ),
+            "reviewing": ReviewingAgent(
+                "reviewing",
+                llm_backend="llama7b",
+                system_prompt="You are a critical reviewer checking actuarial models for plausibility, fairness, and regulatory compliance."
+            ),
+            "explanation": ExplanationAgent(
+                "explanation",
+                llm_backend="llama7b",
+                system_prompt="You are an explanation specialist who clarifies model reasoning, consistency, and fairness for auditors and regulators."
+            ),
         }
 
     def send(self, message: Message) -> Message:
@@ -34,7 +58,7 @@ class CentralHub:
         )
         r1 = self.send(msg)
 
-        print("\n--- 🧹 Data Preparation Completed ---")
+        print("\n--- Data Preparation Completed ---")
         print(r1.content)
 
         # Auto-display LLM explanation if available
