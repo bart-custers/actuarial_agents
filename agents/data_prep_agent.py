@@ -8,7 +8,7 @@ from utils.message_types import Message
 from llms.wrappers import LLMWrapper
 
 class DataPrepAgent(BaseAgent):
-    def __init__(self, name="dataprep", llm_backend="mock"):
+    def __init__(self, name="dataprep", llm_backend="llama7b"):
         super().__init__(name)
         self.llm = LLMWrapper(backend=llm_backend)
 
