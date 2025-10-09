@@ -1,15 +1,20 @@
-from agents.base_agent import BaseAgent
+from llms.wrappers import LLMWrapper
 from utils.message_types import Message
+from agents.base_agent import BaseAgent
 
 class ExplanationAgent(BaseAgent):
+    def __init__(self, name="explanation", llm_backend="mock", system_prompt=None):
+        super().__init__(name)
+        self.llm = LLMWrapper(backend=llm_backend, system_prompt=system_prompt)
+    
     def handle_message(self, message: Message) -> Message:
-        print(f"[{self.name}] explaining results.")
+        print(f"[{self.name}] received: {message.content}")
+        # For now: placeholder until Week 3
         return Message(
             sender=self.name,
             recipient=message.sender,
             type="response",
-            content="Generated placeholder explanation for model predictions.",
-            metadata={"explanation_quality": "draft"}
+            content="Explaining agent placeholder: blabla.",
         )
 
 # from .base_agent import BaseAgent
