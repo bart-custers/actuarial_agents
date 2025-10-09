@@ -8,12 +8,12 @@ from utils.message_types import Message
 from llms.wrappers import LLMWrapper
 
 class DataPrepAgent(BaseAgent):
-    def __init__(self, name="dataprep", llm_backend="llama7b"):
+    def __init__(self, name="dataprep", llm_backend="llama7b", system_prompt=None):
         super().__init__(name)
-        self.llm = LLMWrapper(backend=llm_backend)
+        self.llm = LLMWrapper(backend=llm_backend, system_prompt=system_prompt)
 
     def handle_message(self, message: Message) -> Message:
-        print(f"[{self.name}] Starting deterministic cleaning pipeline...")
+        print(f"[{self.name}] Starting deterministic data pipeline...")
 
         dataset_path = message.metadata.get("dataset_path", "data/raw/freMTPL2freq.csv")
         processed_dir = "data/processed"
