@@ -55,16 +55,42 @@ class LLMWrapper:
     # ------------------------------------------------------------
     # Unified callable interface
     # ------------------------------------------------------------
+    # def __call__(self, prompt):
+    #     """Ensure all models return a string."""
+    #     if self.backend == "openai":
+    #         msg = HumanMessage(content=prompt)
+    #         response = self.llm([msg])
+    #         return response.content
+    #     elif self.backend in ["phi3mini", "llama7b"]:
+    #         return self.llm(prompt)
+    #     elif self.backend == "mock":
+    #         return self.llm(prompt)
+    #     else:
+    #         raise ValueError(f"Unsupported backend: {self.backend}")
     def __call__(self, prompt):
-        """Ensure all models return a string."""
+        """Ensure all models return a plain string output."""
         if self.backend == "openai":
             msg = HumanMessage(content=prompt)
             response = self.llm([msg])
             return response.content
+
         elif self.backend in ["phi3mini", "llama7b"]:
-            return self.llm(prompt)
+            raw = self.llm(prompt)
+            # ✅ Normalize Hugging Face / LangChain output formats
+            if isinstance(raw, dict) and "generated_text" in raw:
+                return raw["generated_text"]
+            elif isinstance(raw, list) and isinstance(raw[0], dict) and "generated_text" in raw[0]:
+                return raw[0]["generated_text"]
+            elif hasattr(raw, "generations"):  # LangChain LLMResult
+                return raw.generations[0][0].text
+            elif hasattr(raw, "content"):
+                return raw.content
+            else:
+                return str(raw)
+
         elif self.backend == "mock":
             return self.llm(prompt)
+
         else:
             raise ValueError(f"Unsupported backend: {self.backend}")
 
