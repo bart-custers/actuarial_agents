@@ -36,13 +36,15 @@ class ModellingAgent(BaseAgent):
         X_test = pd.read_csv(processed_paths["X_test"])
         y_train = pd.read_csv(processed_paths["y_train"]).values.ravel()
         y_test = pd.read_csv(processed_paths["y_test"]).values.ravel()
+        exposure_train = pd.read_csv(processed_paths["exposure_train"]).values.ravel()
+        exposure_test = pd.read_csv(processed_paths["exposure_test"]).values.ravel()
         feature_names = pd.read_pickle(os.path.join(artifacts_dir, "feature_names.pkl"))
 
         # --- Train model ---
         trainer = ModelTrainer(model_type=self.model_type)
         trainer.train(X_train, y_train)
         preds = trainer.predict(X_test)
-        metrics = trainer.evaluate(y_test, preds, feature_names)
+        metrics = trainer.evaluate(y_test, preds, feature_names, exposure_test)
 
         # --- Save model and evaluation ---
         model_path = os.path.join(artifacts_dir, f"model_{self.model_type}.pkl")
@@ -61,6 +63,12 @@ class ModellingAgent(BaseAgent):
                     f.write(f"\n{k}:\n{v.to_string(index=False)}\n")
                 else:
                     f.write(f"{k}: {v}\n")
+        
+        plot_path = metrics.get("Calibration Plot", None)
+        if plot_path and os.path.exists(plot_path):
+            from IPython.display import Image, display
+            print("\n--- Calibration / Lift Chart ---")
+            display(Image(filename=plot_path))
 
         # --- LLM Explanation ---
         explain_prompt = f"""
@@ -83,6 +91,23 @@ Highlight whether model fit is reasonable, any bias patterns, and next steps for
             "llm_explanation": explanation,
         }
 
+        results_dir = "data/results"
+        os.makedirs(results_dir, exist_ok=True)
+        meta_path = os.path.join(results_dir, f"{self.name}_metadata.json")
+
+        # Convert DataFrames to string-safe formats
+        safe_meta = {}
+        for k, v in metadata.items():
+            if isinstance(v, pd.DataFrame):
+                safe_meta[k] = v.to_dict(orient="records")
+            else:
+                safe_meta[k] = v
+
+        import json
+        with open(meta_path, "w") as f:
+            json.dump(safe_meta, f, indent=2)
+        metadata["metadata_file"] = meta_path
+
         return Message(
             sender=self.name,
             recipient=message.sender,
@@ -90,6 +115,8 @@ Highlight whether model fit is reasonable, any bias patterns, and next steps for
             content=f"Model ({self.model_type}) trained and evaluated successfully.",
             metadata=metadata,
         )
+
+        
 
 
 # from llms.wrappers import LLMWrapper

@@ -49,12 +49,16 @@ class DataPrepAgent(BaseAgent):
         X_test_path = os.path.join(processed_dir, f"{base_name}_X_test.csv")
         y_train_path = os.path.join(processed_dir, f"{base_name}_y_train.csv")
         y_test_path = os.path.join(processed_dir, f"{base_name}_y_test.csv")
+        exposure_train_path = os.path.join(processed_dir, f"{base_name}_exposure_train.csv")
+        exposure_test_path = os.path.join(processed_dir, f"{base_name}_exposure_test.csv")
 
         # Save the split sets
         pd.DataFrame(results["X_train"], columns=results["feature_names"]).to_csv(X_train_path, index=False)
         pd.DataFrame(results["X_test"], columns=results["feature_names"]).to_csv(X_test_path, index=False)
         results["y_train"].to_csv(y_train_path, index=False)
         results["y_test"].to_csv(y_test_path, index=False)
+        results["exposure_train"].to_csv(exposure_train_path, index=False)
+        results["exposure_test"].to_csv(exposure_test_path, index=False)
 
         # --- Save preprocessing artifacts ---
         preproc_path = os.path.join(artifacts_dir, f"preprocessor.pkl")
@@ -89,12 +93,31 @@ class DataPrepAgent(BaseAgent):
                 "X_test": X_test_path,
                 "y_train": y_train_path,
                 "y_test": y_test_path,
+                "exposure_train": exposure_train_path,
+                "exposure_test": exposure_test_path,
             },
             "artifacts": {
                 "preprocessor": preproc_path,
                 "feature_names": features_path,
             },
         }
+
+        results_dir = "data/results"
+        os.makedirs(results_dir, exist_ok=True)
+        meta_path = os.path.join(results_dir, f"{self.name}_metadata.json")
+
+        # Convert DataFrames to string-safe formats
+        safe_meta = {}
+        for k, v in metadata.items():
+            if isinstance(v, pd.DataFrame):
+                safe_meta[k] = v.to_dict(orient="records")
+            else:
+                safe_meta[k] = v
+
+        import json
+        with open(meta_path, "w") as f:
+            json.dump(safe_meta, f, indent=2)
+        metadata["metadata_file"] = meta_path
 
         return Message(
             sender=self.name,
