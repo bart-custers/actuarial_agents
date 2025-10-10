@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -89,7 +90,9 @@ class ModelTrainer:
             plt.tight_layout()
 
             # Save figure
-            plot_path = os.path.join(self.artifacts_dir, f"calibration.png")
+            results_dir = "data/results"
+            os.makedirs(results_dir, exist_ok=True)
+            plot_path = os.path.join(results_dir, f"calibration.png")
             plt.savefig(plot_path)
             plt.show()
             plt.close(fig)
