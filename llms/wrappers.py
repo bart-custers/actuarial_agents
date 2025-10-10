@@ -25,12 +25,16 @@ class LLMWrapper:
         openai_model="gpt-4o-mini",
         openai_api_key=None,
         hf_token=None,
-        system_prompt="You are a helpful assistant that writes concise, professional explanations for technical tasks.",
+        system_prompt=None,
     ):
         """
         backend: one of ["openai", "phi3mini", "llama7b", "mock"]
         """
         self.backend = backend
+        self.system_prompt = (
+            system_prompt
+            or "You are a helpful assistant that writes concise, professional explanations."
+        )
         self.hf_token = hf_token or os.getenv("HF_TOKEN")
 
         if backend == "openai":

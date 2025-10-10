@@ -1,4 +1,5 @@
 from utils.message_types import Message
+from llms.wrappers import LLMWrapper
 from agents.data_prep_agent import DataPrepAgent
 from agents.modelling_agent import ModellingAgent
 from agents.review_agent import ReviewingAgent
@@ -51,7 +52,7 @@ class CentralHub:
         print(f"[Hub] routing message from {message.sender} to {recipient}")
         response = self.agents[recipient].handle_message(message)
         return response
-        
+
     def workflow_demo(self):
         """Run full demonstration of the agent workflow."""
         print("\n===== STARTING MULTI-AGENT WORKFLOW DEMO =====\n")
