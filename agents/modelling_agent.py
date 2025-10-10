@@ -55,7 +55,12 @@ class ModellingAgent(BaseAgent):
         with open(log_path, "w") as f:
             f.write("=== MODEL EVALUATION ===\n")
             for k, v in metrics.items():
-                f.write(f"{k}: {v:.6f}\n")
+                if isinstance(v, (float, int)):
+                    f.write(f"{k}: {v:.6f}\n")
+                elif isinstance(v, pd.DataFrame):
+                    f.write(f"\n{k}:\n{v.to_string(index=False)}\n")
+                else:
+                    f.write(f"{k}: {v}\n")
 
         # --- LLM Explanation ---
         explain_prompt = f"""
