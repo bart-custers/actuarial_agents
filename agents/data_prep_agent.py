@@ -8,9 +8,11 @@ from utils.message_types import Message
 from llms.wrappers import LLMWrapper
 
 class DataPrepAgent(BaseAgent):
-    def __init__(self, name="dataprep", llm_backend="llama7b", system_prompt=None):
+    def __init__(self, name="dataprep", shared_llm=None, system_prompt=None):
         super().__init__(name)
-        self.llm = LLMWrapper(backend=llm_backend, system_prompt=system_prompt)
+        # Use shared LLM if provided, else create own
+        self.llm = shared_llm or LLMWrapper(backend="mock", system_prompt=system_prompt)
+        self.system_prompt = system_prompt
 
     def handle_message(self, message: Message) -> Message:
         print(f"[{self.name}] Starting deterministic data pipeline...")

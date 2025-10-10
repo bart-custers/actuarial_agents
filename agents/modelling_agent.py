@@ -3,11 +3,10 @@ from utils.message_types import Message
 from agents.base_agent import BaseAgent
 
 class ModellingAgent(BaseAgent):
-    def __init__(self, name="modelling", llm_backend="mock", system_prompt=None):
-        # Only pass name to BaseAgent
+    def __init__(self, name="modelling", shared_llm=None, system_prompt=None):
         super().__init__(name)
-        # Store the LLM with backend + role prompt
-        self.llm = LLMWrapper(backend=llm_backend, system_prompt=system_prompt)
+        self.llm = shared_llm or LLMWrapper(backend="mock", system_prompt=system_prompt)
+        self.system_prompt = system_prompt
 
     def handle_message(self, message: Message) -> Message:
         print(f"[{self.name}] received: {message.content}")

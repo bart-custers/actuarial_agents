@@ -14,36 +14,44 @@ class CentralHub:
     #     }
     
     def __init__(self):
+        # ✅ 1. Create ONE shared LLM instance
+        self.shared_llm = LLMWrapper(
+            backend="llama7b",
+            system_prompt="You are a helpful actuarial assistant that can handle multiple reasoning tasks.",
+        )
+
+        # ✅ 2. Create agents that reuse this instance
         self.agents = {
             "dataprep": DataPrepAgent(
                 "dataprep",
-                llm_backend="llama7b",
-                system_prompt="You are a meticulous data-preparation specialist who cleans insurance datasets and documents every step clearly and reproducibly."
+                shared_llm=self.shared_llm,
+                system_prompt="You are a meticulous data-preparation specialist who cleans insurance datasets clearly and reproducibly."
             ),
             "modelling": ModellingAgent(
                 "modelling",
-                llm_backend="llama7b",
-                system_prompt="You are an actuarial modeller who builds and evaluates predictive models with precision, explaining trade-offs clearly."
+                shared_llm=self.shared_llm,
+                system_prompt="You are an actuarial modeller who builds and evaluates predictive models precisely."
             ),
             "reviewing": ReviewingAgent(
                 "reviewing",
-                llm_backend="llama7b",
-                system_prompt="You are a critical reviewer checking actuarial models for plausibility, fairness, and regulatory compliance."
+                shared_llm=self.shared_llm,
+                system_prompt="You are a critical reviewer checking model plausibility and regulatory compliance."
             ),
             "explanation": ExplanationAgent(
                 "explanation",
-                llm_backend="llama7b",
-                system_prompt="You are an explanation specialist who clarifies model reasoning, consistency, and fairness for auditors and regulators."
+                shared_llm=self.shared_llm,
+                system_prompt="You are an explanation specialist ensuring interpretability and fairness."
             ),
         }
 
-    def send(self, message: Message) -> Message:
+    def send(self, message):
         recipient = message.recipient
         if recipient not in self.agents:
             raise ValueError(f"Unknown recipient: {recipient}")
         print(f"[Hub] routing message from {message.sender} to {recipient}")
         response = self.agents[recipient].handle_message(message)
         return response
+        
     def workflow_demo(self):
         """Run full demonstration of the agent workflow."""
         print("\n===== STARTING MULTI-AGENT WORKFLOW DEMO =====\n")
