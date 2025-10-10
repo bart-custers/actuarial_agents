@@ -60,18 +60,6 @@ class LLMWrapper:
     # ------------------------------------------------------------
     # Unified callable interface
     # ------------------------------------------------------------
-    # def __call__(self, prompt):
-    #     """Ensure all models return a string."""
-    #     if self.backend == "openai":
-    #         msg = HumanMessage(content=prompt)
-    #         response = self.llm([msg])
-    #         return response.content
-    #     elif self.backend in ["phi3mini", "llama7b"]:
-    #         return self.llm(prompt)
-    #     elif self.backend == "mock":
-    #         return self.llm(prompt)
-    #     else:
-    #         raise ValueError(f"Unsupported backend: {self.backend}")
     def __call__(self, prompt):
         """Ensure all models return a plain string output."""
         if self.backend == "openai":
@@ -109,9 +97,6 @@ class LLMWrapper:
 
         #print(f"Loading {model_name} ... (using cache at {model_path})")
 
-        # tokenizer = AutoTokenizer.from_pretrained(
-        #     model_path, use_auth_token=self.hf_token, cache_dir=model_path
-        # )
         tokenizer = AutoTokenizer.from_pretrained(
             model_name, use_auth_token=self.hf_token
         )
@@ -174,9 +159,6 @@ class LLMWrapper:
 
     # Add LLaMA chat-format wrapper
         def llama_chat(prompt):
-            # system_prompt = (
-            #     "You are a helpful assistant that summarizes and explains technical content clearly."
-            # )
             formatted_prompt = f"<s>[INST] <<SYS>>\n{self.system_prompt}\n<</SYS>>\n{prompt}\n[/INST]"
             out = hf_llm.invoke(formatted_prompt)
             # Extract text safely
@@ -188,42 +170,3 @@ class LLMWrapper:
                 return str(out)
 
         return llama_chat
-
-    # def _init_llama7b(self):
-    #     model_name = "meta-llama/Llama-2-7b-chat-hf"
-    #     model_path = os.path.join(model_cache_dir, model_name.replace("/", "_"))
-    #     os.makedirs(model_path, exist_ok=True)
-
-    #     #print(f"Loading {model_name} ... (using cache at {model_path})")
-
-    #     # tokenizer = AutoTokenizer.from_pretrained(
-    #     #     model_path,
-    #     #     use_auth_token=self.hf_token,
-    #     #     cache_dir=model_path,
-    #     #     use_fast=True,
-    #     # )
-    #     tokenizer = AutoTokenizer.from_pretrained(
-    #         model_name,
-    #         use_auth_token=self.hf_token,
-    #         #cache_dir=model_path,
-    #         use_fast=True,
-    #     )
-    #     model = AutoModelForCausalLM.from_pretrained(
-    #         model_name,
-    #         device_map="auto",
-    #         torch_dtype="auto",
-    #         load_in_4bit=True,
-    #         use_auth_token=self.hf_token,
-    #         #cache_dir=model_path,
-    #     )
-
-    #     text_gen = pipeline(
-    #         "text-generation",
-    #         model=model,
-    #         tokenizer=tokenizer,
-    #         max_new_tokens=512,
-    #         do_sample=False,
-    #     )
-
-    #     hf_llm = HuggingFacePipeline(pipeline=text_gen)
-    #     return lambda prompt: hf_llm.invoke(prompt)
