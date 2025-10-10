@@ -80,7 +80,8 @@ class CentralHub:
             sender="hub",
             recipient="modelling",
             type="task",
-            content="Train predictive model."
+            content="Train predictive model.",
+            metadata=r1.metadata,
         ))
         print("\n--- Modelling Completed ---")
         print(r2.content)
@@ -90,7 +91,8 @@ class CentralHub:
             sender="hub",
             recipient="reviewing",
             type="task",
-            content="Review model outputs."
+            content="Review model outputs.",
+            metadata=r2.metadata,
         ))
         print("\n--- Review Completed ---")
         print(r3.content)
@@ -100,7 +102,8 @@ class CentralHub:
             sender="hub",
             recipient="explanation",
             type="task",
-            content="Generate explanations."
+            content="Generate explanations.",
+            metadata=r3.metadata,
         ))
         print("\n--- Explanation Completed ---")
         print(r4.content)
