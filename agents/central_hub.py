@@ -141,7 +141,7 @@ class CentralHub:
         print(r4.content)
 
         if r4.metadata and "llm_explanation" in r4.metadata:
-            print("\n--- 🤖 LLM Explanation ---")
+            print("\n--- LLM Explanation ---")
             print(r4.metadata["llm_explanation"]) 
         print("\n===== WORKFLOW FINISHED =====\n")
 
