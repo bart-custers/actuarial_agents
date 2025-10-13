@@ -2,8 +2,10 @@
 import os
 from datetime import datetime
 import pandas as pd
+import json
 import joblib
 from utils.message_types import Message
+from utils.general_utils import make_json_compatible
 from agents.base_agent import BaseAgent
 from agents.model_trainer import ModelTrainer
 
@@ -96,17 +98,9 @@ Highlight whether model fit is reasonable, any bias patterns, and next steps for
         meta_path = os.path.join(results_dir, f"{self.name}_metadata.json")
 
         # Convert DataFrames to string-safe formats
-        safe_meta = {}
-        for k, v in metadata.items():
-            if isinstance(v, pd.DataFrame):
-                safe_meta[k] = v.to_dict(orient="records")
-            else:
-                safe_meta[k] = v
-
-        import json
+        safe_meta = make_json_compatible(metadata)
         with open(meta_path, "w") as f:
             json.dump(safe_meta, f, indent=2)
-        metadata["metadata_file"] = meta_path
 
         return Message(
             sender=self.name,
