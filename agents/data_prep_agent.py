@@ -3,7 +3,7 @@ import joblib
 import pandas as pd
 from datetime import datetime
 from agents.base_agent import BaseAgent
-from agents.data_pipeline import DataPipeline
+from utils.data_pipeline import DataPipeline
 from utils.message_types import Message
 from llms.wrappers import LLMWrapper
 

@@ -114,7 +114,7 @@ class LLMWrapper:
             "text-generation",
             model=model,
             tokenizer=tokenizer,
-            max_new_tokens=512,
+            max_new_tokens=1024,
             do_sample=False,
         )
 

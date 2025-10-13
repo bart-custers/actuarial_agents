@@ -5,15 +5,7 @@ from agents.modelling_agent import ModellingAgent
 from agents.review_agent import ReviewingAgent
 from agents.explanation_agent import ExplanationAgent
 
-class CentralHub:
-    # def __init__(self):
-    #     self.agents = {
-    #         "dataprep": DataPrepAgent("dataprep"),
-    #         "modelling": ModellingAgent("modelling"),
-    #         "reviewing": ReviewingAgent("reviewing"),
-    #         "explanation": ExplanationAgent("explanation"),
-    #     }
-    
+class CentralHub:  
     def __init__(self):
         # ✅ 1. Create ONE shared LLM instance
         self.shared_llm = LLMWrapper(
@@ -105,25 +97,52 @@ class CentralHub:
         print("\n--- Review Completed ---")
         print(r3.content)
 
-        if "llm_explanation" in msg.metadata:
-            print("\n--- LLM Explanation ---")
-            print(msg.metadata["llm_explanation"])
+        # Display LLM review text if available
+        if r3.metadata and "llm_review" in r3.metadata:
+            print("\n--- LLM Review ---")
+            print(r3.metadata["llm_review"])
 
-        # Explanation phase
-        r4 = self.send(Message(
-            sender="hub",
-            recipient="explanation",
-            type="task",
-            content="Generate explanations.",
-            metadata=r3.metadata,
-        ))
+        # === Decide next routing based on review status ===
+        status = r3.metadata.get("status", "approved")
+        action = r3.metadata.get("action", "proceed_to_explanation")
+
+        if action == "retrain_model":
+            print("[Hub] Review requested retraining — forwarding to modelling.\n")
+            retrain_msg = Message(
+                sender="hub",
+                recipient="modelling",
+                type="task",
+                content=r3.metadata.get("retrain_prompt", "Retrain model with adjustments."),
+                metadata=r2.metadata,  # reuse same data
+            )
+            r4 = self.send(retrain_msg)
+
+        elif action == "proceed_to_explanation":
+            print("[Hub] Review approved model — forwarding to explanation.\n")
+            r4 = self.send(Message(
+                sender="hub",
+                recipient="explanation",
+                type="task",
+                content="Explain model results and predictions.",
+                metadata=r3.metadata,
+            ))
+
+        else:
+            print(f"[Hub] Unknown action: {action}. Defaulting to explanation step.")
+            r4 = self.send(Message(
+                sender="hub",
+                recipient="explanation",
+                type="task",
+                content="Explain model results and predictions.",
+                metadata=r3.metadata,
+            ))
+
         print("\n--- Explanation Completed ---")
         print(r4.content)
 
-        if "llm_explanation" in msg.metadata:
-            print("\n--- LLM Explanation ---")
-            print(msg.metadata["llm_explanation"])
-
+        if r4.metadata and "llm_explanation" in r4.metadata:
+            print("\n--- 🤖 LLM Explanation ---")
+            print(r4.metadata["llm_explanation"]) 
         print("\n===== WORKFLOW FINISHED =====\n")
 
         print("--- Summary ---")

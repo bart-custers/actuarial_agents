@@ -7,7 +7,7 @@ import joblib
 from utils.message_types import Message
 from utils.general_utils import make_json_compatible
 from agents.base_agent import BaseAgent
-from agents.model_trainer import ModelTrainer
+from utils.model_trainer import ModelTrainer
 
 class ModellingAgent(BaseAgent):
     def __init__(self, name="modelling", shared_llm=None, system_prompt=None, model_type="glm"):
