@@ -69,6 +69,10 @@ class CentralHub:
 
         print("\n--- Data Preparation Completed ---")
         print(r1.content)
+        
+        if "llm_explanation" in msg.metadata:
+            print("\n--- LLM Explanation ---")
+            print(msg.metadata["llm_explanation"])
 
         # Auto-display LLM explanation if available
         if r1.metadata and "llm_explanation" in r1.metadata:
@@ -86,6 +90,10 @@ class CentralHub:
         print("\n--- Modelling Completed ---")
         print(r2.content)
 
+        if "llm_explanation" in msg.metadata:
+            print("\n--- LLM Explanation ---")
+            print(msg.metadata["llm_explanation"])
+
         # Reviewing phase
         r3 = self.send(Message(
             sender="hub",
@@ -97,6 +105,10 @@ class CentralHub:
         print("\n--- Review Completed ---")
         print(r3.content)
 
+        if "llm_explanation" in msg.metadata:
+            print("\n--- LLM Explanation ---")
+            print(msg.metadata["llm_explanation"])
+
         # Explanation phase
         r4 = self.send(Message(
             sender="hub",
@@ -107,6 +119,10 @@ class CentralHub:
         ))
         print("\n--- Explanation Completed ---")
         print(r4.content)
+
+        if "llm_explanation" in msg.metadata:
+            print("\n--- LLM Explanation ---")
+            print(msg.metadata["llm_explanation"])
 
         print("\n===== WORKFLOW FINISHED =====\n")
 
