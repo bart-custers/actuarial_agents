@@ -62,6 +62,7 @@ class CentralHub:
         task = "dataprep"
         continue_workflow = True
         iteration = 0
+        MAX_ITERATIONS = 4
 
         # === Prepare iteration log folder ===
         log_dir = "data/workflow_logs"
@@ -73,6 +74,12 @@ class CentralHub:
         while continue_workflow:
             iteration += 1
             print(f"\n=== Iteration {iteration} — Starting {task.upper()} phase ===\n")
+
+            if iteration > MAX_ITERATIONS:
+                print(f"Maximum iteration limit ({MAX_ITERATIONS}) reached. Aborting workflow.")
+                current_metadata["status"] = "terminated"
+                current_metadata["reason"] = "Exceeded maximum iterations without model approval."
+                break
 
             # ===============================
             # Data Preparation Phase
