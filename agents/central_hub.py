@@ -113,9 +113,20 @@ class CentralHub:
                 recipient="modelling",
                 type="task",
                 content=r3.metadata.get("retrain_prompt", "Retrain model with adjustments."),
-                metadata=r2.metadata,  # reuse same data
+                metadata=r3.metadata,  # includes iteration count
             )
             r4 = self.send(retrain_msg)
+
+        elif action == "reclean_data":
+            print("[Hub] Escalation: sending workflow back to DataPrepAgent for data review.\n")
+            re_prep_msg = Message(
+                sender="hub",
+                recipient="dataprep",
+                type="task",
+                content="Review and enhance data preprocessing, addressing model instability.",
+                metadata=r3.metadata,
+            )
+            r4 = self.send(re_prep_msg)
 
         elif action == "proceed_to_explanation":
             print("[Hub] Review approved model — forwarding to explanation.\n")

@@ -27,6 +27,8 @@ class ReviewingAgent(BaseAgent):
     def handle_message(self, message):
         print(f"[{self.name}] Reviewing model outputs and evaluation results...")
 
+        iteration = message.metadata.get("review_iteration", 0)
+        
         # === Load metadata from ModellingAgent ===
         metrics = message.metadata.get("metrics", {})
         review_notes = []
@@ -85,8 +87,15 @@ class ReviewingAgent(BaseAgent):
             e.g. additional interactions, nonlinear terms, or feature checks.
             """
 
+        if status == "retrain_requested":
+            if iteration >= 1:
+                print("[ReviewingAgent] Model still inadequate after retraining → escalating to DataPrepAgent.")
+                status = "reclean_requested"
+            if iteration >= 2:
+                print("[ReviewingAgent] Multiple failures detected → aborting workflow.")
+                status = "rejected"
+
         # === Step 5. Save metadata ===
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         results_dir = "data/results"
         os.makedirs(results_dir, exist_ok=True)
 
@@ -96,9 +105,10 @@ class ReviewingAgent(BaseAgent):
             "review_notes": review_notes,
             "llm_review": llm_review,
             "retrain_prompt": retrain_prompt,
+            "review_iteration": iteration + 1,
         }
 
-        meta_path = os.path.join(results_dir, f"review_metadata_{timestamp}.json")
+        meta_path = os.path.join(results_dir, f"review_metadata_iteration_{iteration+1}.json")
         save_json_safe(metadata, meta_path)
         metadata["metadata_file"] = meta_path
 
@@ -106,6 +116,7 @@ class ReviewingAgent(BaseAgent):
         print(f"\n--- Review Outcome ---")
         print(f"Status: {status}")
         print(f"Severity: {severity}")
+        print(f"Iteration: {iteration}")
         print(f"LLM Review: {llm_review[:500]}{'...' if len(llm_review) > 500 else ''}")
         if retrain_prompt:
             print("\n--- Suggested Retrain Prompt ---")
@@ -116,6 +127,8 @@ class ReviewingAgent(BaseAgent):
             "approved": "proceed_to_explanation",
             "needs_revision": "proceed_to_explanation",
             "retrain_requested": "retrain_model",
+            "reclean_requested": "reclean_data",    
+            "rejected": "abort_workflow",           
         }[status]
 
         metadata["action"] = next_action
