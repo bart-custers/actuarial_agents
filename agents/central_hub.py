@@ -2,6 +2,7 @@ import os
 import json
 from datetime import datetime
 from utils.message_types import Message
+from utils.general_utils import make_json_compatible
 from llms.wrappers import LLMWrapper
 from agents.data_prep_agent import DataPrepAgent
 from agents.modelling_agent import ModellingAgent
@@ -173,7 +174,7 @@ class CentralHub:
             # ===============================
             log_path = os.path.join(log_dir, f"iteration_{iteration}_{task}.json")
             with open(log_path, "w") as f:
-                json.dump(current_metadata, f, indent=2)
+                json.dump(make_json_compatible(current_metadata), f, indent=2)
             print(f"\nSaved iteration metadata to: {log_path}")
 
             # Optional visual separator
