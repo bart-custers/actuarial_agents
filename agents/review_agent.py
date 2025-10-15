@@ -27,6 +27,9 @@ class ReviewingAgent(BaseAgent):
     def handle_message(self, message):
         print(f"[{self.name}] Reviewing model outputs and evaluation results...")
 
+        if message.metadata is None:
+            message.metadata = {}
+            
         iteration = message.metadata.get("review_iteration", 0)
         
         # === Load metadata from ModellingAgent ===
