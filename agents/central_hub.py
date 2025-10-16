@@ -1,8 +1,11 @@
 import os
 import json
+import time
 from datetime import datetime
 from utils.message_types import Message
 from utils.general_utils import make_json_compatible
+from utils.performance import WorkflowAudit
+from utils.belief_tracking import belief_change_tracking
 from llms.wrappers import LLMWrapper
 from agents.data_prep_agent import DataPrepAgent
 from agents.modelling_agent import ModellingAgent
@@ -49,9 +52,9 @@ class CentralHub:
         response = self.agents[recipient].handle_message(message)
         return response
 
-    def workflow_demo(self):
+    def run_workflow(self):
         """Run adaptive multi-agent workflow with separate phases and retraining iterations."""
-        print("\n===== STARTING MULTI-AGENT WORKFLOW DEMO =====\n")
+        print("\n===== STARTING AGENTIC ACTUARIES WORKFLOW =====\n")
 
         # === Initialize metadata and counters ===
         current_metadata = {"dataset_path": "data/raw/freMTPL2freq.csv"}
@@ -65,8 +68,12 @@ class CentralHub:
         os.makedirs(log_dir, exist_ok=True)
         summary_records = []
 
+        # === Initialize performance audit ===
+        audit = WorkflowAudit(log_dir="data/audit")
+
         # === Keep responses for summary ===
         r1 = r2 = r3 = r4 = None
+        start_time = time.time()
 
         # === Workflow loop ===
         while continue_workflow:
@@ -88,6 +95,7 @@ class CentralHub:
                 print("\n--- Data Preparation Completed ---")
                 print(r1.content)
                 phase = "modelling"  # proceed to model building
+                audit.record_event("dataprep", iteration, "data_cleaning", current_metadata)
 
             # ------------------------------------------------
             # MODELLING PHASE
@@ -105,6 +113,7 @@ class CentralHub:
                 print("\n--- Modelling Completed ---")
                 print(r2.content)
                 phase = "reviewing"
+                audit.record_event("modelling", iteration, "model_training", current_metadata)
 
             # ------------------------------------------------
             # REVIEWING PHASE
@@ -131,6 +140,8 @@ class CentralHub:
                 # === Decision logic ===
                 action = current_metadata.get("action", "proceed_to_explanation")
                 print(f"[Hub] Review decision → {action.upper()}")
+                
+                audit.record_event("reviewing", iteration, action, current_metadata)
 
                 if action == "retrain_model":
                     iteration += 1
@@ -169,6 +180,7 @@ class CentralHub:
                 current_metadata.update(r4.metadata or {})
                 print("\n--- Explanation Completed ---")
                 print(r4.content)
+                audit.record_event("reviewing", iteration, action, current_metadata)
                 continue_workflow = False  # End workflow
 
             # ------------------------------------------------
@@ -196,6 +208,13 @@ class CentralHub:
         # ------------------------------------------------
         # FINAL SUMMARY
         # ------------------------------------------------
+        end_time = time.time()
+        runtime = end_time - start_time
+        print(f"\n Workflow runtime: {runtime:.2f} seconds")
+
+        # Finalize audit log
+        audit_df = audit.finalize()
+        
         summary_path = os.path.join(log_dir, "workflow_summary.json")
         with open(summary_path, "w") as f:
             json.dump(make_json_compatible(summary_records), f, indent=2)
@@ -210,7 +229,7 @@ class CentralHub:
 
 
 
-    # def workflow_demo(self):
+    # def run_workflow(self):
     #     """Run adaptive workflow with retraining, escalation, and per-iteration logging."""
     #     print("\n===== STARTING MULTI-AGENT WORKFLOW DEMO =====\n")
 
