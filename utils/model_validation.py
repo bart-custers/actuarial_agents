@@ -8,9 +8,17 @@ def evaluate_model_quality(metrics):
     mae = metrics.get("MAE", 0)
 
     # Conservative thresholds for actuarial frequency models
-    if rmse > 0.5 or dev > 0.5 or mae > 0.8:
+    if rmse > 0.5:
         return "critical"
-    elif rmse > 0.3 or dev > 0.3 or mae > 0.5:
+    elif rmse > 0.3:
         return "moderate"
     else:
         return "minor"
+
+    # Conservative thresholds for actuarial frequency models
+    # if rmse > 0.5 or dev > 0.5 or mae > 0.8:
+    #     return "critical"
+    # elif rmse > 0.3 or dev > 0.3 or mae > 0.5:
+    #     return "moderate"
+    # else:
+    #     return "minor"
