@@ -1,4 +1,5 @@
 import os
+import re
 from datetime import datetime
 from agents.base_agent import BaseAgent
 from llms.wrappers import LLMWrapper
@@ -48,37 +49,50 @@ class ReviewingAgent(BaseAgent):
         # === Step 2. LLM reasoning ===
         review_prompt = f"""
         You are an actuarial model reviewer.
-        Evaluate the following model results and classify adequacy as one of:
-        - APPROVED (no action)
-        - NEEDS_REVISION (minor issues, acceptable for now)
-        - RETRAIN_REQUESTED (serious issues, must be retrained)
+        Evaluate the following model results and provide an explicit decision line
+
+        At the end of your response, include a line exactly in this format:
+        Status: <APPROVED | NEEDS_REVISION | RETRAIN_REQUESTED>
 
         Metrics: {metrics}
         Numeric severity: {severity}
         Review notes: {review_notes}
 
         Provide:
-        1. One line with your classification (e.g. "Status: APPROVED")
+        1. One line starting with "Status:" (e.g., "Status: APPROVED")
         2. A short professional justification.
         """
 
         llm_review = self.llm(review_prompt)
 
         # === Step 3. Extract LLM classification ===
-        text_upper = llm_review.upper()
-        if "RETRAIN" in text_upper:
-            status = "retrain_requested"
-        elif "NEEDS" in text_upper:
-            status = "needs_revision"
-        elif "APPROVED" in text_upper:
-            status = "approved"
+        # Look for explicit "Status:" line first
+        match = re.search(r"Status\s*:\s*(APPROVED|NEEDS[_\s-]?REVISION|RETRAIN[_\s-]?REQUESTED)", llm_review, re.IGNORECASE)
+
+        if match:
+            label = match.group(1).upper().replace(" ", "_")
         else:
-            # Fallback to numeric severity
-            status = {
-                "critical": "retrain_requested",
-                "moderate": "needs_revision",
-                "minor": "approved",
-            }[severity]
+            # fallback: look for standalone keywords, ignoring those in prompts
+            text_section = llm_review.split("[/INST]")[-1].upper()  # only look after the prompt
+            if re.search(r"\bRETRAIN", text_section):
+                label = "RETRAIN_REQUESTED"
+            elif re.search(r"NEEDS", text_section):
+                label = "NEEDS_REVISION"
+            elif re.search(r"\bAPPROVED", text_section):
+                label = "APPROVED"
+            else:
+                label = severity.upper()
+
+        # Normalize mapping
+        status_map = {
+            "RETRAIN_REQUESTED": "retrain_requested",
+            "NEEDS_REVISION": "needs_revision",
+            "APPROVED": "approved",
+            "CRITICAL": "retrain_requested",
+            "MODERATE": "needs_revision",
+            "MINOR": "approved",
+        }
+        status = status_map.get(label, "approved")                              
 
         # === Step 4. Optional prompt revision for retraining ===
         retrain_prompt = None
