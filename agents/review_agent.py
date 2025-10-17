@@ -4,7 +4,7 @@ import json
 from datetime import datetime
 from agents.base_agent import BaseAgent
 from llms.wrappers import LLMWrapper
-from utils.general_utils import save_json_safe
+from utils.general_utils import save_json_safe, make_json_compatible
 from utils.model_validation import evaluate_model_quality
 
 class ReviewingAgent(BaseAgent):
@@ -72,7 +72,7 @@ class ReviewingAgent(BaseAgent):
 
         If previous memory of dataprep, modelling and reviews exist, ensure consistency with them.
         Historical memory summary:
-        {json.dumps(memory_summary, indent=2)}
+        {json.dumps(make_json_compatible(memory_summary), indent=2)}
 
         Provide:
         1. One line starting with "Status:" (e.g., "Status: APPROVED")
