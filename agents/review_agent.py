@@ -13,7 +13,7 @@ class ReviewingAgent(BaseAgent):
     is approved, needs minor revision, or must be retrained.
     """
 
-    def __init__(self, name="reviewing", shared_llm=None, system_prompt=None):
+    def __init__(self, name="reviewing", shared_llm=None, system_prompt=None, hub=None):
         super().__init__(name)
         # Use shared LLM if provided, else initialize local one
         if shared_llm:
@@ -21,6 +21,7 @@ class ReviewingAgent(BaseAgent):
         else:
             self.llm = LLMWrapper(backend="mock", system_prompt=system_prompt)
         self.system_prompt = system_prompt or "You are a critical actuarial reviewer assessing model adequacy."
+        self.hub = hub
 
     # ------------------------------------------------------------
     # Main message handler

@@ -10,11 +10,12 @@ from agents.base_agent import BaseAgent
 from utils.model_trainer import ModelTrainer
 
 class ModellingAgent(BaseAgent):
-    def __init__(self, name="modelling", shared_llm=None, system_prompt=None, model_type="glm"):
+    def __init__(self, name="modelling", shared_llm=None, system_prompt=None, model_type="glm", hub=None):
         super().__init__(name)
         self.llm = shared_llm
         self.system_prompt = system_prompt
         self.model_type = model_type
+        self.hub = hub
 
     def handle_message(self, message: Message) -> Message:
         print(f"[{self.name}] Starting model training ({self.model_type})...")

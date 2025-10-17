@@ -15,7 +15,7 @@ class ExplanationAgent(BaseAgent):
     if inconsistencies are detected.
     """
 
-    def __init__(self, name="explanation", shared_llm=None, system_prompt=None):
+    def __init__(self, name="explanation", shared_llm=None, system_prompt=None, hub=None):
         super().__init__(name)
         if shared_llm:
             self.llm = shared_llm
@@ -26,6 +26,7 @@ class ExplanationAgent(BaseAgent):
             system_prompt
             or "You are an explanation specialist ensuring interpretability, fairness, and stability across model runs."
         )
+        self.hub = hub
 
     def _load_previous_logs(self):
         log_dir = "data/workflow_logs"

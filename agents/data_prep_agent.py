@@ -8,11 +8,12 @@ from utils.message_types import Message
 from llms.wrappers import LLMWrapper
 
 class DataPrepAgent(BaseAgent):
-    def __init__(self, name="dataprep", shared_llm=None, system_prompt=None):
+    def __init__(self, name="dataprep", shared_llm=None, system_prompt=None, hub=None):
         super().__init__(name)
         # Use shared LLM if provided, else create own
         self.llm = shared_llm or LLMWrapper(backend="mock", system_prompt=system_prompt)
         self.system_prompt = system_prompt
+        self.hub = hub
 
     def handle_message(self, message: Message) -> Message:
         print(f"[{self.name}] Starting deterministic data pipeline...")
@@ -118,6 +119,11 @@ class DataPrepAgent(BaseAgent):
         with open(meta_path, "w") as f:
             json.dump(safe_meta, f, indent=2)
         metadata["metadata_file"] = meta_path
+
+        # Log to central memory
+        if self.hub and self.hub.memory:
+            self.hub.memory.log_event(self.name, "data_preparation", summary_text)
+            self.hub.memory.update("last_data_prep", summary_text)
 
         return Message(
             sender=self.name,
