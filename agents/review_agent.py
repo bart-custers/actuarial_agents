@@ -1,5 +1,6 @@
 import os
 import re
+import json
 from datetime import datetime
 from agents.base_agent import BaseAgent
 from llms.wrappers import LLMWrapper
@@ -43,9 +44,9 @@ class ReviewingAgent(BaseAgent):
         review_context = self.hub.memory.get("review_history", []) if self.hub else []
 
         memory_summary = {
-            "dataprep_summary": dataprep_context[-1] if dataprep_context else "No previous dataprep record",
-            "model_summary": model_context[-1] if model_context else "No previous model record",
-            "past_reviews": review_context[-3:] if review_context else "No previous reviews"
+            "dataprep_summary": dataprep_context[-1] if len(dataprep_context) > 0 else "No dataprep history",
+            "model_summary": model_context[-1] if len(model_context) > 0 else "No model history",
+            "past_reviews": review_context[-3:] if len(review_context) > 0 else "No review history"
         }
 
         # === Step 1. Numeric plausibility checks ===
@@ -69,8 +70,9 @@ class ReviewingAgent(BaseAgent):
         Numeric severity: {severity}
         Review notes: {review_notes}
 
-        If previous memory of dataprep, modelling and reviews exist, ensure consistency with them:
-        {memory_summary[-1] if memory_summary else "No history available."}
+        If previous memory of dataprep, modelling and reviews exist, ensure consistency with them.
+        Historical memory summary:
+        {json.dumps(memory_summary, indent=2)}
 
         Provide:
         1. One line starting with "Status:" (e.g., "Status: APPROVED")
