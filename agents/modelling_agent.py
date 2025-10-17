@@ -75,13 +75,13 @@ class ModellingAgent(BaseAgent):
 
         # --- LLM Explanation ---
         explain_prompt = f"""
-You are an actuarial data scientist reviewing model results.
-Explain these evaluation metrics for a GLM claim frequency model in plain terms:
+        You are an actuarial data scientist reviewing model results.
+        Explain these evaluation metrics for a GLM claim frequency model in plain terms:
 
-{metrics}
+        {metrics}
 
-Highlight whether model fit is reasonable, any bias patterns, and next steps for improvement.
-"""
+        Highlight whether model fit is reasonable, any bias patterns, and next steps for improvement.
+        """
         explanation = self.llm(explain_prompt) if self.llm else "No LLM backend available."
 
         # --- Return message ---
@@ -102,6 +102,13 @@ Highlight whether model fit is reasonable, any bias patterns, and next steps for
         safe_meta = make_json_compatible(metadata)
         with open(meta_path, "w") as f:
             json.dump(safe_meta, f, indent=2)
+
+        # Log to central memory
+        if self.hub and self.hub.memory:
+            self.hub.memory.log_event(self.name, "model_trained", metadata)
+            history = self.hub.memory.get("model_history", [])
+            history.append(metadata)
+            self.hub.memory.update("model_history", history)
 
         return Message(
             sender=self.name,

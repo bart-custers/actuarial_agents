@@ -194,7 +194,7 @@ class CentralHub:
             log_path = os.path.join(log_dir, f"iter{iteration}_{phase}.json")
             with open(log_path, "w") as f:
                 json.dump(make_json_compatible(current_metadata), f, indent=2)
-            print(f"✅ Saved log for iteration {iteration}, phase '{phase}' → {log_path}")
+            print(f"Saved log for iteration {iteration}, phase '{phase}' → {log_path}")
 
             # Record summary info for the overall report
             summary_records.append({

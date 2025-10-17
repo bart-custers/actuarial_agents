@@ -25,6 +25,6 @@ class WorkflowAudit:
         df = pd.DataFrame(self.records)
         df.to_csv(os.path.join(self.log_dir, "audit_log.csv"), index=False)
         runtime = time.time() - self.start_time
-        print(f"\n🕒 Total runtime: {runtime:.2f} seconds")
-        print(f"📄 Audit log saved to: {self.log_dir}/audit_log.csv")
+        print(f"\n Total runtime: {runtime:.2f} seconds")
+        print(f"Audit log saved to: {self.log_dir}/audit_log.csv")
         return df

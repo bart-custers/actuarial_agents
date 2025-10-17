@@ -188,6 +188,13 @@ class ExplanationAgent(BaseAgent):
             "final_bundle": final_path,
         })
 
+        # Log to central memory
+        if self.hub and self.hub.memory:
+            self.hub.memory.log_event(self.name, "model_explanation", summary)
+            past_explanations = self.hub.memory.get("explanation_history", [])
+            past_explanations.append(summary)
+            self.hub.memory.update("explanation_history", past_explanations)
+
         return Message(
             sender=self.name,
             recipient="hub",

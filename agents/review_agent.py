@@ -151,6 +151,13 @@ class ReviewingAgent(BaseAgent):
 
         metadata["action"] = next_action
 
+        # Log to central memory
+        if self.hub and self.hub.memory:
+            self.hub.memory.log_event(self.name, "review_decision", metadata)
+            history = self.hub.memory.get("review_history", [])
+            history.append(metadata)
+            self.hub.memory.update("review_history", history)
+
         return message.__class__(
             sender=self.name,
             recipient="hub",
