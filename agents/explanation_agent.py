@@ -27,21 +27,6 @@ class ExplanationAgent(BaseAgent):
             or "You are an explanation specialist ensuring interpretability, fairness, and stability across model runs."
         )
         self.hub = hub
-
-    # def _load_previous_logs(self):
-    #     log_dir = "data/workflow_logs"
-    #     if not os.path.exists(log_dir):
-    #         return []
-
-    #     log_files = sorted(glob.glob(os.path.join(log_dir, "iteration_*.json")))
-    #     logs = []
-    #     for path in log_files[-3:]:  # only last 3 runs
-    #         try:
-    #             with open(path, "r") as f:
-    #                 logs.append(json.load(f))
-    #         except Exception:
-    #             continue
-    #     return logs
     
     def handle_message(self, message):
         print(f"[{self.name}] explaining results and checking consistency...")

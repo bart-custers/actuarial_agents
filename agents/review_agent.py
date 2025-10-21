@@ -90,6 +90,8 @@ class ReviewingAgent(BaseAgent):
                 consistency_info = f"Mean coefficient drift vs previous model: {coef_drift:.6f}"
             else:
                 consistency_info = "Coefficient structures are incompatible — cannot compare."
+        
+        print(f"[ReviewingAgent] Consistency info: {consistency_info}")
 
         # === Step 2. LLM reasoning ===
         review_prompt = f"""
