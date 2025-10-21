@@ -74,7 +74,7 @@ class ReviewingAgent(BaseAgent):
         coef_drift = None
 
         if len(model_history) >= 1:
-            prev_run = model_history[-1]['Coef']
+            prev_run = model_history[-1]
             previous = prev_run.get("metrics", {})
             current = metrics['Coef']
             
