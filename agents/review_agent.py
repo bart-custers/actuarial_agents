@@ -78,7 +78,7 @@ class ReviewingAgent(BaseAgent):
 
         If previous memory of dataprep, modelling and reviews exist, ensure consistency with them.
         Historical memory summary:
-        {memory_summary['last_review_notes']}
+        {memory_summary['past_reviews']}
 
         Provide:
         1. One line starting with "Status:" (e.g., "Status: APPROVED")
