@@ -77,16 +77,19 @@ class ReviewingAgent(BaseAgent):
             prev_run = model_history[-1]
             previous = prev_run.get("metrics", {})
             current = metrics['Coef']
+
+            prev_coef_raw = previous.get("Coef", None)
+            df_coef_prev = prev_coef_raw
+            prev_coef = dict(zip(df_coef_prev["Feature"], df_coef_prev["Coefficient"]))
+            curr_coef = dict(zip(current["Feature"], current["Coefficient"]))
             
-            # Extract coefficients as dicts {feature: value}
-            prev_coef = np.array(list(previous.get("Coef", {}).values()))
-            curr_coef = np.array(list(current.get("Coef", {}).values()))
-            
-            if len(prev_coef) == len(curr_coef):
-                coef_drift = float(np.mean(np.abs(prev_coef - curr_coef)))
-                consistency_info = (f"Mean coefficient change: {coef_drift:.6f}")
+            if prev_coef and curr_coef and set(prev_coef.keys()) == set(curr_coef.keys()):
+                prev_vals = np.array(list(prev_coef.values()))
+                curr_vals = np.array(list(curr_coef.values()))
+                coef_drift = float(np.mean(np.abs(prev_vals - curr_vals)))
+                consistency_info = f"Mean coefficient drift vs previous model: {coef_drift:.6f}"
             else:
-                consistency_info = "Coefficient dimensions differ — cannot compare reliably."
+                consistency_info = "Coefficient structures are incompatible — cannot compare."
 
         # === Step 2. LLM reasoning ===
         review_prompt = f"""
