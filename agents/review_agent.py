@@ -78,7 +78,7 @@ class ReviewingAgent(BaseAgent):
 
         If previous memory of dataprep, modelling and reviews exist, ensure consistency with them.
         Historical memory summary:
-        {json.dumps(make_json_compatible(memory_summary[2]), indent=2)}
+        {memory_summary['last_review_notes']}
 
         Provide:
         1. One line starting with "Status:" (e.g., "Status: APPROVED")
