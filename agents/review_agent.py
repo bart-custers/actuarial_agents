@@ -9,25 +9,12 @@ from utils.general_utils import save_json_safe, make_json_compatible
 from utils.model_validation import evaluate_model_quality
 
 class ReviewingAgent(BaseAgent):
-    """
-    The ReviewingAgent evaluates model metrics and explanations,
-    combining numeric checks and LLM reasoning to decide if the model
-    is approved, needs minor revision, or must be retrained.
-    """
-
     def __init__(self, name="reviewing", shared_llm=None, system_prompt=None, hub=None):
         super().__init__(name)
-        # Use shared LLM if provided, else initialize local one
-        if shared_llm:
-            self.llm = shared_llm
-        else:
-            self.llm = LLMWrapper(backend="mock", system_prompt=system_prompt)
-        self.system_prompt = system_prompt or "You are a critical actuarial reviewer assessing model adequacy."
+        self.llm = shared_llm
+        self.system_prompt = system_prompt
         self.hub = hub
 
-    # ------------------------------------------------------------
-    # Main message handler
-    # ------------------------------------------------------------
     def handle_message(self, message):
         print(f"[{self.name}] Reviewing model outputs and evaluation results...")
 

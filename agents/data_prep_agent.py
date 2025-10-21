@@ -10,8 +10,7 @@ from llms.wrappers import LLMWrapper
 class DataPrepAgent(BaseAgent):
     def __init__(self, name="dataprep", shared_llm=None, system_prompt=None, hub=None):
         super().__init__(name)
-        # Use shared LLM if provided, else create own
-        self.llm = shared_llm or LLMWrapper(backend="mock", system_prompt=system_prompt)
+        self.llm = shared_llm
         self.system_prompt = system_prompt
         self.hub = hub
 

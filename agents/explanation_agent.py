@@ -8,24 +8,10 @@ from agents.base_agent import BaseAgent
 
 
 class ExplanationAgent(BaseAgent):
-    """
-    The ExplanationAgent consolidates model evaluations, explanations, and prior
-    review logs to generate a stability and consistency analysis. It uses LLM
-    reasoning to check alignment between iterations and perform belief revision
-    if inconsistencies are detected.
-    """
-
     def __init__(self, name="explanation", shared_llm=None, system_prompt=None, hub=None):
         super().__init__(name)
-        if shared_llm:
-            self.llm = shared_llm
-        else:
-            from llms.wrappers import LLMWrapper
-            self.llm = LLMWrapper(backend="mock", system_prompt=system_prompt)
-        self.system_prompt = (
-            system_prompt
-            or "You are an explanation specialist ensuring interpretability, fairness, and stability across model runs."
-        )
+        self.llm = shared_llm
+        self.system_prompt = system_prompt
         self.hub = hub
     
     def handle_message(self, message):
