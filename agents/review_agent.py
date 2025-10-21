@@ -43,10 +43,16 @@ class ReviewingAgent(BaseAgent):
         model_context = self.hub.memory.get("model_history", []) if self.hub else []
         review_context = self.hub.memory.get("review_history", []) if self.hub else []
 
+        # Only get last review's status & notes (instead of full history)
+        if review_context and isinstance(review_context[-1], dict):
+            last_review_notes = review_context[-1].get("review_notes", "No previous review notes")
+        else:
+            last_review_notes = "No previous review notes"
+
         memory_summary = {
             "dataprep_summary": dataprep_context[-1] if len(dataprep_context) > 0 else "No dataprep history",
             "model_summary": model_context[-1] if len(model_context) > 0 else "No model history",
-            "past_reviews": review_context[-3:] if len(review_context) > 0 else "No review history"
+            "past_reviews": last_review_notes,
         }
 
         # === Step 1. Numeric plausibility checks ===
@@ -72,7 +78,7 @@ class ReviewingAgent(BaseAgent):
 
         If previous memory of dataprep, modelling and reviews exist, ensure consistency with them.
         Historical memory summary:
-        {json.dumps(make_json_compatible(memory_summary), indent=2)}
+        {json.dumps(make_json_compatible(memory_summary[2]), indent=2)}
 
         Provide:
         1. One line starting with "Status:" (e.g., "Status: APPROVED")
