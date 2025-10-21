@@ -74,12 +74,13 @@ class ReviewingAgent(BaseAgent):
         coef_drift = None
 
         if len(model_history) >= 1:
-            previous = model_history[-1]['Coef']
+            prev_run = model_history[-1]['Coef']
+            previous = prev_run.get("metrics", {})
             current = metrics['Coef']
             
             # Extract coefficients as dicts {feature: value}
-            prev_coef = np.array(list(previous.get("coefficients", {}).values()))
-            curr_coef = np.array(list(current.get("coefficients", {}).values()))
+            prev_coef = np.array(list(previous.get("Coef", {}).values()))
+            curr_coef = np.array(list(current.get("Coef", {}).values()))
             
             if len(prev_coef) == len(curr_coef):
                 coef_drift = float(np.mean(np.abs(prev_coef - curr_coef)))
