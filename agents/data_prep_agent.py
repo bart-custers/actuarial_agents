@@ -15,7 +15,7 @@ class DataPrepAgent(BaseAgent):
         self.hub = hub
 
     def handle_message(self, message: Message) -> Message:
-        print(f"[{self.name}] Starting deterministic data pipeline...")
+        print(f"[{self.name}] Starting data pipeline...")
 
         dataset_path = message.metadata.get("dataset_path", "data/raw/freMTPL2freq.csv")
         processed_dir = "data/processed"

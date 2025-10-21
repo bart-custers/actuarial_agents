@@ -6,7 +6,6 @@ from utils.general_utils import make_json_compatible
 from utils.message_types import Message
 from agents.base_agent import BaseAgent
 
-
 class ExplanationAgent(BaseAgent):
     def __init__(self, name="explanation", shared_llm=None, system_prompt=None, hub=None):
         super().__init__(name)
@@ -15,7 +14,7 @@ class ExplanationAgent(BaseAgent):
         self.hub = hub
     
     def handle_message(self, message):
-        print(f"[{self.name}] explaining results and checking consistency...")
+        print(f"[{self.name}] Explaining results and checking consistency...")
 
         metadata = message.metadata or {}
         model_metrics = metadata.get("metrics", {})
