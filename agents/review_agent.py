@@ -1,6 +1,7 @@
 import os
 import re
 import json
+import numpy as np
 from datetime import datetime
 from agents.base_agent import BaseAgent
 from llms.wrappers import LLMWrapper
@@ -64,6 +65,28 @@ class ReviewingAgent(BaseAgent):
         else:
             review_notes.append("Model performance within acceptable limits.")
 
+        # === Step 1B. Numeric plausibility checks ===
+        model_history = []
+        if self.hub and self.hub.memory:
+            model_history = self.hub.memory.get("model_history", [])
+
+        consistency_info = "No prior model runs available."
+        coef_drift = None
+
+        if len(model_history) >= 1:
+            previous = model_history[-1]['Coef']
+            current = metrics['Coef']
+            
+            # Extract coefficients as dicts {feature: value}
+            prev_coef = np.array(list(previous.get("coefficients", {}).values()))
+            curr_coef = np.array(list(current.get("coefficients", {}).values()))
+            
+            if len(prev_coef) == len(curr_coef):
+                coef_drift = float(np.mean(np.abs(prev_coef - curr_coef)))
+                consistency_info = (f"Mean coefficient change: {coef_drift:.6f}")
+            else:
+                consistency_info = "Coefficient dimensions differ — cannot compare reliably."
+
         # === Step 2. LLM reasoning ===
         review_prompt = f"""
         You are an actuarial model reviewer.
@@ -79,6 +102,9 @@ class ReviewingAgent(BaseAgent):
         If previous memory of dataprep, modelling and reviews exist, ensure consistency with them.
         Historical memory summary:
         {memory_summary['past_reviews']}
+
+        Consistency check for model coefficients:
+        {consistency_info}
 
         Provide:
         1. One line starting with "Status:" (e.g., "Status: APPROVED")
