@@ -98,15 +98,15 @@ class LLMWrapper:
         #print(f"Loading {model_name} ... (using cache at {model_path})")
 
         tokenizer = AutoTokenizer.from_pretrained(
-            model_name, use_auth_token=self.hf_token
+            model_name, token=self.hf_token
         )
         model = AutoModelForCausalLM.from_pretrained(
             model_name,
             device_map="auto",
-            torch_dtype="auto",
+            dtype="auto",
             load_in_4bit=True,
             offload_folder="offload",
-            use_auth_token=self.hf_token,
+            token=self.hf_token,
             #cache_dir=model_path,
         )
 
@@ -133,16 +133,16 @@ class LLMWrapper:
 
         tokenizer = AutoTokenizer.from_pretrained(
             model_name,
-            use_auth_token=self.hf_token,
+            token=self.hf_token,
             cache_dir=model_path,
             use_fast=True,
         )
         model = AutoModelForCausalLM.from_pretrained(
             model_name,
             device_map="auto",
-            torch_dtype="auto",
+            dtype="auto",
             load_in_4bit=True,
-            use_auth_token=self.hf_token,
+            token=self.hf_token,
             cache_dir=model_path,
         )
 

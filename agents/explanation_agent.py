@@ -28,20 +28,20 @@ class ExplanationAgent(BaseAgent):
         )
         self.hub = hub
 
-    def _load_previous_logs(self):
-        log_dir = "data/workflow_logs"
-        if not os.path.exists(log_dir):
-            return []
+    # def _load_previous_logs(self):
+    #     log_dir = "data/workflow_logs"
+    #     if not os.path.exists(log_dir):
+    #         return []
 
-        log_files = sorted(glob.glob(os.path.join(log_dir, "iteration_*.json")))
-        logs = []
-        for path in log_files[-3:]:  # only last 3 runs
-            try:
-                with open(path, "r") as f:
-                    logs.append(json.load(f))
-            except Exception:
-                continue
-        return logs
+    #     log_files = sorted(glob.glob(os.path.join(log_dir, "iteration_*.json")))
+    #     logs = []
+    #     for path in log_files[-3:]:  # only last 3 runs
+    #         try:
+    #             with open(path, "r") as f:
+    #                 logs.append(json.load(f))
+    #         except Exception:
+    #             continue
+    #     return logs
     
     def handle_message(self, message):
         print(f"[{self.name}] explaining results and checking consistency...")
@@ -52,43 +52,37 @@ class ExplanationAgent(BaseAgent):
         llm_review = metadata.get("llm_review", "")
         predictions_path = metadata.get("predictions_path", None)
 
-        # === Load previous run logs for consistency context ===
-        previous_logs = self._load_previous_logs()
-        num_prev = len(previous_logs)
-
-        if num_prev == 0:
-            previous_summaries = []
-            consistency_context = "No previous logs available. This is the first model iteration."
-        elif num_prev == 1:
-            previous_summaries = [previous_logs[-1].get("review_notes", [])]
-            consistency_context = (
-                "Only one previous run found — stability assessment will be indicative, not conclusive."
-            )
+        # === Step 0. Get historical memory context ===
+        if self.hub and self.hub.memory:
+            review_history = self.hub.memory.get("review_history", [])
+            explanation_history = self.hub.memory.get("explanation_history", [])
         else:
-            previous_summaries = [log.get("review_notes", []) for log in previous_logs]
-            consistency_context = f"{num_prev} previous runs found and used for comparison."
+            review_history, explanation_history = [], []
+
+        # Extract only useful + small elements for prompting
+        last_review = review_history[-1] if review_history else {"status": "No previous review", "review_notes": []}
+        last_explanation = explanation_history[-1] if explanation_history else {"consistency_summary": "No previous explanation", "belief_revision_summary": "No previous explanation"} 
 
         # === Define prompt templates ===
         consistency_prompt = f"""
         You are an actuarial explanation specialist.
-        {consistency_context}
 
-        Compare the current model's evaluation metrics and review notes
-        with the summaries of previous runs below.
+        Compare current model results to the previous run stored in memory.
+
+        Current Metrics:
+        {model_metrics}
+
+        Current Review Notes:
+        {review_notes}
+
+        Previous Review Outcome:
+        Status: {last_review.get('status', 'N/A')}
+        Notes: {last_review.get('review_notes', [])}
 
         Identify:
         - Whether the model is consistent with prior iterations (metrics, direction of coefficients)
         - Any drift or unexplained changes
         - Any contradictory findings or explanations.
-
-        Current metrics:
-        {model_metrics}
-
-        Current review notes:
-        {review_notes}
-
-        Previous summaries:
-        {previous_summaries}
 
         Provide a concise stability summary in plain English.
         """
@@ -111,20 +105,12 @@ class ExplanationAgent(BaseAgent):
         Review notes:
         {review_notes}
 
-        Model metrics:
-        {model_metrics}
+        Last Review Notes:
+        {last_review.get('review_notes', [])}
         """
 
         # === Run the LLM ===
-        if num_prev == 0:
-            # Only generate belief revision; skip consistency check
-            consistency_explanation = (
-                "No prior model runs available. This is the initial iteration, "
-                "so consistency cannot yet be assessed."
-            )
-        else:
-            consistency_explanation = self.llm(consistency_prompt)
-
+        consistency_explanation = self.llm(consistency_prompt)
         belief_revision_explanation = self.llm(belief_revision_prompt)
 
         # === Create structured summaries ===
@@ -144,12 +130,10 @@ class ExplanationAgent(BaseAgent):
         summary = {
             "timestamp": timestamp,
             "status": metadata.get("status", "unknown"),
-            "consistency_context": consistency_context,
             "consistency_summary": consistency_explanation,
             "belief_revision_summary": belief_revision_explanation,
             "model_metrics": model_metrics,
             "review_notes": review_notes,
-            "previous_runs": num_prev,
         }
 
         summary_file = os.path.join(results_dir, f"explanation_summary_{timestamp}.json")
