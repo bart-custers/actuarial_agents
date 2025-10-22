@@ -16,14 +16,13 @@ class DataPrepAgent(BaseAgent):
     def handle_message(self, message: Message) -> Message:
         print(f"[{self.name}] Starting data pipeline...")
 
+        # --- Initiate paths ---
         dataset_path = message.metadata.get("dataset_path", "data/raw/freMTPL2freq.csv")
         processed_dir = "data/processed"
         artifacts_dir = "data/artifacts"
-        logs_dir = "data/logs"
 
         os.makedirs(processed_dir, exist_ok=True)
         os.makedirs(artifacts_dir, exist_ok=True)
-        os.makedirs(logs_dir, exist_ok=True)
 
         # --- Load dataset ---
         try:
@@ -36,7 +35,7 @@ class DataPrepAgent(BaseAgent):
                 content=f"Failed to load dataset: {e}",
             )
 
-        # --- Run deterministic cleaning ---
+        # --- Run data pipeline ---
         pipeline = DataPipeline()
         results = pipeline.clean(data)
         summary_text = pipeline.summary()
@@ -66,14 +65,6 @@ class DataPrepAgent(BaseAgent):
         joblib.dump(results["feature_names"], features_path)
         joblib.dump(pipeline.preprocessor, preproc_path)
 
-        # --- Log summary ---
-        log_path = os.path.join(logs_dir, f"dataprep_summary.txt")
-        with open(log_path, "w") as f:
-            f.write("=== DATA PREPARATION SUMMARY ===\n")
-            f.write(summary_text + "\n\n")
-            f.write(f"Processed data saved to: {processed_dir}\n")
-            f.write(f"Artifacts saved to: {artifacts_dir}\n")
-
         # --- LLM-generated explanation ---
         explain_prompt = f"""
         You are an AI assistant summarizing a data preprocessing pipeline for an actuarial audience.
@@ -86,7 +77,7 @@ class DataPrepAgent(BaseAgent):
         # Store metadata
         metadata = {
             "status": "success",
-            "summary_log": log_path,
+            "summary_log": summary_text,
             "llm_explanation": explanation,
             "processed_paths": {
                 "X_train": X_train_path,

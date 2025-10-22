@@ -83,6 +83,10 @@ class CentralHub:
         # === Workflow loop ===
         while continue_workflow:
             print(f"\n=== Iteration {iteration} | Phase: {phase.upper()} ===\n")
+            # remember which phase we're about to run so the log can record the
+            # phase that just completed (otherwise `phase` may be updated to the
+            # next phase before we write the per-iteration log file)
+            completed_phase = phase
 
             # ------------------------------------------------
             # DATA PREPARATION PHASE
@@ -191,10 +195,10 @@ class CentralHub:
             # ------------------------------------------------
             # LOGGING
             # ------------------------------------------------
-            log_path = os.path.join(log_dir, f"iter{iteration}_{phase}.json")
+            log_path = os.path.join(log_dir, f"iter{iteration}_{completed_phase}.json")
             with open(log_path, "w") as f:
                 json.dump(make_json_compatible(current_metadata), f, indent=2)
-            print(f"Saved log for iteration {iteration}, phase '{phase}' → {log_path}")
+            print(f"Saved log for iteration {iteration}, phase '{completed_phase}' → {log_path}")
 
             # Record summary info for the overall report
             summary_records.append({

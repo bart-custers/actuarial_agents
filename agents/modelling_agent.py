@@ -17,11 +17,10 @@ class ModellingAgent(BaseAgent):
     def handle_message(self, message: Message) -> Message:
         print(f"[{self.name}] Starting model training ({self.model_type})...")
 
+        # --- Initiate paths ---
         processed_paths = message.metadata.get("processed_paths", None)
         artifacts_dir = "data/artifacts"
-        logs_dir = "data/logs"
         os.makedirs(artifacts_dir, exist_ok=True)
-        os.makedirs(logs_dir, exist_ok=True)
 
         if processed_paths is None:
             return Message(
@@ -49,20 +48,9 @@ class ModellingAgent(BaseAgent):
         # --- Save model and evaluation ---
         model_path = os.path.join(artifacts_dir, f"model_{self.model_type}.pkl")
         preds_path = os.path.join(artifacts_dir, f"predictions.csv")
-        log_path = os.path.join(logs_dir, f"model_eval.txt")
 
         trainer.save(model_path)
         pd.DataFrame({"y_true": y_test, "y_pred": preds}).to_csv(preds_path, index=False)
-
-        with open(log_path, "w") as f:
-            f.write("=== MODEL EVALUATION ===\n")
-            for k, v in metrics.items():
-                if isinstance(v, (float, int)):
-                    f.write(f"{k}: {v:.6f}\n")
-                elif isinstance(v, pd.DataFrame):
-                    f.write(f"\n{k}:\n{v.to_string(index=False)}\n")
-                else:
-                    f.write(f"{k}: {v}\n")
         
         plot_path = metrics.get("Calibration Plot", None)
         if plot_path and os.path.exists(plot_path):
@@ -87,7 +75,6 @@ class ModellingAgent(BaseAgent):
             "status": "success",
             "model_path": model_path,
             "preds_path": preds_path,
-            "log_path": log_path,
             "metrics": metrics,
             "llm_explanation": explanation,
         }
