@@ -92,7 +92,6 @@ class ExplanationAgent(BaseAgent):
             "belief_revision_summary": belief_revision_explanation,
             "model_metrics": model_metrics,
             "review_notes": review_notes,
-            "explanation_report": explanation_file,
         }
 
         results_dir = "data/results"
