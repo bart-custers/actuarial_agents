@@ -40,7 +40,7 @@ class LLMWrapper:
         if backend == "openai":
             self.llm = ChatOpenAI(
                 model=openai_model,
-                temperature=0.1,
+                temperature=0.7,
                 max_tokens=512,
                 openai_api_key=openai_api_key or os.getenv("OPENAI_API_KEY"),
             )
@@ -153,7 +153,7 @@ class LLMWrapper:
             max_new_tokens=1024,
             truncation=False,
             do_sample=True,          
-            temperature=0.3,         
+            temperature=0.7,         
         )
 
         hf_llm = HuggingFacePipeline(pipeline=text_gen)

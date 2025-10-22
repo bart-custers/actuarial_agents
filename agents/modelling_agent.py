@@ -1,11 +1,8 @@
 # agents/modelling_agent.py
 import os
-from datetime import datetime
 import pandas as pd
-import json
-import joblib
+from utils.general_utils import save_json_safe
 from utils.message_types import Message
-from utils.general_utils import make_json_compatible
 from agents.base_agent import BaseAgent
 from utils.model_trainer import ModelTrainer
 
@@ -84,7 +81,8 @@ class ModellingAgent(BaseAgent):
         """
         explanation = self.llm(explain_prompt) if self.llm else "No LLM backend available."
 
-        # --- Return message ---
+        # --- Return message and log output ---
+        # Store metadata
         metadata = {
             "status": "success",
             "model_path": model_path,
@@ -97,11 +95,13 @@ class ModellingAgent(BaseAgent):
         results_dir = "data/results"
         os.makedirs(results_dir, exist_ok=True)
         meta_path = os.path.join(results_dir, f"{self.name}_metadata.json")
+        save_json_safe(metadata, meta_path)
+        metadata["metadata_file"] = meta_path
 
-        # Convert DataFrames to string-safe formats
-        safe_meta = make_json_compatible(metadata)
-        with open(meta_path, "w") as f:
-            json.dump(safe_meta, f, indent=2)
+        # # Convert DataFrames to string-safe formats
+        # safe_meta = make_json_compatible(metadata)
+        # with open(meta_path, "w") as f:
+        #     json.dump(safe_meta, f, indent=2)
 
         # Log to central memory
         if self.hub and self.hub.memory:
@@ -110,9 +110,10 @@ class ModellingAgent(BaseAgent):
             history.append(metadata)
             self.hub.memory.update("model_history", history)
 
+        # Return message to the hub
         return Message(
             sender=self.name,
-            recipient=message.sender,
+            recipient="hub",
             type="response",
             content=f"Model ({self.model_type}) trained and evaluated successfully.",
             metadata=metadata,

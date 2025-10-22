@@ -1,11 +1,10 @@
 import os
 import joblib
 import pandas as pd
-from datetime import datetime
+from utils.general_utils import save_json_safe
 from agents.base_agent import BaseAgent
 from utils.data_pipeline import DataPipeline
 from utils.message_types import Message
-from llms.wrappers import LLMWrapper
 
 class DataPrepAgent(BaseAgent):
     def __init__(self, name="dataprep", shared_llm=None, system_prompt=None, hub=None):
@@ -83,7 +82,8 @@ class DataPrepAgent(BaseAgent):
         """
         explanation = self.llm(explain_prompt)
 
-        # --- Return structured output message ---
+        # --- Return message and log output ---
+        # Store metadata
         metadata = {
             "status": "success",
             "summary_log": log_path,
@@ -105,28 +105,31 @@ class DataPrepAgent(BaseAgent):
         results_dir = "data/results"
         os.makedirs(results_dir, exist_ok=True)
         meta_path = os.path.join(results_dir, f"{self.name}_metadata.json")
+        save_json_safe(metadata, meta_path)
+        metadata["metadata_file"] = meta_path
 
         # Convert DataFrames to string-safe formats
-        safe_meta = {}
-        for k, v in metadata.items():
-            if isinstance(v, pd.DataFrame):
-                safe_meta[k] = v.to_dict(orient="records")
-            else:
-                safe_meta[k] = v
+        # safe_meta = {}
+        # for k, v in metadata.items():
+        #     if isinstance(v, pd.DataFrame):
+        #         safe_meta[k] = v.to_dict(orient="records")
+        #     else:
+        #         safe_meta[k] = v
 
-        import json
-        with open(meta_path, "w") as f:
-            json.dump(safe_meta, f, indent=2)
-        metadata["metadata_file"] = meta_path
+        # import json
+        # with open(meta_path, "w") as f:
+        #     json.dump(safe_meta, f, indent=2)
+        # metadata["metadata_file"] = meta_path
 
         # Log to central memory
         if self.hub and self.hub.memory:
             self.hub.memory.log_event(self.name, "data_preparation", summary_text)
             self.hub.memory.update("last_data_prep", summary_text)
 
+        # Return message to the hub
         return Message(
             sender=self.name,
-            recipient=message.sender,
+            recipient="hub",
             type="response",
             content="Data cleaning and preprocessing completed successfully.",
             metadata=metadata,

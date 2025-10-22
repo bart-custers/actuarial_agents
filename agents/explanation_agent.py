@@ -134,7 +134,7 @@ class ExplanationAgent(BaseAgent):
         print(f"Summary saved to: {summary_file}")
         print(f"Final consolidated bundle: {final_path}")
 
-        # === Return structured message ===
+        # --- Return message and log output ---
         metadata.update({
             "status": "explained",
             "consistency_report": explanation_file,
