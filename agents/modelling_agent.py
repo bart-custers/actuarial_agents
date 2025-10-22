@@ -98,11 +98,6 @@ class ModellingAgent(BaseAgent):
         save_json_safe(metadata, meta_path)
         metadata["metadata_file"] = meta_path
 
-        # # Convert DataFrames to string-safe formats
-        # safe_meta = make_json_compatible(metadata)
-        # with open(meta_path, "w") as f:
-        #     json.dump(safe_meta, f, indent=2)
-
         # Log to central memory
         if self.hub and self.hub.memory:
             self.hub.memory.log_event(self.name, "model_trained", metadata)

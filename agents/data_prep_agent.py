@@ -108,19 +108,6 @@ class DataPrepAgent(BaseAgent):
         save_json_safe(metadata, meta_path)
         metadata["metadata_file"] = meta_path
 
-        # Convert DataFrames to string-safe formats
-        # safe_meta = {}
-        # for k, v in metadata.items():
-        #     if isinstance(v, pd.DataFrame):
-        #         safe_meta[k] = v.to_dict(orient="records")
-        #     else:
-        #         safe_meta[k] = v
-
-        # import json
-        # with open(meta_path, "w") as f:
-        #     json.dump(safe_meta, f, indent=2)
-        # metadata["metadata_file"] = meta_path
-
         # Log to central memory
         if self.hub and self.hub.memory:
             self.hub.memory.log_event(self.name, "data_preparation", summary_text)

@@ -100,7 +100,7 @@ class CentralHub:
                 print("\n--- Data Preparation Completed ---")
                 print(r1.content)
                 phase = "modelling"  # proceed to model building
-                audit.record_event("dataprep", iteration, "data_cleaning", current_metadata)
+                audit.record_event("dataprep", iteration, "data_cleaning", current_metadata, sent=msg, received=r1)
 
             # ------------------------------------------------
             # MODELLING PHASE
@@ -118,7 +118,7 @@ class CentralHub:
                 print("\n--- Modelling Completed ---")
                 print(r2.content)
                 phase = "reviewing"
-                audit.record_event("modelling", iteration, "model_training", current_metadata)
+                audit.record_event("modelling", iteration, "model_training", current_metadata, sent=msg, received=r2)
 
             # ------------------------------------------------
             # REVIEWING PHASE
@@ -146,7 +146,7 @@ class CentralHub:
                 action = current_metadata.get("action", "proceed_to_explanation")
                 print(f"[Hub] Review decision → {action.upper()}")
                 
-                audit.record_event("reviewing", iteration, action, current_metadata)
+                audit.record_event("reviewing", iteration, action, current_metadata, sent=msg, received=r3)
 
                 if action == "retrain_model":
                     iteration += 1
@@ -185,7 +185,7 @@ class CentralHub:
                 current_metadata.update(r4.metadata or {})
                 print("\n--- Explanation Completed ---")
                 print(r4.content)
-                audit.record_event("reviewing", iteration, action, current_metadata)
+                audit.record_event("reviewing", iteration, action, current_metadata, sent=msg, received=r4)
                 continue_workflow = False  # End workflow
 
             # ------------------------------------------------

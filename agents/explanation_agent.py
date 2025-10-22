@@ -1,7 +1,6 @@
 import os
 import json
 from datetime import datetime
-import glob
 from utils.general_utils import make_json_compatible
 from utils.message_types import Message
 from agents.base_agent import BaseAgent

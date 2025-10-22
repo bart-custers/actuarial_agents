@@ -147,24 +147,7 @@ class ReviewingAgent(BaseAgent):
             if iteration >= 2:
                 print("[ReviewingAgent] Multiple failures detected → aborting workflow.")
                 status = "rejected"
-
-        # --- Return message and log output ---
-        # Store metadata
-        metadata = {
-            "status": status,
-            "numeric_severity": severity,
-            "review_notes": review_notes,
-            "llm_review": llm_review,
-            "retrain_prompt": retrain_prompt,
-            "review_iteration": iteration + 1,
-        }
-
-        results_dir = "data/results"
-        os.makedirs(results_dir, exist_ok=True)
-        meta_path = os.path.join(results_dir, f"{self.name}_metadata_iteration_{iteration+1}.json")
-        save_json_safe(metadata, meta_path)
-        metadata["metadata_file"] = meta_path
-
+        
         # === Step 6. Display summary ===
         print(f"\n--- Review Outcome ---")
         print(f"Status: {status}")
@@ -184,7 +167,25 @@ class ReviewingAgent(BaseAgent):
             "rejected": "abort_workflow",           
         }[status]
 
-        metadata["action"] = next_action
+        #metadata["action"] = next_action
+
+        # --- Return message and log output ---
+        # Store metadata
+        metadata = {
+            "status": status,
+            "numeric_severity": severity,
+            "review_notes": review_notes,
+            "llm_review": llm_review,
+            "retrain_prompt": retrain_prompt,
+            "review_iteration": iteration + 1,
+            "action": next_action,
+        }
+
+        results_dir = "data/results"
+        os.makedirs(results_dir, exist_ok=True)
+        meta_path = os.path.join(results_dir, f"{self.name}_metadata_iteration_{iteration+1}.json")
+        save_json_safe(metadata, meta_path)
+        metadata["metadata_file"] = meta_path
 
         # Log to central memory
         if self.hub and self.hub.memory:
