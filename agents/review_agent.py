@@ -20,11 +20,11 @@ class ReviewingAgent(BaseAgent):
             message.metadata = {}
         iteration = message.metadata.get("review_iteration", 0)
 
-        # === Load metadata from ModellingAgent ===
+        # --- Load metadata from ModellingAgent ---
         metrics = message.metadata.get("metrics", {})
         review_notes = []
 
-        # === Step 0. Get historical memory context ===
+        # --- Get historical memory context ---
         dataprep_context = self.hub.memory.get("dataprep_history", []) if self.hub else []
         model_context = self.hub.memory.get("model_history", []) if self.hub else []
         review_context = self.hub.memory.get("review_history", []) if self.hub else []
@@ -41,7 +41,7 @@ class ReviewingAgent(BaseAgent):
             "past_reviews": last_review_notes,
         }
 
-        # === Step 1. Numeric plausibility checks ===
+        # --- Numeric plausibility checks ---
         severity = evaluate_model_quality(metrics)
         if severity == "critical":
             review_notes.append("Critical model performance issue detected.")
@@ -50,7 +50,7 @@ class ReviewingAgent(BaseAgent):
         else:
             review_notes.append("Model performance within acceptable limits.")
 
-        # === Step 1B. Numeric plausibility checks ===
+        # --- History plausibility checks ---
         model_history = []
         if self.hub and self.hub.memory:
             model_history = self.hub.memory.get("model_history", [])
@@ -78,7 +78,7 @@ class ReviewingAgent(BaseAgent):
         
         print(f"[ReviewingAgent] Consistency info: {consistency_info}")
 
-        # === Step 2. LLM reasoning ===
+        # --- LLM reasoning ---
         review_prompt = f"""
         You are an actuarial model reviewer.
         Evaluate the following model results and provide an explicit decision line
@@ -104,7 +104,7 @@ class ReviewingAgent(BaseAgent):
 
         llm_review = self.llm(review_prompt)
 
-        # === Step 3. Extract LLM classification ===
+        # --- Extract LLM classification ---
         match = re.search(r"Status\s*:\s*(APPROVED|NEEDS[_\s-]?REVISION|RETRAIN[_\s-]?REQUESTED)", llm_review, re.IGNORECASE)
         if match:
             label = match.group(1).upper().replace(" ", "_")
@@ -129,7 +129,7 @@ class ReviewingAgent(BaseAgent):
         }
         status = status_map.get(label, "approved")
 
-        # === Step 4. Optional prompt revision for retraining ===
+        # --- Optional prompt revision for retraining ---
         retrain_prompt = None
         if status == "retrain_requested":
             retrain_prompt = f"""
@@ -148,7 +148,7 @@ class ReviewingAgent(BaseAgent):
                 print("[ReviewingAgent] Multiple failures detected → aborting workflow.")
                 status = "rejected"
         
-        # === Step 6. Display summary ===
+        # --- Display summary ---
         print(f"\n--- Review Outcome ---")
         print(f"Status: {status}")
         print(f"Severity: {severity}")
@@ -158,7 +158,7 @@ class ReviewingAgent(BaseAgent):
             print("\n--- Suggested Retrain Prompt ---")
             print(retrain_prompt)
 
-        # === Step 7. Return structured Message ===
+        # --- Return structured Message ---
         next_action = {
             "approved": "proceed_to_explanation",
             "needs_revision": "proceed_to_explanation",
@@ -166,8 +166,6 @@ class ReviewingAgent(BaseAgent):
             "reclean_requested": "reclean_data",    
             "rejected": "abort_workflow",           
         }[status]
-
-        #metadata["action"] = next_action
 
         # --- Return message and log output ---
         # Store metadata

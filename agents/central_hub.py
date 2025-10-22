@@ -203,7 +203,7 @@ class CentralHub:
             # Record summary info for the overall report
             summary_records.append({
                 "iteration": iteration,
-                "phase": phase,
+                "phase": completed_phase,
                 "status": current_metadata.get("status", "unknown"),
                 "action": current_metadata.get("action", None),
                 "metrics": current_metadata.get("metrics", None),

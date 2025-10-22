@@ -94,7 +94,8 @@ class ModelTrainer:
             os.makedirs(results_dir, exist_ok=True)
             plot_path = os.path.join(results_dir, f"calibration.png")
             plt.savefig(plot_path)
-            plt.show()
+            # Do not call plt.show() here; leave display to the caller to avoid
+            # duplicate rendering (the ModellingAgent displays the saved image).
             plt.close(fig)
 
             metrics["Calibration Plot"] = plot_path

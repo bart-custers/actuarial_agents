@@ -1,7 +1,7 @@
 import os
 import json
 from datetime import datetime
-from utils.general_utils import make_json_compatible
+from utils.general_utils import save_json_safe
 from utils.message_types import Message
 from agents.base_agent import BaseAgent
 
@@ -21,7 +21,7 @@ class ExplanationAgent(BaseAgent):
         llm_review = metadata.get("llm_review", "")
         predictions_path = metadata.get("predictions_path", None)
 
-        # === Step 0. Get historical memory context ===
+        # --- Step 0. Get historical memory context ---
         if self.hub and self.hub.memory:
             review_history = self.hub.memory.get("review_history", [])
             explanation_history = self.hub.memory.get("explanation_history", [])
@@ -32,7 +32,7 @@ class ExplanationAgent(BaseAgent):
         last_review = review_history[-1] if review_history else {"status": "No previous review", "review_notes": []}
         last_explanation = explanation_history[-1] if explanation_history else {"consistency_summary": "No previous explanation", "belief_revision_summary": "No previous explanation"} 
 
-        # === Define prompt templates ===
+        # --- Define prompt templates ---
         consistency_prompt = f"""
         You are an actuarial explanation specialist.
 
@@ -78,81 +78,53 @@ class ExplanationAgent(BaseAgent):
         {last_review.get('review_notes', [])}
         """
 
-        # === Run the LLM ===
+        # --- Run the LLM ---
         consistency_explanation = self.llm(consistency_prompt)
         belief_revision_explanation = self.llm(belief_revision_prompt)
 
-        # === Create structured summaries ===
+        # --- Return message and log output ---
+        # Store metadata
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        results_dir = "data/results"
-        final_repo = "data/final_repository"
-        os.makedirs(results_dir, exist_ok=True)
-        os.makedirs(final_repo, exist_ok=True)
-
-        explanation_file = os.path.join(results_dir, f"explanation_report_{timestamp}.txt")
-        with open(explanation_file, "w") as f:
-            f.write("=== CONSISTENCY ANALYSIS ===\n")
-            f.write(consistency_explanation + "\n\n")
-            f.write("=== BELIEF REVISION ===\n")
-            f.write(belief_revision_explanation + "\n")
-
-        summary = {
+        metadata = {
             "timestamp": timestamp,
-            "status": metadata.get("status", "unknown"),
+            "status": "explained",
             "consistency_summary": consistency_explanation,
             "belief_revision_summary": belief_revision_explanation,
             "model_metrics": model_metrics,
             "review_notes": review_notes,
+            "explanation_report": explanation_file,
         }
 
-        summary_file = os.path.join(results_dir, f"explanation_summary_{timestamp}.json")
-        with open(summary_file, "w") as f:
-            json.dump(make_json_compatible(summary), f, indent=2)
+        results_dir = "data/results"
+        os.makedirs(results_dir, exist_ok=True)
+        meta_path = os.path.join(results_dir, f"{self.name}_metadata.json")
+        save_json_safe(metadata, meta_path)
+        metadata["metadata_file"] = meta_path
 
-        # === Store consolidated final results ===
-        bundle = {
-            "predictions_path": predictions_path,
-            "metrics": model_metrics,
-            "review_notes": review_notes,
-            "explanations": {
-                "consistency": consistency_explanation,
-                "belief_revision": belief_revision_explanation,
-            },
-            "files": {
-                "report": explanation_file,
-                "summary": summary_file,
-            },
-        }
-
-        final_path = os.path.join(final_repo, f"final_bundle_{timestamp}.json")
-        with open(final_path, "w") as f:
-            json.dump(make_json_compatible(bundle), f, indent=2)
+        # Store explanation report
+        explanation_file = os.path.join(results_dir, f"explanation_report_{timestamp}.txt")
+        with open(explanation_file, "w") as f:
+            f.write("--- CONSISTENCY ANALYSIS ---\n")
+            f.write(consistency_explanation + "\n\n")
+            f.write("--- BELIEF REVISION ---\n")
+            f.write(belief_revision_explanation + "\n")
 
         print(f"\n--- Explanation Outputs ---")
         print(f"Report saved to: {explanation_file}")
-        print(f"Summary saved to: {summary_file}")
-        print(f"Final consolidated bundle: {final_path}")
-
-        # --- Return message and log output ---
-        metadata.update({
-            "status": "explained",
-            "consistency_report": explanation_file,
-            "summary_file": summary_file,
-            "final_bundle": final_path,
-        })
 
         # Log to central memory
         if self.hub and self.hub.memory:
-            self.hub.memory.log_event(self.name, "model_explanation", summary)
+            self.hub.memory.log_event(self.name, "model_explanation", metadata)
             past_explanations = self.hub.memory.get("explanation_history", [])
-            past_explanations.append(summary)
+            past_explanations.append(metadata)
             self.hub.memory.update("explanation_history", past_explanations)
 
+        # Return message to the hub
         return Message(
             sender=self.name,
             recipient="hub",
             type="response",
-            content="Generated consistency and belief-revision explanations.",
+            content="Generated explanations.",
             metadata=metadata,
         )
 
