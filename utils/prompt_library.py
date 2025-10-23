@@ -16,37 +16,69 @@ PROMPTS = {
 
     "review_model": """
     You are an actuarial model reviewer.
+    Evaluate the following model results and provide an explicit decision line
 
-    Metrics:
-    {metrics}
+    At the end of your response, include a line exactly in this format:
+    Status: <APPROVED | NEEDS_REVISION | RETRAIN_REQUESTED>
 
+    Metrics: {metrics}
     Numeric severity: {severity}
     Review notes: {review_notes}
 
-    Historical context:
-    {memory_context}
+    If previous memory of dataprep, modelling and reviews exist, ensure consistency with them.
+    Historical memory summary:
+    {memory_for_prompt}
 
-    Reproducibility drift (if available):
-    {coef_drift}
-
-    At the end of your response, include:
-    Status: <APPROVED | NEEDS_REVISION | RETRAIN_REQUESTED>
-    """,
-
-    "explain_model": """
-    You are an explanation specialist.
-
-    The model performance metrics are:
-    {metrics}
-
-    Review notes from the auditor:
-    {review_notes}
-
-    Based on historical logs:
-    {memory_context}
+    Consistency check for model coefficients:
+    {consistency_info}
 
     Provide:
-    1. Stability and consistency analysis
-    2. Belief revision summary
+    1. One line starting with "Status:" (e.g., "Status: APPROVED")
+    2. A short professional justification.
+    """,
+
+    "consistency_prompt": """
+    You are an actuarial explanation specialist.
+
+    Compare current model results to the previous run stored in memory.
+
+    Current Metrics:
+    {model_metrics}
+
+    Current Review Notes:
+    {review_notes}
+
+    Previous Review Outcome:
+    Status: {last_review.get('status', 'N/A')}
+    Notes: {last_review.get('review_notes', [])}
+
+    Identify:
+    - Whether the model is consistent with prior iterations (metrics, direction of coefficients)
+    - Any drift or unexplained changes
+    - Any contradictory findings or explanations.
+
+    Provide a concise stability summary in plain English.
+    """,
+
+    "belief_revision_prompt": """
+    You are a reasoning assistant performing belief revision for model interpretation.
+    Given the current explanation, past review notes, and current metrics,
+    update the overall understanding of the model performance and rationale.
+
+    Ensure that your belief update resolves contradictions and forms a coherent explanation.
+
+    Use this structure:
+    1. Consistent beliefs (what remains stable)
+    2. Revised beliefs (what changed and why)
+    3. Remaining uncertainties
+
+    Current LLM review:
+    {llm_review}
+
+    Review notes:
+    {review_notes}
+
+    Last Review Notes:
+    {last_review_for_prompt}
     """
 }

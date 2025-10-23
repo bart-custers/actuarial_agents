@@ -2,10 +2,11 @@ import os
 import re
 from datetime import datetime
 import numpy as np
-from agents.base_agent import BaseAgent
 from utils.general_utils import save_json_safe
 from utils.model_validation import evaluate_model_quality
 from utils.message_types import Message
+from utils.prompt_library import PROMPTS
+from agents.base_agent import BaseAgent
 
 class ReviewingAgent(BaseAgent):
     def __init__(self, name="reviewing", shared_llm=None, system_prompt=None, hub=None):
@@ -41,6 +42,7 @@ class ReviewingAgent(BaseAgent):
             "model_summary": model_context[-1] if len(model_context) > 0 else "No model history",
             "past_reviews": last_review_notes,
         }
+        memory_for_prompt = memory_summary['past_reviews']
 
         # --- Numeric plausibility checks ---
         severity = evaluate_model_quality(metrics)
@@ -80,28 +82,13 @@ class ReviewingAgent(BaseAgent):
         print(f"[ReviewingAgent] Consistency info: {consistency_info}")
 
         # --- LLM reasoning ---
-        review_prompt = f"""
-        You are an actuarial model reviewer.
-        Evaluate the following model results and provide an explicit decision line
-
-        At the end of your response, include a line exactly in this format:
-        Status: <APPROVED | NEEDS_REVISION | RETRAIN_REQUESTED>
-
-        Metrics: {metrics}
-        Numeric severity: {severity}
-        Review notes: {review_notes}
-
-        If previous memory of dataprep, modelling and reviews exist, ensure consistency with them.
-        Historical memory summary:
-        {memory_summary['past_reviews']}
-
-        Consistency check for model coefficients:
-        {consistency_info}
-
-        Provide:
-        1. One line starting with "Status:" (e.g., "Status: APPROVED")
-        2. A short professional justification.
-        """
+        review_prompt = PROMPTS["review_model"].format(
+        metrics=metrics,
+        severity=severity,
+        review_notes=review_notes,
+        memory_for_prompt=memory_for_prompt,
+        consistency_info=consistency_info,
+        )
 
         llm_review = self.llm(review_prompt)
 

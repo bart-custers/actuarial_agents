@@ -4,8 +4,9 @@ import pandas as pd
 from datetime import datetime
 from utils.general_utils import save_json_safe
 from utils.message_types import Message
-from agents.base_agent import BaseAgent
 from utils.model_trainer import ModelTrainer
+from utils.prompt_library import PROMPTS
+from agents.base_agent import BaseAgent
 
 class ModellingAgent(BaseAgent):
     def __init__(self, name="modelling", shared_llm=None, system_prompt=None, model_type="glm", hub=None):
@@ -60,15 +61,11 @@ class ModellingAgent(BaseAgent):
             display(Image(filename=plot_path))
 
         # --- LLM Explanation ---
-        explain_prompt = f"""
-        You are an actuarial data scientist reviewing model results.
-        Explain these evaluation metrics for a GLM claim frequency model in plain terms:
+        modelling_prompt = PROMPTS["modelling"].format(
+        metrics=metrics,
+        )
 
-        {metrics}
-
-        Highlight whether model fit is reasonable, any bias patterns, and next steps for improvement.
-        """
-        explanation = self.llm(explain_prompt) if self.llm else "No LLM backend available."
+        explanation = self.llm(modelling_prompt) if self.llm else "No LLM backend available."
 
         # --- Return message and log output ---
         # Store metadata

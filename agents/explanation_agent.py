@@ -2,6 +2,7 @@ import os
 from datetime import datetime
 from utils.general_utils import save_json_safe
 from utils.message_types import Message
+from utils.prompt_library import PROMPTS
 from agents.base_agent import BaseAgent
 
 class ExplanationAgent(BaseAgent):
@@ -29,53 +30,20 @@ class ExplanationAgent(BaseAgent):
 
         # Extract only useful + small elements for prompting
         last_review = review_history[-1] if review_history else {"status": "No previous review", "review_notes": []}
+        last_review_for_prompt = last_review.get('review_notes', [])
         last_explanation = explanation_history[-1] if explanation_history else {"consistency_summary": "No previous explanation", "belief_revision_summary": "No previous explanation"} 
 
         # --- Define prompt templates ---
-        consistency_prompt = f"""
-        You are an actuarial explanation specialist.
+        consistency_prompt = PROMPTS["consistency_prompt"].format(
+        model_metrics=model_metrics,
+        review_notes=review_notes,
+        )
 
-        Compare current model results to the previous run stored in memory.
-
-        Current Metrics:
-        {model_metrics}
-
-        Current Review Notes:
-        {review_notes}
-
-        Previous Review Outcome:
-        Status: {last_review.get('status', 'N/A')}
-        Notes: {last_review.get('review_notes', [])}
-
-        Identify:
-        - Whether the model is consistent with prior iterations (metrics, direction of coefficients)
-        - Any drift or unexplained changes
-        - Any contradictory findings or explanations.
-
-        Provide a concise stability summary in plain English.
-        """
-
-        belief_revision_prompt = f"""
-        You are a reasoning assistant performing belief revision for model interpretation.
-        Given the current explanation, past review notes, and current metrics,
-        update the overall understanding of the model performance and rationale.
-
-        Ensure that your belief update resolves contradictions and forms a coherent explanation.
-
-        Use this structure:
-        1. Consistent beliefs (what remains stable)
-        2. Revised beliefs (what changed and why)
-        3. Remaining uncertainties
-
-        Current LLM review:
-        {llm_review}
-
-        Review notes:
-        {review_notes}
-
-        Last Review Notes:
-        {last_review.get('review_notes', [])}
-        """
+        belief_revision_prompt = PROMPTS["belief_revision_prompt"].format(
+        llm_review=llm_review,
+        review_notes=review_notes,
+        last_review_for_prompt=last_review_for_prompt,
+        )
 
         # --- Run the LLM ---
         consistency_explanation = self.llm(consistency_prompt)
