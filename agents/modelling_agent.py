@@ -1,6 +1,7 @@
 # agents/modelling_agent.py
 import os
 import pandas as pd
+from datetime import datetime
 from utils.general_utils import save_json_safe
 from utils.message_types import Message
 from agents.base_agent import BaseAgent
@@ -71,7 +72,9 @@ class ModellingAgent(BaseAgent):
 
         # --- Return message and log output ---
         # Store metadata
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         metadata = {
+            "timestamp": timestamp,
             "status": "success",
             "model_path": model_path,
             "preds_path": preds_path,

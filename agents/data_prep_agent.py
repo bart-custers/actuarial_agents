@@ -1,10 +1,12 @@
 import os
 import joblib
 import pandas as pd
+from datetime import datetime
 from utils.general_utils import save_json_safe
-from agents.base_agent import BaseAgent
+from utils.prompt_library import PROMPTS
 from utils.data_pipeline import DataPipeline
 from utils.message_types import Message
+from agents.base_agent import BaseAgent
 
 class DataPrepAgent(BaseAgent):
     def __init__(self, name="dataprep", shared_llm=None, system_prompt=None, hub=None):
@@ -66,16 +68,22 @@ class DataPrepAgent(BaseAgent):
         joblib.dump(pipeline.preprocessor, preproc_path)
 
         # --- LLM-generated explanation ---
-        explain_prompt = f"""
-        You are an AI assistant summarizing a data preprocessing pipeline for an actuarial audience.
-        Write a clear explanation of the following cleaning steps and why they are important:
-        {summary_text}
-        """
-        explanation = self.llm(explain_prompt)
+        # explain_prompt = f"""
+        # You are an AI assistant summarizing a data preprocessing pipeline for an actuarial audience.
+        # Write a clear explanation of the following cleaning steps and why they are important:
+        # {summary_text}
+        # """
+        data_prep_prompt = PROMPTS["data_prep"].format(
+        summary_text=summary_text,
+        )
+
+        explanation = self.llm(data_prep_prompt)
 
         # --- Return message and log output ---
         # Store metadata
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         metadata = {
+            "timestamp": timestamp,
             "status": "success",
             "summary_log": summary_text,
             "llm_explanation": explanation,

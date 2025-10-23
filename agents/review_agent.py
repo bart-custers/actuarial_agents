@@ -1,5 +1,6 @@
 import os
 import re
+from datetime import datetime
 import numpy as np
 from agents.base_agent import BaseAgent
 from utils.general_utils import save_json_safe
@@ -169,7 +170,9 @@ class ReviewingAgent(BaseAgent):
 
         # --- Return message and log output ---
         # Store metadata
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         metadata = {
+            "timestamp": timestamp,
             "status": status,
             "numeric_severity": severity,
             "review_notes": review_notes,

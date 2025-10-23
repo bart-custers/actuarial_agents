@@ -1,5 +1,4 @@
 import os
-import json
 from datetime import datetime
 from utils.general_utils import save_json_safe
 from utils.message_types import Message
