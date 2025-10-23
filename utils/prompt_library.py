@@ -49,8 +49,8 @@ PROMPTS = {
     {review_notes}
 
     Previous Review Outcome:
-    Status: {last_review.get('status', 'N/A')}
-    Notes: {last_review.get('review_notes', [])}
+    Status: {last_review_status}
+    Notes: {last_review_for_prompt}
 
     Identify:
     - Whether the model is consistent with prior iterations (metrics, direction of coefficients)

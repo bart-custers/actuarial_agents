@@ -30,6 +30,7 @@ class ExplanationAgent(BaseAgent):
 
         # Extract only useful + small elements for prompting
         last_review = review_history[-1] if review_history else {"status": "No previous review", "review_notes": []}
+        last_review_status = last_review.get('status', 'N/A')
         last_review_for_prompt = last_review.get('review_notes', [])
         last_explanation = explanation_history[-1] if explanation_history else {"consistency_summary": "No previous explanation", "belief_revision_summary": "No previous explanation"} 
 
@@ -37,6 +38,8 @@ class ExplanationAgent(BaseAgent):
         consistency_prompt = PROMPTS["consistency_prompt"].format(
         model_metrics=model_metrics,
         review_notes=review_notes,
+        last_review_status=last_review_status,
+        last_review_for_prompt=last_review_for_prompt
         )
 
         belief_revision_prompt = PROMPTS["belief_revision_prompt"].format(
