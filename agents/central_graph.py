@@ -103,5 +103,6 @@ def build_actuarial_graph():
 
     # Final step
     graph.add_edge("explanation", END)
+    graph.set_entry_point("dataprep")
 
     return graph
