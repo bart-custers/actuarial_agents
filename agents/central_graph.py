@@ -1,4 +1,5 @@
-from typing import TypedDict, List, Dict, Any 
+from typing import TypedDict, List, Dict, Any
+from utils.message_types import Message 
 from langgraph.graph import StateGraph, END
 
 
@@ -24,13 +25,13 @@ def merge_state(old_state: WorkflowState, new_metadata: Dict[str, Any]) -> Workf
 # Wrap agents as Langgraph nodes
 def dataprep_node(state: WorkflowState) -> WorkflowState:
     hub = state["hub"]
-    msg = {
-        "sender": "hub",
-        "recipient": "dataprep",
-        "type": "task",
-        "content": "Clean dataset and summarize.",
-        "metadata": state,
-    }
+    msg = Message(
+    sender="hub",
+    recipient="dataprep",
+    type="task",
+    content="Clean dataset and summarize.",
+    metadata=state
+    )
     response = hub.send(msg)
     state = merge_state(state, response.metadata)
     state["phase"] = "modelling"
@@ -39,13 +40,13 @@ def dataprep_node(state: WorkflowState) -> WorkflowState:
 
 def modelling_node(state: WorkflowState) -> WorkflowState:
     hub = state["hub"]
-    msg = {
-        "sender": "hub",
-        "recipient": "modelling",
-        "type": "task",
-        "content": f"Train predictive model (iteration {state['iteration']}).",
-        "metadata": state,
-    }
+    msg = Message(
+    sender="hub",
+    recipient="modelling",
+    type="task",
+    content=f"Train predictive model (iteration {state['iteration']}).",
+    metadata=state
+    )
     response = hub.send(msg)
     state = merge_state(state, response.metadata)
     state["phase"] = "reviewing"
@@ -54,13 +55,13 @@ def modelling_node(state: WorkflowState) -> WorkflowState:
 
 def reviewing_node(state: WorkflowState) -> WorkflowState:
     hub = state["hub"]
-    msg = {
-        "sender": "hub",
-        "recipient": "reviewing",
-        "type": "task",
-        "content": "Review model outputs and consistency.",
-        "metadata": state,
-    }
+    msg = Message(
+    sender="hub",
+    recipient="reviewing",
+    type="task",
+    content="Review model outputs and consistency.",
+    metadata=state
+    )
     response = hub.send(msg)
     state = merge_state(state, response.metadata)
 
@@ -79,13 +80,13 @@ def reviewing_node(state: WorkflowState) -> WorkflowState:
 
 def explanation_node(state: WorkflowState) -> WorkflowState:
     hub = state["hub"]
-    msg = {
-        "sender": "hub",
-        "recipient": "explanation",
-        "type": "task",
-        "content": "Generate explanations and belief-revision report.",
-        "metadata": state,
-    }
+    msg = Message(
+    sender="hub",
+    recipient="explanation",
+    type="task",
+    content="Generate explanations and belief-revision report.",
+    metadata=state
+    )
     response = hub.send(msg)
     state = merge_state(state, response.metadata)
     state["phase"] = "end"
