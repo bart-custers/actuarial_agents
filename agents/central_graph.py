@@ -11,9 +11,19 @@ class WorkflowState(TypedDict):
     status: str
     action: str
     memory_log: Dict[str, Any]
+    hub: Any
+
+def merge_state(old_state: WorkflowState, new_metadata: Dict[str, Any]) -> WorkflowState:
+    """Safely merge new metadata without losing persistent keys."""
+    new_state = {**old_state, **(new_metadata or {})}
+    new_state["hub"] = old_state["hub"]          # ensure hub is preserved
+    new_state["iteration"] = old_state.get("iteration", 0)
+    new_state["memory_log"] = old_state.get("memory_log", {})
+    return new_state
 
 # Wrap agents as Langgraph nodes
 def dataprep_node(state: WorkflowState) -> WorkflowState:
+    hub = state["hub"]
     msg = {
         "sender": "hub",
         "recipient": "dataprep",
@@ -21,12 +31,14 @@ def dataprep_node(state: WorkflowState) -> WorkflowState:
         "content": "Clean dataset and summarize.",
         "metadata": state,
     }
-    response = state["hub"].send(msg)
-    state.update(response.metadata or {})
+    response = hub.send(msg)
+    state = merge_state(state, response.metadata)
     state["phase"] = "modelling"
+    print("[dataprep_node] completed → next phase: modelling")
     return state
 
 def modelling_node(state: WorkflowState) -> WorkflowState:
+    hub = state["hub"]
     msg = {
         "sender": "hub",
         "recipient": "modelling",
@@ -34,12 +46,14 @@ def modelling_node(state: WorkflowState) -> WorkflowState:
         "content": f"Train predictive model (iteration {state['iteration']}).",
         "metadata": state,
     }
-    response = state["hub"].send(msg)
-    state.update(response.metadata or {})
+    response = hub.send(msg)
+    state = merge_state(state, response.metadata)
     state["phase"] = "reviewing"
+    print("[modelling_node] completed → next phase: reviewing")
     return state
 
 def reviewing_node(state: WorkflowState) -> WorkflowState:
+    hub = state["hub"]
     msg = {
         "sender": "hub",
         "recipient": "reviewing",
@@ -47,10 +61,9 @@ def reviewing_node(state: WorkflowState) -> WorkflowState:
         "content": "Review model outputs and consistency.",
         "metadata": state,
     }
-    response = state["hub"].send(msg)
-    state.update(response.metadata or {})
+    response = hub.send(msg)
+    state = merge_state(state, response.metadata)
 
-    # Decide next transition
     action = state.get("action", "proceed_to_explanation")
     if action == "retrain_model":
         state["phase"] = "modelling"
@@ -61,9 +74,11 @@ def reviewing_node(state: WorkflowState) -> WorkflowState:
     else:
         state["phase"] = "explanation"
 
+    print(f"[reviewing_node] completed → next phase: {state['phase']}")
     return state
 
 def explanation_node(state: WorkflowState) -> WorkflowState:
+    hub = state["hub"]
     msg = {
         "sender": "hub",
         "recipient": "explanation",
@@ -71,9 +86,10 @@ def explanation_node(state: WorkflowState) -> WorkflowState:
         "content": "Generate explanations and belief-revision report.",
         "metadata": state,
     }
-    response = state["hub"].send(msg)
-    state.update(response.metadata or {})
+    response = hub.send(msg)
+    state = merge_state(state, response.metadata)
     state["phase"] = "end"
+    print("[explanation_node] completed → workflow end.")
     return state
 
 # Define the graph structure
