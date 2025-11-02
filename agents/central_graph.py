@@ -33,108 +33,254 @@ def safe_update_state(state, new_data):
             state[k] = v
     return state
 
-# Wrap agents as Langgraph nodes
 def dataprep_node(state: WorkflowState) -> WorkflowState:
     hub = state["hub"]
     msg = Message(
-    sender="hub",
-    recipient="dataprep",
-    type="task",
-    content="Clean dataset and summarize.",
-    metadata=state
+        sender="hub",
+        recipient="dataprep",
+        type="task",
+        content="Clean dataset and summarize.",
+        metadata=state,
     )
+
     response = hub.send(msg)
-    #state = merge_state(state, response.metadata)
     state = safe_update_state(state, response.metadata)
+
     state["phase"] = "modelling"
     print("[dataprep_node] completed → next phase: modelling")
     return state
 
+
+# ------------------------------
+#  Modelling Node
+# ------------------------------
 def modelling_node(state: WorkflowState) -> WorkflowState:
     hub = state["hub"]
     msg = Message(
-    sender="hub",
-    recipient="modelling",
-    type="task",
-    content=f"Train predictive model (iteration {state['iteration']}).",
-    metadata=state
+        sender="hub",
+        recipient="modelling",
+        type="task",
+        content=f"Train predictive model (iteration {state.get('iteration', 0)}).",
+        metadata=state,
     )
+
     response = hub.send(msg)
-    #state = merge_state(state, response.metadata)
     state = safe_update_state(state, response.metadata)
+
+    # Ensure metrics are recorded in memory for downstream review
+    if "metrics" not in state and hasattr(response, "metadata"):
+        state["metrics"] = response.metadata.get("metrics", {})
+
     state["phase"] = "reviewing"
     print("[modelling_node] completed → next phase: reviewing")
     return state
 
+
+# ------------------------------
+#  Reviewing Node
+# ------------------------------
 def reviewing_node(state: WorkflowState) -> WorkflowState:
     hub = state["hub"]
     msg = Message(
-    sender="hub",
-    recipient="reviewing",
-    type="task",
-    content="Review model outputs and consistency.",
-    metadata=state
+        sender="hub",
+        recipient="reviewing",
+        type="task",
+        content="Review model outputs and consistency.",
+        metadata=state,
     )
+
     response = hub.send(msg)
-    #state = merge_state(state, response.metadata)
     state = safe_update_state(state, response.metadata)
 
     action = state.get("action", "proceed_to_explanation")
     if action == "retrain_model":
-        state["phase"] = "modelling"
+        next_phase = "modelling"
     elif action == "reclean_data":
-        state["phase"] = "dataprep"
+        next_phase = "dataprep"
     elif action == "abort_workflow":
-        state["phase"] = "end"
+        next_phase = "end"
     else:
-        state["phase"] = "explanation"
+        next_phase = "explanation"
 
-    print(f"[reviewing_node] completed → next phase: {state['phase']}")
+    state["phase"] = next_phase
+    print(f"[reviewing_node] completed → next phase: {next_phase}")
     return state
 
+
+# ------------------------------
+#  Explanation Node
+# ------------------------------
 def explanation_node(state: WorkflowState) -> WorkflowState:
     hub = state["hub"]
     msg = Message(
-    sender="hub",
-    recipient="explanation",
-    type="task",
-    content="Generate explanations and belief-revision report.",
-    metadata=state
+        sender="hub",
+        recipient="explanation",
+        type="task",
+        content="Generate explanations and belief-revision report.",
+        metadata=state,
     )
+
     response = hub.send(msg)
-    #state = merge_state(state, response.metadata)
     state = safe_update_state(state, response.metadata)
     state["phase"] = "end"
+
     print("[explanation_node] completed → workflow end.")
     return state
 
-# Define the graph structure
-def build_actuarial_graph():
+def build_actuarial_graph(hub):
     graph = StateGraph(WorkflowState)
+
+    def dataprep_node(state):
+        msg = {"sender": "hub", "recipient": "dataprep", "type": "task", "content": "Clean dataset and summarize.", "metadata": state}
+        response = hub.send(msg)
+        state.update(response.metadata or {})
+        state["phase"] = "modelling"
+        return state
+
+    def modelling_node(state):
+        msg = {"sender": "hub", "recipient": "modelling", "type": "task", "content": f"Train predictive model (iteration {state['iteration']}).", "metadata": state}
+        response = hub.send(msg)
+        state.update(response.metadata or {})
+        state["phase"] = "reviewing"
+        return state
+
+    def reviewing_node(state):
+        msg = {"sender": "hub", "recipient": "reviewing", "type": "task", "content": "Review model outputs and consistency.", "metadata": state}
+        response = hub.send(msg)
+        state.update(response.metadata or {})
+        return state
+
+    def explanation_node(state):
+        msg = {"sender": "hub", "recipient": "explanation", "type": "task", "content": "Generate explanations and belief-revision report.", "metadata": state}
+        response = hub.send(msg)
+        state.update(response.metadata or {})
+        state["phase"] = "end"
+        return state
 
     graph.add_node("dataprep", dataprep_node)
     graph.add_node("modelling", modelling_node)
     graph.add_node("reviewing", reviewing_node)
     graph.add_node("explanation", explanation_node)
 
-    # Define linear transitions
+    # transitions
     graph.add_edge("dataprep", "modelling")
     graph.add_edge("modelling", "reviewing")
 
-    # Conditional transitions from reviewing
-    def review_decision(state: WorkflowState):
-        action = state.get("action", "proceed_to_explanation")
+    def review_decision(state):
         return {
             "retrain_model": "modelling",
             "reclean_data": "dataprep",
             "abort_workflow": END,
             "proceed_to_explanation": "explanation",
-        }.get(action, "explanation")
+        }.get(state.get("action", "proceed_to_explanation"), "explanation")
 
     graph.add_conditional_edges("reviewing", review_decision)
-
-    # Final step
     graph.add_edge("explanation", END)
     graph.set_entry_point("dataprep")
-
     return graph
+
+# Wrap agents as Langgraph nodes
+# def dataprep_node(state: WorkflowState) -> WorkflowState:
+#     hub = state["hub"]
+#     msg = Message(
+#     sender="hub",
+#     recipient="dataprep",
+#     type="task",
+#     content="Clean dataset and summarize.",
+#     metadata=state
+#     )
+#     response = hub.send(msg)
+#     #state = merge_state(state, response.metadata)
+#     state = safe_update_state(state, response.metadata)
+#     state["phase"] = "modelling"
+#     print("[dataprep_node] completed → next phase: modelling")
+#     return state
+
+# def modelling_node(state: WorkflowState) -> WorkflowState:
+#     hub = state["hub"]
+#     msg = Message(
+#     sender="hub",
+#     recipient="modelling",
+#     type="task",
+#     content=f"Train predictive model (iteration {state['iteration']}).",
+#     metadata=state
+#     )
+#     response = hub.send(msg)
+#     #state = merge_state(state, response.metadata)
+#     state = safe_update_state(state, response.metadata)
+#     state["phase"] = "reviewing"
+#     print("[modelling_node] completed → next phase: reviewing")
+#     return state
+
+# def reviewing_node(state: WorkflowState) -> WorkflowState:
+#     hub = state["hub"]
+#     msg = Message(
+#     sender="hub",
+#     recipient="reviewing",
+#     type="task",
+#     content="Review model outputs and consistency.",
+#     metadata=state
+#     )
+#     response = hub.send(msg)
+#     #state = merge_state(state, response.metadata)
+#     state = safe_update_state(state, response.metadata)
+
+#     action = state.get("action", "proceed_to_explanation")
+#     if action == "retrain_model":
+#         state["phase"] = "modelling"
+#     elif action == "reclean_data":
+#         state["phase"] = "dataprep"
+#     elif action == "abort_workflow":
+#         state["phase"] = "end"
+#     else:
+#         state["phase"] = "explanation"
+
+#     print(f"[reviewing_node] completed → next phase: {state['phase']}")
+#     return state
+
+# def explanation_node(state: WorkflowState) -> WorkflowState:
+#     hub = state["hub"]
+#     msg = Message(
+#     sender="hub",
+#     recipient="explanation",
+#     type="task",
+#     content="Generate explanations and belief-revision report.",
+#     metadata=state
+#     )
+#     response = hub.send(msg)
+#     #state = merge_state(state, response.metadata)
+#     state = safe_update_state(state, response.metadata)
+#     state["phase"] = "end"
+#     print("[explanation_node] completed → workflow end.")
+#     return state
+
+# # Define the graph structure
+# def build_actuarial_graph():
+#     graph = StateGraph(WorkflowState)
+
+#     graph.add_node("dataprep", dataprep_node)
+#     graph.add_node("modelling", modelling_node)
+#     graph.add_node("reviewing", reviewing_node)
+#     graph.add_node("explanation", explanation_node)
+
+#     # Define linear transitions
+#     graph.add_edge("dataprep", "modelling")
+#     graph.add_edge("modelling", "reviewing")
+
+#     # Conditional transitions from reviewing
+#     def review_decision(state: WorkflowState):
+#         action = state.get("action", "proceed_to_explanation")
+#         return {
+#             "retrain_model": "modelling",
+#             "reclean_data": "dataprep",
+#             "abort_workflow": END,
+#             "proceed_to_explanation": "explanation",
+#         }.get(action, "explanation")
+
+#     graph.add_conditional_edges("reviewing", review_decision)
+
+#     # Final step
+#     graph.add_edge("explanation", END)
+#     graph.set_entry_point("dataprep")
+
+#     return graph
