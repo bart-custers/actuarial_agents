@@ -130,53 +130,33 @@ def explanation_node(state: WorkflowState) -> WorkflowState:
 def build_actuarial_graph(hub):
     graph = StateGraph(WorkflowState)
 
-    def dataprep_node(state):
-        msg = {"sender": "hub", "recipient": "dataprep", "type": "task", "content": "Clean dataset and summarize.", "metadata": state}
-        response = hub.send(msg)
-        state.update(response.metadata or {})
-        state["phase"] = "modelling"
-        return state
-
-    def modelling_node(state):
-        msg = {"sender": "hub", "recipient": "modelling", "type": "task", "content": f"Train predictive model (iteration {state['iteration']}).", "metadata": state}
-        response = hub.send(msg)
-        state.update(response.metadata or {})
-        state["phase"] = "reviewing"
-        return state
-
-    def reviewing_node(state):
-        msg = {"sender": "hub", "recipient": "reviewing", "type": "task", "content": "Review model outputs and consistency.", "metadata": state}
-        response = hub.send(msg)
-        state.update(response.metadata or {})
-        return state
-
-    def explanation_node(state):
-        msg = {"sender": "hub", "recipient": "explanation", "type": "task", "content": "Generate explanations and belief-revision report.", "metadata": state}
-        response = hub.send(msg)
-        state.update(response.metadata or {})
-        state["phase"] = "end"
-        return state
-
+    # Add nodes
     graph.add_node("dataprep", dataprep_node)
     graph.add_node("modelling", modelling_node)
     graph.add_node("reviewing", reviewing_node)
     graph.add_node("explanation", explanation_node)
 
-    # transitions
+    # Define linear transitions
     graph.add_edge("dataprep", "modelling")
     graph.add_edge("modelling", "reviewing")
 
-    def review_decision(state):
+    # Conditional transitions
+    def review_decision(state: WorkflowState):
+        action = state.get("action", "proceed_to_explanation")
         return {
             "retrain_model": "modelling",
             "reclean_data": "dataprep",
             "abort_workflow": END,
             "proceed_to_explanation": "explanation",
-        }.get(state.get("action", "proceed_to_explanation"), "explanation")
+        }.get(action, "explanation")
 
     graph.add_conditional_edges("reviewing", review_decision)
     graph.add_edge("explanation", END)
+
+    # Entry point
     graph.set_entry_point("dataprep")
+
+    print("[HubGraph] Actuarial workflow graph initialized.")
     return graph
 
 # Wrap agents as Langgraph nodes
