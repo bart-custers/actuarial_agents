@@ -22,6 +22,17 @@ def merge_state(old_state: WorkflowState, new_metadata: Dict[str, Any]) -> Workf
     new_state["memory_log"] = old_state.get("memory_log", {})
     return new_state
 
+def safe_update_state(state, new_data):
+    """Safely merge new_data into the workflow state."""
+    if not new_data:
+        return state
+    for k, v in new_data.items():
+        if isinstance(v, dict) and isinstance(state.get(k), dict):
+            state[k].update(v)
+        else:
+            state[k] = v
+    return state
+
 # Wrap agents as Langgraph nodes
 def dataprep_node(state: WorkflowState) -> WorkflowState:
     hub = state["hub"]
@@ -33,7 +44,8 @@ def dataprep_node(state: WorkflowState) -> WorkflowState:
     metadata=state
     )
     response = hub.send(msg)
-    state = merge_state(state, response.metadata)
+    #state = merge_state(state, response.metadata)
+    state = safe_update_state(state, response.metadata)
     state["phase"] = "modelling"
     print("[dataprep_node] completed → next phase: modelling")
     return state
@@ -48,7 +60,8 @@ def modelling_node(state: WorkflowState) -> WorkflowState:
     metadata=state
     )
     response = hub.send(msg)
-    state = merge_state(state, response.metadata)
+    #state = merge_state(state, response.metadata)
+    state = safe_update_state(state, response.metadata)
     state["phase"] = "reviewing"
     print("[modelling_node] completed → next phase: reviewing")
     return state
@@ -63,7 +76,8 @@ def reviewing_node(state: WorkflowState) -> WorkflowState:
     metadata=state
     )
     response = hub.send(msg)
-    state = merge_state(state, response.metadata)
+    #state = merge_state(state, response.metadata)
+    state = safe_update_state(state, response.metadata)
 
     action = state.get("action", "proceed_to_explanation")
     if action == "retrain_model":
@@ -88,7 +102,8 @@ def explanation_node(state: WorkflowState) -> WorkflowState:
     metadata=state
     )
     response = hub.send(msg)
-    state = merge_state(state, response.metadata)
+    #state = merge_state(state, response.metadata)
+    state = safe_update_state(state, response.metadata)
     state["phase"] = "end"
     print("[explanation_node] completed → workflow end.")
     return state
