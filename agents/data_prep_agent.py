@@ -61,21 +61,21 @@ Current deterministic pipeline (short description):
 
 Please produce a JSON object (only JSON) with the following optional keys:
 - "drop_columns": [list of column names to drop]
-- "impute_numeric": { "colA": "median"|"mean"|"zero"|"constant", ... }
-- "impute_categorical": { "colB": "mode"|"unknown"|"constant", ... }
+- "impute_numeric": {{ "colA": "median"|"mean"|"zero"|"constant", ... }}
+- "impute_categorical": {{ "colB": "mode"|"unknown"|"constant", ... }}
 - "encode_categorical": [list of categorical columns to one-hot encode (optional)]
 - "additional_transform": [brief text descriptions, not code]
 
 Example (JSON):
-{
+{{
   "drop_columns": ["colX"],
-  "impute_numeric": {"VehAge": "median"},
-  "impute_categorical": {"Region": "mode"},
+  "impute_numeric": {{"VehAge": "median"}},
+  "impute_categorical": {{"Region": "mode"}},
   "encode_categorical": ["VehBrand"],
   "additional_transform": ["clip VehAge at 20"]
-}
+}}
 
-Return only valid JSON. If nothing to suggest, return {}
+Return only valid JSON. If nothing to suggest, return {{}}.
 """,
 )
 
