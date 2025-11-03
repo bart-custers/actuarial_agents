@@ -348,8 +348,8 @@ class DataPrepAgent(BaseAgent):
         results["exposure_test"].to_csv(exposure_test_path, index=False)
 
         # Save preprocessor and features
-        preproc_path = os.path.join(artifacts_dir, f"preprocessor_{timestamp}.pkl")
-        features_path = os.path.join(artifacts_dir, f"feature_names_{timestamp}.pkl")
+        preproc_path = os.path.join(artifacts_dir, f"preprocessor.pkl")
+        features_path = os.path.join(artifacts_dir, f"feature_names.pkl")
         joblib.dump(results["feature_names"], features_path)
         joblib.dump(pipeline.preprocessor, preproc_path)
         print(f"[{self.name}] Starting layer 3...")
