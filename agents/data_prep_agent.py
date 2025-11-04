@@ -114,7 +114,7 @@ class DataPrepAgent(BaseAgent):
         # Layer 1: recall & plan (LLM)
         # --------------------
         plan_chain = self._make_chain("dataprep_layer1")
-        summary1 = plan_chain.run(info=json.dumps(info_dict, indent=2))
+        summary1 = plan_chain.run(info_dict=json.dumps(info_dict, indent=2))
         self.memory.save_context({"input": info_dict}, {"output": summary1})
         
         print(f"[{self.name}] Starting layer 2...")
@@ -123,8 +123,8 @@ class DataPrepAgent(BaseAgent):
         # --------------------
         adapt_chain = self._make_chain("dataprep_layer2_confidence")
         suggestion = adapt_chain.run(summary1,
-            dataset_summary=json.dumps(info_dict, indent=2),
-            deterministic_pipeline=open("utils/data_pipeline.py").read()
+            info_dict=json.dumps(info_dict, indent=2),
+            pipeline_code=open("utils/data_pipeline.py").read()
         )
         self.memory.save_context({"input": summary1}, {"output": suggestion})
 
