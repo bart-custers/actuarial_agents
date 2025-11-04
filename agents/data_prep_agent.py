@@ -135,7 +135,7 @@ class DataPrepAgent(BaseAgent):
         suggestion = self.llm(suggestion_prompt)
 
         confidence = self._extract_confidence(suggestion)
-        print("[{self.name}] Layer 2 confidence: {confidence:.2f}")
+        print(f"[{self.name}] Layer 2 confidence: {confidence:.2f}")
 
         # === Apply deterministic pipeline
         det_pipe = DataPipeline()
@@ -207,10 +207,10 @@ class DataPrepAgent(BaseAgent):
         # --------------------
         # Layer 4: LLM inspects result
         # --------------------
-        explain_chain = self._make_chain("dataprep_layer4")
-        explanation = explain_chain.run(
-            verification=verification
-        )
+        # explain_chain = self._make_chain("dataprep_layer4")
+        # explanation = explain_chain.run(
+        #     verification=verification
+        # )
 
         explain_prompt = PROMPTS["dataprep_layer4"].format(verification=verification)
         explanation = self.llm(explain_prompt)
