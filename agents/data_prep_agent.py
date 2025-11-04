@@ -120,7 +120,7 @@ class DataPrepAgent(BaseAgent):
         plan_prompt = PROMPTS["dataprep_layer1"].format(info_dict=json.dumps(info_dict, indent=2))
         summary1 = self.llm(plan_prompt)
         
-        print(f"[{self.name}] Starting layer 2...")
+        print(f"[{self.name}] Invoke layer 2...")
         # --------------------
         # Layer 2: suggestions (LLM)
         # --------------------
@@ -155,7 +155,7 @@ class DataPrepAgent(BaseAgent):
         # === Compare pipelines
         comparison_summary = self._compare_pipelines(deterministic_results, adaptive_results)
 
-        print(f"[{self.name}] Starting layer 3...")
+        print(f"[{self.name}] Invoke layer 3...")
 
         # --------------------
         # Layer 3: verification (LLM)
@@ -197,12 +197,12 @@ class DataPrepAgent(BaseAgent):
         chosen_results["exposure_train"].to_csv(exposure_train_path, index=False)
         chosen_results["exposure_test"].to_csv(exposure_test_path, index=False)
 
-        preproc_path = os.path.join(artifacts_dir, f"preprocessor_{chosen_pipeline_name}.pkl")
-        features_path = os.path.join(artifacts_dir, f"feature_names_{chosen_pipeline_name}.pkl")
+        preproc_path = os.path.join(artifacts_dir, f"preprocessor.pkl")
+        features_path = os.path.join(artifacts_dir, f"feature_names.pkl")
         joblib.dump(chosen_results["feature_names"], features_path)
         joblib.dump(det_pipe.preprocessor, preproc_path)
 
-        print(f"[{self.name}] Starting layer 4...")
+        print(f"[{self.name}] Invoke layer 4...")
 
         # --------------------
         # Layer 4: LLM inspects result
@@ -215,7 +215,6 @@ class DataPrepAgent(BaseAgent):
         explain_prompt = PROMPTS["dataprep_layer4"].format(verification=verification)
         explanation = self.llm(explain_prompt)
 
-        print(f"[{self.name}] Explanation:\n{explanation}")
         print(f"[{self.name}] Finalize...")
 
         # --------------------
