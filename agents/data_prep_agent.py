@@ -1,103 +1,17 @@
-# agents/data_prep_agent.py
 import os
 import json
 import joblib
 import pandas as pd
 from datetime import datetime
 from typing import Dict, Any, List
-
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
 from langchain.memory import ConversationBufferMemory
-
 from utils.general_utils import save_json_safe
 from utils.prompt_library import PROMPTS
 from utils.data_pipeline import DataPipeline
 from utils.message_types import Message
 from agents.base_agent import BaseAgent
-
-# ---------------------------
-# Prompt templates (LangChain)
-# ---------------------------
-
-LAYER1_PROMPT = PromptTemplate(
-    input_variables=["dataset_name", "n_rows", "n_cols", "sample_head", "assignment_desc"],
-    template="""
-You are an actuarial data-prep assistant.
-
-Layer 1 — Task recall & initial plan:
-Dataset: {dataset_name}
-Rows: {n_rows}, Columns: {n_cols}
-Sample head:
-{sample_head}
-
-Assignment / goal:
-{assignment_desc}
-
-1) Briefly restate the assignment in one sentence.
-2) List the top 6 actions you think are most important to prepare this dataset for claim frequency modelling (short bullet list).
-3) Provide any immediate warnings (e.g., very skewed numeric columns, too many missing values).
-Respond concisely.
-""",
-)
-
-LAYER2_PROMPT = PromptTemplate(
-    input_variables=["summary1", "missing_dict", "numerical", "categorical", "pipeline_description"],
-    template="""
-You are an actuarial data-prep assistant.
-
-Layer 2 — Suggest safe preprocessing adjustments.
-
-Context (summary of your earlier recommendations):
-{summary1}
-
-Deterministic diagnostics (JSON):
-Missing counts: {missing_dict}
-Numerical variables: {numerical}
-Categorical variables: {categorical}
-
-Current deterministic pipeline (short description):
-{pipeline_description}
-
-Please produce a JSON object (only JSON) with the following optional keys:
-- "drop_columns": [list of column names to drop]
-- "impute_numeric": {{ "colA": "median"|"mean"|"zero"|"constant", ... }}
-- "impute_categorical": {{ "colB": "mode"|"unknown"|"constant", ... }}
-- "encode_categorical": [list of categorical columns to one-hot encode (optional)]
-- "additional_transform": [brief text descriptions, not code]
-
-Example (JSON):
-{{
-  "drop_columns": ["colX"],
-  "impute_numeric": {{"VehAge": "median"}},
-  "impute_categorical": {{"Region": "mode"}},
-  "encode_categorical": ["VehBrand"],
-  "additional_transform": ["clip VehAge at 20"]
-}}
-
-Return only valid JSON. If nothing to suggest, return {{}}.
-""",
-)
-
-LAYER3_PROMPT = PromptTemplate(
-    input_variables=["pipeline_result_summary", "num_rows", "num_cols"],
-    template="""
-You are an actuarial data-prep assistant.
-
-Layer 3 — Inspect result:
-We applied the preprocessing steps and produced a cleaned dataset.
-
-Summary of the cleaned dataset (text):
-{pipeline_result_summary}
-
-Resulting shape: rows={num_rows}, cols={num_cols}
-
-Please:
-1) Provide a short diagnostic (2-4 bullets) about whether the cleaned data looks suitable for modelling.
-2) If you see remaining issues, provide short bullet list of suggestions.
-Return plain text.
-""",
-)
 
 # ---------------------------
 # Agent
@@ -106,101 +20,66 @@ Return plain text.
 class DataPrepAgent(BaseAgent):
     def __init__(self, name="dataprep", shared_llm=None, system_prompt=None, hub=None):
         super().__init__(name)
-        # shared_llm should be a LangChain-compatible LLM or wrapper exposing __call__(str)->str
         self.llm = shared_llm
         self.system_prompt = system_prompt
         self.hub = hub
-
         # Short-term conversation memory for layered prompting
         self.memory = ConversationBufferMemory(memory_key="chat_history", return_messages=False)
 
+    def _make_chain(self, prompt_key):
+        prompt = PromptTemplate.from_template(PROMPTS[prompt_key])
+        return LLMChain(llm=self.llm, prompt=prompt, memory=self.memory, verbose=False)
         # Setup LLMChains
         # If self.llm is a LangChain LLM implementor (e.g., ChatOpenAI), we can pass it to LLMChain.
         # If self.llm is a callable wrapper (returns string), we will call it directly as fallback.
-        try:
-            self.chain_layer1 = LLMChain(llm=self.llm, prompt=LAYER1_PROMPT, memory=self.memory)
-            self.chain_layer2 = LLMChain(llm=self.llm, prompt=LAYER2_PROMPT, memory=self.memory)
-            self.chain_layer3 = LLMChain(llm=self.llm, prompt=LAYER3_PROMPT, memory=self.memory)
-            self.use_chains = True
-        except Exception:
-            # Fallback: call llm directly with formatted prompt texts
-            self.chain_layer1 = None
-            self.chain_layer2 = None
-            self.chain_layer3 = None
-            self.use_chains = False
+        # try:
+        #     self.chain_layer1 = LLMChain(llm=self.llm, prompt=PROMPTS["dataprep_layer1"], memory=self.memory)
+        #     self.chain_layer2 = LLMChain(llm=self.llm, prompt=PROMPTS["dataprep_layer2"], memory=self.memory)
+        #     self.chain_layer3 = LLMChain(llm=self.llm, prompt=PROMPTS["dataprep_layer3"], memory=self.memory)
+        #     self.use_chains = True
+        # except Exception:
+        #     # Fallback: call llm directly with formatted prompt texts
+        #     self.chain_layer1 = None
+        #     self.chain_layer2 = None
+        #     self.chain_layer3 = None
+        #     self.use_chains = False
 
-    # ---------------------------
-    # Helper: safe parse JSON from LLM
-    # ---------------------------
-    def _parse_json(self, text: str) -> Dict[str, Any]:
-        """Try to find and parse the first JSON object in text. Return {} if failed."""
-        # Try direct load
-        try:
-            obj = json.loads(text.strip())
-            if isinstance(obj, dict):
-                return obj
-        except Exception:
-            pass
-        # Try to extract a {...} substring
-        start = text.find("{")
-        end = text.rfind("}")
-        if start != -1 and end != -1 and end > start:
-            try:
-                obj = json.loads(text[start:end+1])
-                if isinstance(obj, dict):
-                    return obj
-            except Exception:
-                pass
-        return {}
+    # --------------------------
+    # Helper functions
+    # --------------------------
 
-    # ---------------------------
-    # Helper: apply safe suggestions to DataFrame
-    # ---------------------------
-    def _apply_suggestions(self, df: pd.DataFrame, suggestions: Dict[str, Any]) -> pd.DataFrame:
-        df = df.copy()
-        # 1) drop_columns
-        drop_cols = suggestions.get("drop_columns", []) or []
-        drop_cols = [c for c in drop_cols if c in df.columns]
-        if drop_cols:
-            df = df.drop(columns=drop_cols)
+    def _extract_confidence(self, suggestion_text: str) -> float:
+        """Extract confidence rating (0–1) from LLM output if present."""
+        import re
+        match = re.search(r"confidence[:=]\s*([\d\.]+)", suggestion_text.lower())
+        return float(match.group(1)) if match else 0.5
 
-        # 2) impute_numeric
-        for col, strategy in (suggestions.get("impute_numeric") or {}).items():
-            if col in df.columns:
-                if strategy == "median":
-                    df[col] = df[col].fillna(df[col].median())
-                elif strategy == "mean":
-                    df[col] = df[col].fillna(df[col].mean())
-                elif strategy == "zero":
-                    df[col] = df[col].fillna(0)
-                elif strategy == "constant":
-                    # constant value could be specified as a tuple or string "constant:val"
-                    df[col] = df[col].fillna(0)
-                else:
-                    # fallback to median
-                    df[col] = df[col].fillna(df[col].median())
+    def _apply_llm_pipeline(self, df: pd.DataFrame, suggestion_text: str):
+        """Safely run any code snippet proposed by LLM (sandbox-like)."""
+        if "import" in suggestion_text or "os." in suggestion_text:
+            raise ValueError("Unsafe LLM suggestion detected.")
+        # This example only accepts dictionary-style mapping suggestions
+        # In future: implement real DSL or code parsing
+        return DataPipeline().clean(df)
 
-        # 3) impute_categorical
-        for col, strategy in (suggestions.get("impute_categorical") or {}).items():
-            if col in df.columns:
-                if strategy == "mode":
-                    df[col] = df[col].fillna(df[col].mode().iloc[0] if not df[col].mode().empty else "UNKNOWN")
-                elif strategy == "unknown":
-                    df[col] = df[col].fillna("UNKNOWN")
-                elif strategy == "constant":
-                    df[col] = df[col].fillna("UNKNOWN")
-                else:
-                    df[col] = df[col].fillna("UNKNOWN")
-
-        # 4) additional_transform (not executed as code, only warn/log)
-        # We don't execute arbitrary python from LLM — just log suggestions.
-        return df
+    def _compare_pipelines(self, det, adapt):
+        """Quantitative comparison of two pipelines."""
+        if adapt is None:
+            return {"status": "adaptive_failed"}
+        det_shape = det["X_train"].shape
+        adapt_shape = adapt["X_train"].shape if "X_train" in adapt else None
+        feature_overlap = len(set(det["feature_names"]) & set(adapt["feature_names"]))
+        return {
+            "status": "adaptive_succeeded",
+            "feature_overlap": feature_overlap,
+            "shape_diff": (det_shape, adapt_shape),
+        }
 
     # ---------------------------
     # Main handler
     # ---------------------------
     def handle_message(self, message: Message) -> Message:
-        print(f"[{self.name}] Starting layered data-prep with deterministic pipeline...")
+        print(f"[{self.name}] Starting data preparation...")
 
         # --- Step 1: Load dataset (python) ---
         dataset_path = message.metadata.get("dataset_path", "data/raw/freMTPL2freq.csv")
@@ -214,176 +93,126 @@ class DataPrepAgent(BaseAgent):
                 content=f"Failed to load dataset: {e}",
             )
 
-        # Basic dataset descriptors
-        dataset_name = os.path.basename(dataset_path)
-        n_rows, n_cols = df.shape
-        sample_head = df.head(5).to_csv(index=False)
-
-        # Assignment description (from prompts library or message)
-        assignment_desc = message.metadata.get("assignment_desc", PROMPTS.get("data_prep_brief", "Prepare dataset for claim frequency GLM modelling."))
+        # Basic dataset info
+        info_dict = {
+            "n_rows": len(df),
+            "n_cols": len(df.columns),
+            "missing_perc": df.isna().mean().to_dict(),
+            "num_vars": df.select_dtypes(include="number").columns.tolist(),
+            "cat_vars": df.select_dtypes(exclude="number").columns.tolist(),
+        }
 
         print(f"[{self.name}] Invoke layer 1...")
+
         # --------------------
         # Layer 1: recall & plan (LLM)
         # --------------------
-        layer1_inputs = {
-            "dataset_name": dataset_name,
-            "n_rows": n_rows,
-            "n_cols": n_cols,
-            "sample_head": sample_head,
-            "assignment_desc": assignment_desc,
-        }
-
-        if self.use_chains:
-            try:
-                summary1 = self.chain_layer1.run(layer1_inputs)
-            except Exception as e:
-                summary1 = self.llm(LAYER1_PROMPT.format(**layer1_inputs)) if callable(self.llm) else str(e)
-        else:
-            prompt1 = LAYER1_PROMPT.format(**layer1_inputs)
-            summary1 = self.llm(prompt1) if callable(self.llm) else prompt1
-        print(f"[{self.name}] Starting step 2...")
-        # --------------------
-        # Step 2: deterministic diagnostics (python)
-        # --------------------
-        missing_dict = df.isna().sum().to_dict()
-        # numerical and categorical heuristics: infer by dtype and small cardinality
-        numerical = df.select_dtypes(include=["number"]).columns.tolist()
-        categorical = df.select_dtypes(include=["object", "category"]).columns.tolist()
-
-        # small-cardinality numeric columns may be categorical (coerce heuristic)
-        for col in numerical[:]:
-            if df[col].nunique() <= 10:
-                # keep as numeric but note it
-                pass
-
-        # pipeline description — short human-readable description of your deterministic pipeline
-        pipeline_description = (
-            "Right-censor some vars, clip extreme values, map Area categories, drop NA, "
-            "define numerical & categorical features, split train/test, scale numerical features and one-hot encode categoricals."
-        )
+        plan_chain = self._make_chain("dataprep_layer1")
+        summary1 = plan_chain.run(info=json.dumps(info_dict, indent=2))
+        self.memory.save_context({"input": info_dict}, {"output": summary1})
+        
         print(f"[{self.name}] Starting layer 2...")
         # --------------------
-        # Layer 2: suggestions (LLM) — expects JSON
+        # Layer 2: suggestions (LLM)
         # --------------------
-        layer2_inputs = {
-            "summary1": summary1,
-            "missing_dict": json.dumps(missing_dict),
-            "numerical": json.dumps(numerical),
-            "categorical": json.dumps(categorical),
-            "pipeline_description": pipeline_description,
-        }
+        adapt_chain = self._make_chain("dataprep_layer2_confidence")
+        suggestion = adapt_chain.run(summary1,
+            dataset_summary=json.dumps(info_dict, indent=2),
+            deterministic_pipeline=open("utils/data_pipeline.py").read()
+        )
+        self.memory.save_context({"input": summary1}, {"output": suggestion})
 
-        if self.use_chains:
-            try:
-                layer2_raw = self.chain_layer2.run(layer2_inputs)
-            except Exception:
-                # fallback to direct call
-                layer2_prompt_text = LAYER2_PROMPT.format(**layer2_inputs)
-                layer2_raw = self.llm(layer2_prompt_text) if callable(self.llm) else "{}"
-        else:
-            layer2_prompt_text = LAYER2_PROMPT.format(**layer2_inputs)
-            layer2_raw = self.llm(layer2_prompt_text) if callable(self.llm) else "{}"
+        confidence = self._extract_confidence(suggestion)
+        print("[{self.name}] Layer 2 confidence: {confidence:.2f}")
 
-        # parse suggested JSON
-        suggestions = self._parse_json(layer2_raw)
-        # sanitize suggestions -> only keep allowed keys and known columns
-        allowed_keys = {"drop_columns", "impute_numeric", "impute_categorical", "encode_categorical", "additional_transform"}
-        suggestions = {k: v for k, v in suggestions.items() if k in allowed_keys}
+        # === Apply deterministic pipeline
+        det_pipe = DataPipeline()
+        deterministic_results = det_pipe.clean(df)
+        deterministic_X = deterministic_results["X_train"]
+        deterministic_features = deterministic_results["feature_names"]
 
-        # Validate column names
-        if "drop_columns" in suggestions:
-            suggestions["drop_columns"] = [c for c in suggestions["drop_columns"] if c in df.columns]
-
-        if "impute_numeric" in suggestions:
-            suggestions["impute_numeric"] = {k: v for k, v in suggestions["impute_numeric"].items() if k in df.columns}
-
-        if "impute_categorical" in suggestions:
-            suggestions["impute_categorical"] = {k: v for k, v in suggestions["impute_categorical"].items() if k in df.columns}
-
-        if "encode_categorical" in suggestions:
-            suggestions["encode_categorical"] = [c for c in suggestions["encode_categorical"] if c in df.columns]
-        print(f"[{self.name}] Apply suggestions...")
-        # --------------------
-        # Step 3: Apply deterministic modifications per suggestions
-        # --------------------
-        df_mod = self._apply_suggestions(df, suggestions)
-        print(f"[{self.name}] Run deterministic data pipeline...")
-        # --------------------
-        # Step 4: Run the deterministic pipeline (DataPipeline)
-        #   - we feed the modified DataFrame to the same pipeline.clean(...)
-        # --------------------
-        pipeline = DataPipeline()
+        # === Attempt adaptive pipeline
         try:
-            results = pipeline.clean(df_mod)
-            pipeline_summary = pipeline.summary()
+            adaptive_results = self._apply_llm_pipeline(df, suggestion)
+            adaptive_success = True
         except Exception as e:
-            return Message(
-                sender=self.name,
-                recipient=message.sender,
-                type="error",
-                content=f"Data pipeline failed: {e}",
-            )
+            adaptive_results = None
+            adaptive_success = False
+            print(f"[{self.name}] Adaptive pipeline failed: {e}")
 
-        # Save processed datasets (existing behavior)
+        # === Compare pipelines
+        comparison_summary = self._compare_pipelines(deterministic_results, adaptive_results)
+
+        print(f"[{self.name}] Starting layer 3...")
+
+        # --------------------
+        # Layer 3: verification (LLM)
+        # --------------------
+        verify_chain = self._make_chain("dataprep_layer3")
+        verification = verify_chain.run(
+            comparison=json.dumps(comparison_summary, indent=2),
+            confidence=confidence,
+        )
+        
+         # Decide based on verification judgment
+        use_adaptive = "USE_ADAPTIVE" in verification.upper() and adaptive_success
+        chosen_results = adaptive_results if use_adaptive else deterministic_results
+        chosen_pipeline_name = "adaptive" if use_adaptive else "deterministic"
+
+        print(f"[{self.name}] Final decision: using {chosen_pipeline_name} pipeline.")
+
+        # Save processed datasets
         processed_dir = "data/processed"
         artifacts_dir = "data/artifacts"
         os.makedirs(processed_dir, exist_ok=True)
         os.makedirs(artifacts_dir, exist_ok=True)
 
         base_name = os.path.splitext(os.path.basename(dataset_path))[0]
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        X_train_path = os.path.join(processed_dir, f"{base_name}_X_train_{timestamp}.csv")
-        X_test_path = os.path.join(processed_dir, f"{base_name}_X_test_{timestamp}.csv")
-        y_train_path = os.path.join(processed_dir, f"{base_name}_y_train_{timestamp}.csv")
-        y_test_path = os.path.join(processed_dir, f"{base_name}_y_test_{timestamp}.csv")
-        exposure_train_path = os.path.join(processed_dir, f"{base_name}_exposure_train_{timestamp}.csv")
-        exposure_test_path = os.path.join(processed_dir, f"{base_name}_exposure_test_{timestamp}.csv")
+        X_train_path = os.path.join(processed_dir, f"{base_name}_X_train.csv")
+        X_test_path = os.path.join(processed_dir, f"{base_name}_X_test.csv")
+        y_train_path = os.path.join(processed_dir, f"{base_name}_y_train.csv")
+        y_test_path = os.path.join(processed_dir, f"{base_name}_y_test.csv")
+        exposure_train_path = os.path.join(processed_dir, f"{base_name}_exposure_train.csv")
+        exposure_test_path = os.path.join(processed_dir, f"{base_name}_exposure_test.csv")
 
-        pd.DataFrame(results["X_train"], columns=results["feature_names"]).to_csv(X_train_path, index=False)
-        pd.DataFrame(results["X_test"], columns=results["feature_names"]).to_csv(X_test_path, index=False)
-        results["y_train"].to_csv(y_train_path, index=False)
-        results["y_test"].to_csv(y_test_path, index=False)
-        results["exposure_train"].to_csv(exposure_train_path, index=False)
-        results["exposure_test"].to_csv(exposure_test_path, index=False)
+        pd.DataFrame(chosen_results["X_train"], columns=chosen_results["feature_names"]).to_csv(X_train_path, index=False)
+        pd.DataFrame(chosen_results["X_test"], columns=chosen_results["feature_names"]).to_csv(X_test_path, index=False)
+        chosen_results["y_train"].to_csv(y_train_path, index=False)
+        chosen_results["y_test"].to_csv(y_test_path, index=False)
+        chosen_results["exposure_train"].to_csv(exposure_train_path, index=False)
+        chosen_results["exposure_test"].to_csv(exposure_test_path, index=False)
 
-        # Save preprocessor and features
-        preproc_path = os.path.join(artifacts_dir, f"preprocessor.pkl")
-        features_path = os.path.join(artifacts_dir, f"feature_names.pkl")
-        joblib.dump(results["feature_names"], features_path)
-        joblib.dump(pipeline.preprocessor, preproc_path)
-        print(f"[{self.name}] Starting layer 3...")
+        preproc_path = os.path.join(artifacts_dir, f"preprocessor_{chosen_pipeline_name}.pkl")
+        features_path = os.path.join(artifacts_dir, f"feature_names_{chosen_pipeline_name}.pkl")
+        joblib.dump(chosen_results["feature_names"], features_path)
+        joblib.dump(det_pipe.preprocessor, preproc_path)
+
+        print(f"[{self.name}] Starting layer 4...")
+
         # --------------------
-        # Layer 3: LLM inspects result
+        # Layer 4: LLM inspects result
         # --------------------
-        pipeline_result_summary = pipeline_summary
-        layer3_inputs = {
-            "pipeline_result_summary": pipeline_result_summary,
-            "num_rows": results.get("X_train").shape[0] if hasattr(results.get("X_train"), "shape") else len(results.get("X_train", [])),
-            "num_cols": len(results.get("feature_names", [])),
-        }
-
-        if self.use_chains:
-            try:
-                layer3_text = self.chain_layer3.run(layer3_inputs)
-            except Exception:
-                layer3_prompt_text = LAYER3_PROMPT.format(**layer3_inputs)
-                layer3_text = self.llm(layer3_prompt_text) if callable(self.llm) else ""
-        else:
-            layer3_prompt_text = LAYER3_PROMPT.format(**layer3_inputs)
-            layer3_text = self.llm(layer3_prompt_text) if callable(self.llm) else ""
+        explain_chain = self._make_chain("dataprep_layer4")
+        explanation = explain_chain.run(
+            verification=verification
+        )
+        print(f"[{self.name}] Explanation:\n{explanation}")
         print(f"[{self.name}] Finalize...")
+
         # --------------------
         # Step 5: Save metadata (keeps your original structure)
         # --------------------
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         metadata = {
             "timestamp": timestamp,
             "status": "success",
-            "summary_log": pipeline_summary,
-            "llm_explanation_layer1": summary1,
-            "llm_suggestions_layer2_raw": layer2_raw,
-            "llm_suggestions_layer2": suggestions,
-            "llm_explanation_layer3": layer3_text,
+            "used_pipeline": chosen_pipeline_name,
+            "confidence": confidence,
+            "plan": summary1,
+            "adaptive_suggestion": suggestion,
+            "comparison": comparison_summary,
+            "verification": verification,
+            "explanation": explanation,
             "processed_paths": {
                 "X_train": X_train_path,
                 "X_test": X_test_path,
@@ -394,7 +223,7 @@ class DataPrepAgent(BaseAgent):
             },
             "artifacts": {
                 "preprocessor": preproc_path,
-                "feature_names": features_path,
+                "features": features_path,
             },
         }
 
@@ -407,12 +236,7 @@ class DataPrepAgent(BaseAgent):
         # Log to central memory (store both deterministic summary and LLM outputs)
         if self.hub and self.hub.memory:
             self.hub.memory.log_event(self.name, "data_preparation", metadata)
-            # also update last_data_prep to a compact summary
-            self.hub.memory.update("last_data_prep", {
-                "timestamp": timestamp,
-                "summary": pipeline_summary,
-                "suggestions": suggestions,
-            })
+            self.hub.memory.update("last_data_prep_summary", explanation)
 
         # Return message to the hub
         return Message(

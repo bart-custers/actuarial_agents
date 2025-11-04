@@ -1,4 +1,50 @@
 PROMPTS = {
+    "dataprep_layer1": """
+    You are an expert data preparation agent for actuarial datasets.
+    Dataset summary:
+    {info_dict}
+
+    1) Briefly restate the assignment in one sentence.
+    2) List the top 6 actions you think are most important to prepare this dataset for claim frequency modelling (short bullet list).
+    3) Provide any immediate warnings (e.g., very skewed numeric columns, too many missing values).
+    Respond concisely.
+    """,
+
+    "dataprep_layer2": """
+    You are advising on preprocessing transformations for actuarial modeling.
+    Given this dataset summary and the existing pipeline code, suggest
+    any improvements or additional transformations.
+
+    Context (summary of your earlier recommendations):
+    {summary1}
+
+    Dataset summary:
+    {info_dict}
+
+    Existing pipeline:
+    {pipeline_code}
+
+    Output a JSON object:
+    {{
+        "actions": ["list", "of", "actions"],
+        "confidence": <float between 0 and 1>,
+        "override_pipeline": "optional Python code to override deterministic pipeline"
+    }}
+    """,
+
+    "dataprep_layer3": """
+    Compare deterministic vs adaptive pipelines:
+    {comparison}
+    The model gave confidence={confidence}.
+    Should the adaptive pipeline be used? Justify clearly and decide: USE_ADAPTIVE or KEEP_BASELINE.
+    """,
+
+    "dataprep_layer4": """
+    Summarize the verified data preparation and reasoning.
+    Include stability, differences, and final rationale.
+    Verification feedback: {verification}.
+    """,
+    
     "data_prep": """
     You are an AI assistant summarizing a data preprocessing pipeline for an actuarial audience.
     Write a clear explanation of the following cleaning steps and why they are important:
