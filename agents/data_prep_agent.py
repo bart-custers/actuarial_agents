@@ -4,6 +4,7 @@ import joblib
 import pandas as pd
 from datetime import datetime
 from typing import Dict, Any, List
+from langchain_core.runnables import RunnableLambda
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
 from langchain.memory import ConversationBufferMemory
@@ -26,9 +27,14 @@ class DataPrepAgent(BaseAgent):
         # Short-term conversation memory for layered prompting
         self.memory = ConversationBufferMemory(memory_key="chat_history", return_messages=False)
 
+    # def _make_chain(self, prompt_key):
+    #     prompt = PromptTemplate.from_template(PROMPTS[prompt_key])
+    #     return LLMChain(llm=self.llm, prompt=prompt, memory=self.memory, verbose=False)
+        
     def _make_chain(self, prompt_key):
         prompt = PromptTemplate.from_template(PROMPTS[prompt_key])
-        return LLMChain(llm=self.llm, prompt=prompt, memory=self.memory, verbose=False)
+        llm_runnable = RunnableLambda(lambda x: self.llm(x["input"]))
+        return LLMChain(llm=llm_runnable, prompt=prompt, memory=self.memory, verbose=False)    
         # Setup LLMChains
         # If self.llm is a LangChain LLM implementor (e.g., ChatOpenAI), we can pass it to LLMChain.
         # If self.llm is a callable wrapper (returns string), we will call it directly as fallback.
