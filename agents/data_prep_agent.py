@@ -113,20 +113,26 @@ class DataPrepAgent(BaseAgent):
         # --------------------
         # Layer 1: recall & plan (LLM)
         # --------------------
-        plan_chain = self._make_chain("dataprep_layer1")
-        summary1 = plan_chain.run(info_dict=json.dumps(info_dict, indent=2))
-        self.memory.save_context({"input": info_dict}, {"output": summary1})
+        # plan_chain = self._make_chain("dataprep_layer1")
+        # summary1 = plan_chain.run(info_dict=json.dumps(info_dict, indent=2))
+        # self.memory.save_context({"input": info_dict}, {"output": summary1})
+
+        plan_prompt = PROMPTS["dataprep_layer1"].format(info_dict=json.dumps(info_dict, indent=2))
+        summary1 = self.llm(plan_prompt)
         
         print(f"[{self.name}] Starting layer 2...")
         # --------------------
         # Layer 2: suggestions (LLM)
         # --------------------
-        adapt_chain = self._make_chain("dataprep_layer2_confidence")
-        suggestion = adapt_chain.run(summary1,
-            info_dict=json.dumps(info_dict, indent=2),
-            pipeline_code=open("utils/data_pipeline.py").read()
-        )
-        self.memory.save_context({"input": summary1}, {"output": suggestion})
+        # adapt_chain = self._make_chain("dataprep_layer2")
+        # suggestion = adapt_chain.run(summary1,
+        #     info_dict=json.dumps(info_dict, indent=2),
+        #     pipeline_code=open("utils/data_pipeline.py").read()
+        # )
+        # self.memory.save_context({"input": summary1}, {"output": suggestion})
+
+        suggestion_prompt = PROMPTS["dataprep_layer2"].format(summary1=summary1,info_dict=json.dumps(info_dict, indent=2),pipeline_code=open("utils/data_pipeline.py").read())
+        suggestion = self.llm(suggestion_prompt)
 
         confidence = self._extract_confidence(suggestion)
         print("[{self.name}] Layer 2 confidence: {confidence:.2f}")
@@ -154,12 +160,15 @@ class DataPrepAgent(BaseAgent):
         # --------------------
         # Layer 3: verification (LLM)
         # --------------------
-        verify_chain = self._make_chain("dataprep_layer3")
-        verification = verify_chain.run(
-            comparison=json.dumps(comparison_summary, indent=2),
-            confidence=confidence,
-        )
+        # verify_chain = self._make_chain("dataprep_layer3")
+        # verification = verify_chain.run(
+        #     comparison=json.dumps(comparison_summary, indent=2),
+        #     confidence=confidence,
+        # )
         
+        verify_prompt = PROMPTS["dataprep_layer3"].format(comparison=json.dumps(comparison_summary, indent=2),confidence=confidence)
+        verification = self.llm(verify_prompt)
+
          # Decide based on verification judgment
         use_adaptive = "USE_ADAPTIVE" in verification.upper() and adaptive_success
         chosen_results = adaptive_results if use_adaptive else deterministic_results
@@ -202,6 +211,10 @@ class DataPrepAgent(BaseAgent):
         explanation = explain_chain.run(
             verification=verification
         )
+
+        explain_prompt = PROMPTS["dataprep_layer4"].format(verification=verification)
+        explanation = self.llm(explain_prompt)
+
         print(f"[{self.name}] Explanation:\n{explanation}")
         print(f"[{self.name}] Finalize...")
 
