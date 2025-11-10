@@ -32,7 +32,7 @@ PROMPTS = {
     - No explanations or comments outside the code block.
     - Do NOT import any modules.
     - Do NOT read/write files.
-    - Make sure the python code always contains these elements: 
+    - Make sure the python code always outputs these elements: 
     
     "X_train": ...,
     "X_test": ...,
