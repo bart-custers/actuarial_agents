@@ -33,6 +33,12 @@ PROMPTS = {
 
     ```python
     # your code here
+
+    At the end of your answer, output:
+
+    CONFIDENCE: <a number between 0 and 1>
+
+    This line MUST be present.
     """,
 
     "dataprep_layer3": """

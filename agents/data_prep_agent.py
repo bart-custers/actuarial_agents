@@ -60,10 +60,14 @@ class DataPrepAgent(BaseAgent):
         match = re.search(r"```python(.*?)```", text, re.DOTALL)
         return match.group(1).strip() if match else None
 
-    def _extract_confidence(self, suggestion_text: str) -> float:
-        """Extract confidence rating (0–1) from LLM output if present."""
-        import re
-        match = re.search(r"confidence[:=]\s*([\d\.]+)", suggestion_text.lower())
+    # def _extract_confidence(self, suggestion_text: str) -> float:
+    #     """Extract confidence rating (0–1) from LLM output if present."""
+    #     import re
+    #     match = re.search(r"confidence[:=]\s*([\d\.]+)", suggestion_text.lower())
+    #     return float(match.group(1)) if match else 0.5
+    
+    def _extract_confidence(self, text):
+        match = re.search(r"confidence:\s*([\d\.]+)", text.lower())
         return float(match.group(1)) if match else 0.5
 
     # def _apply_llm_pipeline(self, df: pd.DataFrame, suggestion_text: str):
