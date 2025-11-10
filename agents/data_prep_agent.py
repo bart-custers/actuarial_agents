@@ -1,5 +1,6 @@
 import os
 import json
+import re
 import joblib
 import pandas as pd
 from datetime import datetime
@@ -54,19 +55,47 @@ class DataPrepAgent(BaseAgent):
     # Helper functions
     # --------------------------
 
+    def extract_code_block(text: str) -> str | None:
+        """Extract ```python ... ``` code block from LLM output."""
+        match = re.search(r"```python(.*?)```", text, re.DOTALL)
+        return match.group(1).strip() if match else None
+
     def _extract_confidence(self, suggestion_text: str) -> float:
         """Extract confidence rating (0–1) from LLM output if present."""
         import re
         match = re.search(r"confidence[:=]\s*([\d\.]+)", suggestion_text.lower())
         return float(match.group(1)) if match else 0.5
 
+    # def _apply_llm_pipeline(self, df: pd.DataFrame, suggestion_text: str):
+    #     """Safely run any code snippet proposed by LLM (sandbox-like)."""
+    #     if "import" in suggestion_text or "os." in suggestion_text:
+    #         raise ValueError("Unsafe LLM suggestion detected.")
+    #     # This example only accepts dictionary-style mapping suggestions
+    #     # In future: implement real DSL or code parsing
+    #     return DataPipeline().clean(df)
     def _apply_llm_pipeline(self, df: pd.DataFrame, suggestion_text: str):
-        """Safely run any code snippet proposed by LLM (sandbox-like)."""
-        if "import" in suggestion_text or "os." in suggestion_text:
-            raise ValueError("Unsafe LLM suggestion detected.")
-        # This example only accepts dictionary-style mapping suggestions
-        # In future: implement real DSL or code parsing
-        return DataPipeline().clean(df)
+        """Executes LLM-generated preprocessing code safely."""
+        code = self.extract_code_block(suggestion_text)
+        if code is None:
+            raise ValueError("No Python code block found in LLM suggestion.")
+            raise ValueError("No Python code block found in LLM suggestion.")
+
+        # Safety: forbid imports or system calls
+        if "import os" in code or "subprocess" in code or "open(" in code:
+            raise ValueError("Unsafe code detected.")
+
+        # Local execution namespace
+        local_env = {"df": df.copy(), "np": np, "pd": pd}
+
+        try:
+            exec(code, {}, local_env)
+        except Exception as e:
+            raise ValueError(f"Adaptive preprocessing code failed: {e}")
+
+        if "df" not in local_env:
+            raise ValueError("Adaptive code did not modify df.")
+
+        return local_env["df"]
 
     def _compare_pipelines(self, det, adapt):
         """Quantitative comparison of two pipelines."""

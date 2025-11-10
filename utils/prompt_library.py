@@ -24,12 +24,15 @@ PROMPTS = {
     Existing pipeline:
     {pipeline_code}
 
-    Output a JSON object:
-    {{
-        "actions": ["list", "of", "actions"],
-        "confidence": <float between 0 and 1>,
-        "override_pipeline": "optional Python code to override deterministic pipeline"
-    }}
+    You will now propose OPTIONAL adaptive preprocessing code.
+
+    ### Instructions
+    - You MUST output runnable Python code only.
+    - Do NOT provide explanations.
+    - Wrap the code in triple backticks like this:
+
+    ```python
+    # your code here
     """,
 
     "dataprep_layer3": """
