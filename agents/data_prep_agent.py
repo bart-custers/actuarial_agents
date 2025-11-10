@@ -54,7 +54,7 @@ class DataPrepAgent(BaseAgent):
     # --------------------------
     # Helper functions
     # --------------------------
-
+    @staticmethod
     def extract_code_block(text: str) -> str | None:
         """Extract ```python ... ``` code block from LLM output."""
         match = re.search(r"```python(.*?)```", text, re.DOTALL)
@@ -77,7 +77,6 @@ class DataPrepAgent(BaseAgent):
         """Executes LLM-generated preprocessing code safely."""
         code = self.extract_code_block(suggestion_text)
         if code is None:
-            raise ValueError("No Python code block found in LLM suggestion.")
             raise ValueError("No Python code block found in LLM suggestion.")
 
         # Safety: forbid imports or system calls
