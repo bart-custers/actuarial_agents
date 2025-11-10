@@ -3,6 +3,7 @@ import json
 import re
 import joblib
 import pandas as pd
+import numpy as np
 from datetime import datetime
 from typing import Dict, Any, List
 from langchain_core.runnables import RunnableLambda
@@ -25,31 +26,7 @@ class DataPrepAgent(BaseAgent):
         self.llm = shared_llm
         self.system_prompt = system_prompt
         self.hub = hub
-        # Short-term conversation memory for layered prompting
-        self.memory = ConversationBufferMemory(memory_key="chat_history", return_messages=False)
-
-    # def _make_chain(self, prompt_key):
-    #     prompt = PromptTemplate.from_template(PROMPTS[prompt_key])
-    #     return LLMChain(llm=self.llm, prompt=prompt, memory=self.memory, verbose=False)
-        
-    def _make_chain(self, prompt_key):
-        prompt = PromptTemplate.from_template(PROMPTS[prompt_key])
-        llm_runnable = RunnableLambda(lambda x: self.llm(x["input"]))
-        return LLMChain(llm=llm_runnable, prompt=prompt, memory=self.memory, verbose=False)    
-        # Setup LLMChains
-        # If self.llm is a LangChain LLM implementor (e.g., ChatOpenAI), we can pass it to LLMChain.
-        # If self.llm is a callable wrapper (returns string), we will call it directly as fallback.
-        # try:
-        #     self.chain_layer1 = LLMChain(llm=self.llm, prompt=PROMPTS["dataprep_layer1"], memory=self.memory)
-        #     self.chain_layer2 = LLMChain(llm=self.llm, prompt=PROMPTS["dataprep_layer2"], memory=self.memory)
-        #     self.chain_layer3 = LLMChain(llm=self.llm, prompt=PROMPTS["dataprep_layer3"], memory=self.memory)
-        #     self.use_chains = True
-        # except Exception:
-        #     # Fallback: call llm directly with formatted prompt texts
-        #     self.chain_layer1 = None
-        #     self.chain_layer2 = None
-        #     self.chain_layer3 = None
-        #     self.use_chains = False
+        self.memory = ConversationBufferMemory(memory_key="chat_history", return_messages=False) # Short-term conversation memory for layered prompting
 
     # --------------------------
     # Helper functions
@@ -59,13 +36,7 @@ class DataPrepAgent(BaseAgent):
         """Extract ```python ... ``` code block from LLM output."""
         match = re.search(r"```python(.*?)```", text, re.DOTALL)
         return match.group(1).strip() if match else None
-
-    # def _extract_confidence(self, suggestion_text: str) -> float:
-    #     """Extract confidence rating (0–1) from LLM output if present."""
-    #     import re
-    #     match = re.search(r"confidence[:=]\s*([\d\.]+)", suggestion_text.lower())
-    #     return float(match.group(1)) if match else 0.5
-    
+  
     def _extract_confidence(self, text):
         match = re.search(r"confidence:\s*([\d\.]+)", text.lower())
         return float(match.group(1)) if match else 0.5
@@ -119,7 +90,9 @@ class DataPrepAgent(BaseAgent):
     def handle_message(self, message: Message) -> Message:
         print(f"[{self.name}] Starting data preparation...")
 
-        # --- Step 1: Load dataset (python) ---
+        # --------------------
+        # Load dataset
+        # --------------------
         dataset_path = message.metadata.get("dataset_path", "data/raw/freMTPL2freq.csv")
         try:
             df = pd.read_csv(dataset_path)
@@ -145,26 +118,21 @@ class DataPrepAgent(BaseAgent):
         # --------------------
         # Layer 1: recall & plan (LLM)
         # --------------------
-        # plan_chain = self._make_chain("dataprep_layer1")
-        # summary1 = plan_chain.run(info_dict=json.dumps(info_dict, indent=2))
-        # self.memory.save_context({"input": info_dict}, {"output": summary1})
-
         plan_prompt = PROMPTS["dataprep_layer1"].format(info_dict=json.dumps(info_dict, indent=2))
         summary1 = self.llm(plan_prompt)
+        self.memory.chat_memory.add_user_message(plan_prompt)
+        self.memory.chat_memory.add_ai_message(summary1)
         
         print(f"[{self.name}] Invoke layer 2...")
+
         # --------------------
         # Layer 2: suggestions (LLM)
         # --------------------
-        # adapt_chain = self._make_chain("dataprep_layer2")
-        # suggestion = adapt_chain.run(summary1,
-        #     info_dict=json.dumps(info_dict, indent=2),
-        #     pipeline_code=open("utils/data_pipeline.py").read()
-        # )
-        # self.memory.save_context({"input": summary1}, {"output": suggestion})
-
         suggestion_prompt = PROMPTS["dataprep_layer2"].format(summary1=summary1,info_dict=json.dumps(info_dict, indent=2),pipeline_code=open("utils/data_pipeline.py").read())
         suggestion = self.llm(suggestion_prompt)
+
+        self.memory.chat_memory.add_user_message(suggestion_prompt)
+        self.memory.chat_memory.add_ai_message(suggestion)
 
         confidence = self._extract_confidence(suggestion)
         print(f"[{self.name}] Layer 2 confidence: {confidence:.2f}")
@@ -192,14 +160,11 @@ class DataPrepAgent(BaseAgent):
         # --------------------
         # Layer 3: verification (LLM)
         # --------------------
-        # verify_chain = self._make_chain("dataprep_layer3")
-        # verification = verify_chain.run(
-        #     comparison=json.dumps(comparison_summary, indent=2),
-        #     confidence=confidence,
-        # )
-        
         verify_prompt = PROMPTS["dataprep_layer3"].format(comparison=json.dumps(comparison_summary, indent=2),confidence=confidence)
         verification = self.llm(verify_prompt)
+
+        self.memory.chat_memory.add_user_message(verify_prompt)
+        self.memory.chat_memory.add_ai_message(verification)
 
          # Decide based on verification judgment
         use_adaptive = "USE_ADAPTIVE" in verification.upper() and adaptive_success
@@ -239,18 +204,13 @@ class DataPrepAgent(BaseAgent):
         # --------------------
         # Layer 4: LLM inspects result
         # --------------------
-        # explain_chain = self._make_chain("dataprep_layer4")
-        # explanation = explain_chain.run(
-        #     verification=verification
-        # )
-
         explain_prompt = PROMPTS["dataprep_layer4"].format(verification=verification)
         explanation = self.llm(explain_prompt)
 
         print(f"[{self.name}] Finalize...")
 
         # --------------------
-        # Step 5: Save metadata (keeps your original structure)
+        # Save metadata (keeps your original structure)
         # --------------------
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         metadata = {
