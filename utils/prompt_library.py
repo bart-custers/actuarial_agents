@@ -4,6 +4,7 @@ PROMPTS = {
     Dataset summary:
     {info_dict}
 
+    Think step-by-step and list:
     1) Briefly restate the assignment in one sentence.
     2) List the top 6 actions you think are most important to prepare this dataset for claim frequency modelling (short bullet list).
     3) Provide any immediate warnings (e.g., very skewed numeric columns, too many missing values).
@@ -27,12 +28,13 @@ PROMPTS = {
     You will now propose OPTIONAL adaptive preprocessing code.
 
     ### Instructions
-    - You MUST output runnable Python code only.
-    - Do NOT provide explanations.
+    - ONLY output Python code inside a ```python``` code block.
+    - No explanations or comments outside the code block.
+    - Do NOT import any modules.
+    - Do NOT read/write files.
     - Wrap the code in triple backticks like this:
 
-    ```python
-    # your code here
+    ```python code here```
 
     At the end of your answer, output:
 

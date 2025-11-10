@@ -6,9 +6,6 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 from typing import Dict, Any, List
-from langchain_core.runnables import RunnableLambda
-from langchain.chains import LLMChain
-from langchain.prompts import PromptTemplate
 from langchain.memory import ConversationBufferMemory
 from utils.general_utils import save_json_safe
 from utils.prompt_library import PROMPTS
@@ -136,6 +133,8 @@ class DataPrepAgent(BaseAgent):
 
         confidence = self._extract_confidence(suggestion)
         print(f"[{self.name}] Layer 2 confidence: {confidence:.2f}")
+
+        print(suggestion)
 
         # === Apply deterministic pipeline
         det_pipe = DataPipeline()
