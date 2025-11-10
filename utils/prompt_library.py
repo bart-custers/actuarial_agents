@@ -32,6 +32,16 @@ PROMPTS = {
     - No explanations or comments outside the code block.
     - Do NOT import any modules.
     - Do NOT read/write files.
+    - Make sure the python code always contains these elements: {
+    "X_train": ...,
+    "X_test": ...,
+    "y_train": ...,
+    "y_test": ...,
+    "exposure_train": ...,
+    "exposure_test": ...,
+    "feature_names": [...],
+    "actions_log": [...]
+    }
     - Wrap the code in triple backticks like this:
 
     ```python code here```
