@@ -73,8 +73,8 @@ class DataPrepAgent(BaseAgent):
         """Quantitative comparison of two pipelines."""
         if adapt is None:
             return {"status": "adaptive_failed"}
-        det_shape = det["X_train"].shape
-        adapt_shape = adapt["X_train"].shape if "X_train" in adapt else None
+        det_shape = det.shape
+        adapt_shape = adapt.shape if "X_train" in adapt else None
         det_cols = det.columns.to_list() if hasattr(det, 'columns') else []
         adapt_cols = adapt.columns.to_list() if hasattr(adapt, 'columns') else []
         feature_overlap = len(set(det_cols) & set(adapt_cols))
