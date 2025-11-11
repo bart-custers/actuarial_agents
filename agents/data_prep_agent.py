@@ -74,7 +74,7 @@ class DataPrepAgent(BaseAgent):
         if adapt is None:
             return {"status": "adaptive_failed"}
         det_shape = det.shape
-        adapt_shape = adapt.shape if "X_train" in adapt else None
+        adapt_shape = adapt.shape
         det_cols = det.columns.to_list() if hasattr(det, 'columns') else []
         adapt_cols = adapt.columns.to_list() if hasattr(adapt, 'columns') else []
         feature_overlap = len(set(det_cols) & set(adapt_cols))

@@ -13,7 +13,7 @@ class DataCleaning:
         """
         Perform deterministic data cleaning and preprocessing.
         Returns:
-            dict with cleaned DataFrames and metadata
+            df with cleaned DataFrame
         """
 
         # --- Step 1: Clip outliers / right-censoring ---
@@ -33,7 +33,5 @@ class DataCleaning:
         data = data.dropna()
         after = len(data)
         self.actions_log.append(f"Dropped {before - after} rows with missing values.")
-
-    def summary(self):
-        """Human-readable summary of actions taken."""
-        return "\n".join(self.actions_log)
+        
+        return data
