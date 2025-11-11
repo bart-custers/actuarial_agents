@@ -178,7 +178,7 @@ class DataPrepAgent(BaseAgent):
         # --------------------
 
         preprocess_pipe = DataPipeline()
-        df_processed = preprocess_pipe.clean(chosen_results)
+        df_processed = preprocess_pipe.process(chosen_results)
 
         # Save processed datasets
         processed_dir = "data/processed"
