@@ -1,6 +1,6 @@
 PROMPTS = {
     "dataprep_layer1": """
-    You are an expert data preparation agent for actuarial datasets.
+    You are an expert data preparation agent for actuarial datasets on insurance claims.
     Dataset summary:
     {info_dict}
 
@@ -59,19 +59,49 @@ PROMPTS = {
     Verification feedback: {verification}.
     """,
     
-    "data_prep": """
-    You are an AI assistant summarizing a data preprocessing pipeline for an actuarial audience.
-    Write a clear explanation of the following cleaning steps and why they are important:
-    {summary_text}
+    "modelling_layer1": """
+    You are an expert in actuarial modelling, assisting in claim frequency prediction for insurance claims.
+
+    A dataset has been preprocessed and is now ready for model training.
+    Here is the dataset description:
+
+    {dataset_desc}
+
+    Your tasks, thinking step-by-step:
+
+    1. Restate the modelling goal in one short sentence.
+    2. Confirm that this modelling task is about regression, with claim_count/exposure as target variable.
+    3. Propose the most appropriate modelling approach for this problem:
+    - Choose **exactly one**: GLM or GBM.
+    4. Justify your choice in 3–5 bullet points (actuarial + ML reasoning).
+    5. State any risks or pitfalls you anticipate for this model type.
+
+    Respond concisely. Decide: USE_GLM or USE_GBM.
     """,
 
-    "modelling": """
-    You are an actuarial data scientist reviewing model results.
-    Explain these evaluation metrics for a GLM claim frequency model in plain terms:
+    "modelling_layer2": """
+    You are an expert in actuarial modelling, assisting in claim frequency prediction for insurance claims.
 
-    {metrics}
+    For this task you proposed to use the following model:
+    {model_choice}
 
-    Highlight whether model fit is reasonable, any bias patterns, and next steps for improvement.
+    You will now propose python code to train this model on the dataset. As context you can use the existing pipeline code for a GLM:
+    {current_model_code}
+
+    ### Instructions
+    - Think step-by-step, using the model_choice.
+    - ONLY output Python code inside a ```python``` code block.
+    - No explanations or comments outside the code block.
+    - Do NOT import any modules.
+    - Do NOT read/write files.
+    
+    - Wrap the code in triple backticks like this:
+
+    ```python code here```
+
+    At the end of your answer, output:
+
+    CONFIDENCE: <a number between 0 and 1>
     """,
 
     "review_model": """
