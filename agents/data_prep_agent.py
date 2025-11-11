@@ -39,13 +39,6 @@ class DataPrepAgent(BaseAgent):
         match = re.search(r"confidence:\s*([\d\.]+)", text.lower())
         return float(match.group(1)) if match else 0.5
 
-    # def _apply_llm_pipeline(self, df: pd.DataFrame, suggestion_text: str):
-    #     """Safely run any code snippet proposed by LLM (sandbox-like)."""
-    #     if "import" in suggestion_text or "os." in suggestion_text:
-    #         raise ValueError("Unsafe LLM suggestion detected.")
-    #     # This example only accepts dictionary-style mapping suggestions
-    #     # In future: implement real DSL or code parsing
-    #     return DataPipeline().clean(df)
     def _apply_llm_pipeline(self, df: pd.DataFrame, suggestion_text: str):
         """Executes LLM-generated preprocessing code safely."""
         code = self.extract_code_block(suggestion_text)
@@ -155,6 +148,8 @@ class DataPrepAgent(BaseAgent):
         # === Compare pipelines
         comparison_summary = self._compare_pipelines(deterministic_results, adaptive_results)
 
+        print(comparison_summary)
+
         print(f"[{self.name}] Invoke layer 3...")
 
         # --------------------
@@ -217,7 +212,7 @@ class DataPrepAgent(BaseAgent):
         print(f"[{self.name}] Finalize...")
 
         # --------------------
-        # Save metadata (keeps your original structure)
+        # Save metadata
         # --------------------
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         metadata = {

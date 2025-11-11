@@ -28,6 +28,7 @@ PROMPTS = {
     You will now propose OPTIONAL adaptive preprocessing code.
 
     ### Instructions
+    - Think step-by-step, using the dataset summary and existing pipeline as context.
     - ONLY output Python code inside a ```python``` code block.
     - No explanations or comments outside the code block.
     - Do NOT import any modules.
