@@ -10,6 +10,7 @@ from langchain.memory import ConversationBufferMemory
 from utils.general_utils import save_json_safe
 from utils.prompt_library import PROMPTS
 from utils.data_pipeline import DataPipeline
+from utils.data_cleaning import DataCleaning
 from utils.message_types import Message
 from agents.base_agent import BaseAgent
 
@@ -74,7 +75,9 @@ class DataPrepAgent(BaseAgent):
             return {"status": "adaptive_failed"}
         det_shape = det["X_train"].shape
         adapt_shape = adapt["X_train"].shape if "X_train" in adapt else None
-        feature_overlap = len(set(det["feature_names"]) & set(adapt["feature_names"]))
+        det_cols = det.columns.to_list() if hasattr(det, 'columns') else []
+        adapt_cols = adapt.columns.to_list() if hasattr(adapt, 'columns') else []
+        feature_overlap = len(set(det_cols) & set(adapt_cols))
         return {
             "status": "adaptive_succeeded",
             "feature_overlap": feature_overlap,
@@ -137,10 +140,8 @@ class DataPrepAgent(BaseAgent):
         print(suggestion)
 
         # === Apply deterministic pipeline
-        det_pipe = DataPipeline()
+        det_pipe = DataCleaning()
         deterministic_results = det_pipe.clean(df)
-        deterministic_X = deterministic_results["X_train"]
-        deterministic_features = deterministic_results["feature_names"]
 
         # === Attempt adaptive pipeline
         try:
@@ -172,6 +173,13 @@ class DataPrepAgent(BaseAgent):
 
         print(f"[{self.name}] Final decision: using {chosen_pipeline_name} pipeline.")
 
+        # --------------------
+        # Preprocess the data
+        # --------------------
+
+        preprocess_pipe = DataPipeline()
+        df_processed = preprocess_pipe.clean(chosen_results)
+
         # Save processed datasets
         processed_dir = "data/processed"
         artifacts_dir = "data/artifacts"
@@ -186,17 +194,17 @@ class DataPrepAgent(BaseAgent):
         exposure_train_path = os.path.join(processed_dir, f"{base_name}_exposure_train.csv")
         exposure_test_path = os.path.join(processed_dir, f"{base_name}_exposure_test.csv")
 
-        pd.DataFrame(chosen_results["X_train"], columns=chosen_results["feature_names"]).to_csv(X_train_path, index=False)
-        pd.DataFrame(chosen_results["X_test"], columns=chosen_results["feature_names"]).to_csv(X_test_path, index=False)
-        chosen_results["y_train"].to_csv(y_train_path, index=False)
-        chosen_results["y_test"].to_csv(y_test_path, index=False)
-        chosen_results["exposure_train"].to_csv(exposure_train_path, index=False)
-        chosen_results["exposure_test"].to_csv(exposure_test_path, index=False)
+        pd.DataFrame(df_processed["X_train"], columns=df_processed["feature_names"]).to_csv(X_train_path, index=False)
+        pd.DataFrame(df_processed["X_test"], columns=df_processed["feature_names"]).to_csv(X_test_path, index=False)
+        df_processed["y_train"].to_csv(y_train_path, index=False)
+        df_processed["y_test"].to_csv(y_test_path, index=False)
+        df_processed["exposure_train"].to_csv(exposure_train_path, index=False)
+        df_processed["exposure_test"].to_csv(exposure_test_path, index=False)
 
         preproc_path = os.path.join(artifacts_dir, f"preprocessor.pkl")
         features_path = os.path.join(artifacts_dir, f"feature_names.pkl")
-        joblib.dump(chosen_results["feature_names"], features_path)
-        joblib.dump(det_pipe.preprocessor, preproc_path)
+        joblib.dump(df_processed["feature_names"], features_path)
+        joblib.dump(preprocess_pipe.preprocessor, preproc_path)
 
         print(f"[{self.name}] Invoke layer 4...")
 

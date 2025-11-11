@@ -32,15 +32,7 @@ PROMPTS = {
     - No explanations or comments outside the code block.
     - Do NOT import any modules.
     - Do NOT read/write files.
-    - Make sure the python code always outputs these elements: 
-    
-    "X_train": ...,
-    "X_test": ...,
-    "y_train": ...,
-    "y_test": ...,
-    "exposure_train": ...,
-    "exposure_test": ...,
-    "feature_names": [...],
+    - Always output a dataframe named `df_out` at the end.
     
     - Wrap the code in triple backticks like this:
 
