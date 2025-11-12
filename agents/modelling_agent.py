@@ -233,7 +233,7 @@ class ModellingAgent(BaseAgent):
             sender=self.name,
             recipient="hub",
             type="response",
-            content=f"Model ({self.model_type}) trained and evaluated successfully.",
+            content=f"Model trained and evaluated successfully.",
             metadata=metadata,
         )
 
