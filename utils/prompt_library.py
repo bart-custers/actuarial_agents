@@ -92,7 +92,6 @@ PROMPTS = {
     - Think step-by-step, using the model_choice.
     - ONLY output Python code inside a ```python``` code block.
     - No explanations or comments outside the code block.
-    - Do NOT import any modules.
     - Do NOT read/write files.
     - The code must output predictions on X_test as `preds`.
     
