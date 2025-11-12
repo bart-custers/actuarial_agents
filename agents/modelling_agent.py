@@ -99,7 +99,7 @@ class ModellingAgent(BaseAgent):
         # Layer 1: recall & plan (LLM)
         # --------------------
         layer1_prompt = PROMPTS["modelling_layer1"].format(
-            dataset=json.dumps(dataset_desc, indent=2)
+            dataset_desc=json.dumps(dataset_desc, indent=2)
         )
         proposal = self.llm(layer1_prompt)
         self.memory.chat_memory.add_user_message(layer1_prompt)
