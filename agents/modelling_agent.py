@@ -23,28 +23,60 @@ class ModellingAgent(BaseAgent):
     # -------------------------------
     # Helper functions
     # -------------------------------
-    def _apply_llm_pipeline(self, df: pd.DataFrame, suggestion_text: str):
-        """Executes LLM-generated preprocessing code safely."""
-        code = self.extract_code_block(suggestion_text)
+    # def _apply_llm_pipeline(self, df: pd.DataFrame, suggestion_text: str):
+    #     """Executes LLM-generated preprocessing code safely."""
+    #     code = self.extract_code_block(suggestion_text)
+    #     if code is None:
+    #         raise ValueError("No Python code block found in LLM suggestion.")
+
+    #     # Safety: forbid imports or system calls
+    #     if "import os" in code or "subprocess" in code or "open(" in code:
+    #         raise ValueError("Unsafe code detected.")
+
+    #     # Local execution namespace
+    #     local_env = {"df": df.copy(), "np": np, "pd": pd}
+
+    #     try:
+    #         exec(code, {}, local_env)
+    #     except Exception as e:
+    #         raise ValueError(f"Adaptive preprocessing code failed: {e}")
+
+    #     if "df" not in local_env:
+    #         raise ValueError("Adaptive code did not modify df.")
+
+    #     return local_env["df"]
+    
+    def _apply_llm_pipeline(self, X_train, y_train, X_test, model_code: str):
+        """Executes LLM-generated model training code safely, returning predictions."""
+        code = self.extract_code_block(model_code)
         if code is None:
             raise ValueError("No Python code block found in LLM suggestion.")
 
         # Safety: forbid imports or system calls
-        if "import os" in code or "subprocess" in code or "open(" in code:
+        if any(x in code for x in ["import os", "subprocess", "open("]):
             raise ValueError("Unsafe code detected.")
 
-        # Local execution namespace
-        local_env = {"df": df.copy(), "np": np, "pd": pd}
+        # Local namespace with training data
+        local_env = {
+            "pd": pd,
+            "np": np,
+            "X_train": X_train,
+            "y_train": y_train,
+            "X_test": X_test,
+        }
 
         try:
             exec(code, {}, local_env)
         except Exception as e:
-            raise ValueError(f"Adaptive preprocessing code failed: {e}")
+            raise ValueError(f"Adaptive model training code failed: {e}")
 
-        if "df" not in local_env:
-            raise ValueError("Adaptive code did not modify df.")
-
-        return local_env["df"]
+        # The LLM’s code should define a trained model and predictions
+        if "preds" in local_env:
+            return local_env["preds"]
+        elif "model" in local_env and hasattr(local_env["model"], "predict"):
+            return local_env["model"].predict(X_test)
+        else:
+            raise ValueError("Adaptive code did not return predictions or a model object.")
     
     def _extract_model_choice(self, llm_text: str) -> str:
         text = llm_text.lower()
@@ -134,12 +166,12 @@ class ModellingAgent(BaseAgent):
 
         # === Attempt LLM pipeline
         try:
-            llm_model_preds = self._apply_llm_pipeline(X_train, y_train, model_code)
+            llm_model_preds = self._apply_llm_pipeline(X_train, y_train, X_test, model_code)
             llm_model_success = True
         except Exception as e:
             llm_model_preds = None
             llm_model_success = False
-            print(f"[{self.name}] LLm model training failed: {e}")
+            print(f"[{self.name}] LLM model training failed: {e}")
 
         # === Fallback pipeline
         if llm_model_success == True:
@@ -148,12 +180,15 @@ class ModellingAgent(BaseAgent):
             trainer = ModelTrainer(model_type="glm")
             trainer.train(X_train, y_train)
             model_predictions = trainer.predict(X_test)
+            print(f"[{self.name}] Fallback to GLM model training")
 
         # --------------------
         # Evaluate model
         # --------------------
         print(f"[{self.name}] Invoke model evaluation...")
-        evaluator = ModelEvaluation(model_type="glm")
+        # evaluator = ModelEvaluation(model_type="glm")
+        # metrics = evaluator.evaluate(y_test, model_predictions, feature_names, exposure_test)
+        evaluator = ModelEvaluation(model=trainer.model, model_type=model_choice)
         metrics = evaluator.evaluate(y_test, model_predictions, feature_names, exposure_test)
 
         # -----------------------------------------------------

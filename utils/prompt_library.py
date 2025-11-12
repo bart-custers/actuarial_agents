@@ -94,6 +94,7 @@ PROMPTS = {
     - No explanations or comments outside the code block.
     - Do NOT import any modules.
     - Do NOT read/write files.
+    - The code must output predictions on X_test as `preds`.
     
     - Wrap the code in triple backticks like this:
 
