@@ -1,10 +1,13 @@
 import os
 import pandas as pd
 import json
+import numpy as np
+import re
 from datetime import datetime
 from utils.general_utils import save_json_safe
 from utils.message_types import Message
 from utils.model_trainer import ModelTrainer
+from utils.model_evaluation import ModelEvaluation
 from utils.prompt_library import PROMPTS
 from langchain.memory import ConversationBufferMemory
 from agents.base_agent import BaseAgent
@@ -116,6 +119,8 @@ class ModellingAgent(BaseAgent):
         )
         
         model_code = self.llm(layer2_prompt)
+        self.memory.chat_memory.add_user_message(layer2_prompt)
+        self.memory.chat_memory.add_ai_message(model_code)
 
         confidence = self._extract_confidence(layer2_prompt)
         print(f"[{self.name}] Layer 2 confidence: {confidence:.2f}")
@@ -144,33 +149,35 @@ class ModellingAgent(BaseAgent):
             trainer.train(X_train, y_train)
             model_predictions = trainer.predict(X_test)
 
-        # -----------------------------------------------------
-        # ✅ Evaluate model
-        # -----------------------------------------------------
-        trainer = ModelTrainer(model_type="glm")
-        metrics = trainer.evaluate(y_test, chosen_preds, feature_names, exposure_test)
+        # --------------------
+        # Evaluate model
+        # --------------------
+        print(f"[{self.name}] Invoke model evaluation...")
+        evaluator = ModelEvaluation(model_type="glm")
+        metrics = evaluator.evaluate(y_test, model_predictions, feature_names, exposure_test)
 
         # -----------------------------------------------------
         # ✅ LAYER 3 — LLM describes results
         # -----------------------------------------------------
-        layer3_prompt = PROMPTS["modelling_layer3"].format(
-            metrics=json.dumps(metrics, indent=2),
-            model_choice=model_type
-        )
-        explanation = self.llm(layer3_prompt)
+        # layer3_prompt = PROMPTS["modelling_layer3"].format(
+        #     metrics=json.dumps(metrics, indent=2),
+        #     model_choice=model_type
+        # )
+        # explanation = self.llm(layer3_prompt)
 
-        # -----------------------------------------------------
-        # ✅ Store metadata
-        # -----------------------------------------------------
+        # --------------------
+        # Save metadata
+        # --------------------
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         metadata = {
             "timestamp": timestamp,
             "status": "success",
-            "model_type_used": model_choice,
             "proposal": proposal,
-            "suggestion": suggestion,
+            "model_type_used": model_choice,
+            "model_code": model_code,
+            "code_confidence": confidence,
             "metrics": metrics,
-            "llm_explanation": explanation,
+           # "llm_explanation": explanation,
         }
 
         results_dir = "data/results"
@@ -179,17 +186,19 @@ class ModellingAgent(BaseAgent):
         save_json_safe(metadata, meta_path)
         metadata["metadata_file"] = meta_path
 
+        # Log to central memory (store both deterministic summary and LLM outputs)
         if self.hub and self.hub.memory:
             self.hub.memory.log_event(self.name, "model_training", metadata)
+            history = self.hub.memory.get("model_history", [])
+            history.append(metadata)
+            self.hub.memory.update("model_history", history)
 
-        # -----------------------------------------------------
-        # ✅ Return to hub
-        # -----------------------------------------------------
+        # Return message to the hub
         return Message(
             sender=self.name,
             recipient="hub",
             type="response",
-            content="Modelling completed successfully.",
+            content=f"Model ({self.model_type}) trained and evaluated successfully.",
             metadata=metadata,
         )
 
