@@ -220,11 +220,11 @@ class ModellingAgent(BaseAgent):
         model_obj=llm_model_obj,
         metrics=json.dumps(make_json_compatible(metrics), indent=2))
 
-        explanation = self.llm(layer3_prompt)
+        llm_evaluation = self.llm(layer3_prompt)
         self.memory.chat_memory.add_user_message(layer3_prompt)
-        self.memory.chat_memory.add_ai_message(explanation)
+        self.memory.chat_memory.add_ai_message(llm_evaluation)
 
-        print(explanation)
+        print(llm_evaluation)
 
         print(f"[{self.name}] Saving metadata...")
 
@@ -239,9 +239,9 @@ class ModellingAgent(BaseAgent):
             "model_type_used": model_choice,
             "model_code": model_code,
             "code_confidence": confidence,
-            "model_object": llm_model_obj,
+         #   "model_object": llm_model_obj,
             "metrics": metrics,
-           # "llm_explanation": explanation,
+            "llm_evaluation": llm_evaluation,
         }
 
         results_dir = "data/results"
