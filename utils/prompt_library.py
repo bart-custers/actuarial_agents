@@ -1,4 +1,7 @@
 PROMPTS = {
+    # --------------------
+    # Data prep agent prompts
+    # --------------------
     "dataprep_layer1": """
     You are an expert data preparation agent for actuarial datasets on insurance claims.
     Dataset summary:
@@ -58,7 +61,9 @@ PROMPTS = {
     Include stability, differences, and final rationale.
     Verification feedback: {verification}.
     """,
-    
+    # --------------------
+    # Modelling agent prompts
+    # --------------------
     "modelling_layer1": """
     You are an expert in actuarial modelling, assisting in claim frequency prediction for insurance claims.
 
@@ -93,7 +98,9 @@ PROMPTS = {
     - ONLY output Python code inside a ```python``` code block.
     - No explanations or comments outside the code block.
     - Do NOT read/write files.
-    - The code must output predictions on X_test as `preds`.
+    - You may assume `X_train`, `y_train`, and `X_test` are pandas DataFrames.
+    - The final line of your code must define: result = {'preds': preds, 'model': model}.
+    - Where preds are an array-like of predictions on X_test.
     
     - Wrap the code in triple backticks like this:
 
@@ -104,6 +111,26 @@ PROMPTS = {
     CONFIDENCE: <a number between 0 and 1>
     """,
 
+    "modelling_layer3": """
+    You are an expert in actuarial modelling, assisting in claim frequency prediction for insurance claims. 
+    Your task is to review the model performance.
+
+    The following model ({model_type}) was trained for claim frequency prediction. 
+    This is the model object: {model_obj}
+
+    Here are the evaluation results:
+
+    {metrics}
+
+    Think step-by-step and provide a concise summary that includes:
+    1. Summarize the model’s goodness-of-fit and calibration quality. 
+    2. Highlight whether the model seems overfitted or underfitted.
+    3. Mention which variables appear most influential and why.
+    4. Review the metrics and provide additional evaluation techniques to consider.
+    """,
+    # --------------------
+    # Reviewing agent prompts
+    # --------------------
     "review_model": """
     You are an actuarial model reviewer.
     Evaluate the following model results and provide an explicit decision line
@@ -126,7 +153,9 @@ PROMPTS = {
     1. One line starting with "Status:" (e.g., "Status: APPROVED")
     2. A short professional justification.
     """,
-
+    # --------------------
+    # Explanation agent prompts
+    # --------------------
     "consistency_prompt": """
     You are an actuarial explanation specialist.
 

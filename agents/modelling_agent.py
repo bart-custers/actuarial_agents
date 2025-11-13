@@ -70,18 +70,32 @@ class ModellingAgent(BaseAgent):
             "X_test": X_test,
         }
 
+        # Execute LLM code
         try:
             exec(code, {}, local_env)
         except Exception as e:
             raise ValueError(f"Adaptive model training code failed: {e}")
+        
+        if "result" not in local_env:
+            raise ValueError("Adaptive model code did not define `result`.")
 
-        # The LLM’s code should define a trained model and predictions
-        if "preds" in local_env:
-            return local_env["preds"]
-        elif "model" in local_env and hasattr(local_env["model"], "predict"):
-            return local_env["model"].predict(X_test)
-        else:
-            raise ValueError("Adaptive code did not return predictions or a model object.")
+        result = local_env["result"]
+        if not isinstance(result, dict):
+            raise ValueError("`result` must be a dictionary containing 'preds' and 'model'.")
+
+        if "preds" not in result or "model" not in result:
+            raise ValueError("`result` dictionary must include both 'preds' and 'model' keys.")
+
+        preds = result["preds"]
+        model = result["model"]
+
+        # --- Validate predictions ---
+        if not isinstance(preds, (pd.Series, np.ndarray, list)):
+            raise ValueError("`predictions` must be array-like.")
+        preds = np.asarray(preds).ravel()
+
+        print(f"[{self.name}] ✅ Adaptive model produced {len(preds)} predictions.")
+        return preds, model
     
     def _extract_model_choice(self, llm_text: str) -> str:
         text = llm_text.lower()
@@ -165,20 +179,20 @@ class ModellingAgent(BaseAgent):
         print(model_code)
 
         # --------------------
-        # Deterministic model training
+        # Model training
         # --------------------
         print(f"[{self.name}] Invoke model training...")
 
-        # === Attempt LLM pipeline
+        # Attempt LLM pipeline
         try:
-            llm_model_preds = self._apply_llm_pipeline(X_train, y_train, X_test, model_code)
+            llm_model_preds, llm_model_obj = self._apply_llm_pipeline(X_train, y_train, X_test, model_code)
             llm_model_success = True
         except Exception as e:
-            llm_model_preds = None
+            llm_model_preds, llm_model_obj = None, None
             llm_model_success = False
             print(f"[{self.name}] LLM model training failed: {e}")
 
-        # === Fallback pipeline
+        # Fallback pipeline
         if llm_model_success == True:
             model_predictions = llm_model_preds
         else:
@@ -191,19 +205,26 @@ class ModellingAgent(BaseAgent):
         # Evaluate model
         # --------------------
         print(f"[{self.name}] Invoke model evaluation...")
-        # evaluator = ModelEvaluation(model_type="glm")
-        # metrics = evaluator.evaluate(y_test, model_predictions, feature_names, exposure_test)
         evaluator = ModelEvaluation(model=trainer.model, model_type=model_choice)
         metrics = evaluator.evaluate(y_test, model_predictions, feature_names, exposure_test)
 
-        # -----------------------------------------------------
-        # ✅ LAYER 3 — LLM describes results
-        # -----------------------------------------------------
-        # layer3_prompt = PROMPTS["modelling_layer3"].format(
-        #     metrics=json.dumps(metrics, indent=2),
-        #     model_choice=model_type
-        # )
-        # explanation = self.llm(layer3_prompt)
+        # --------------------
+        # Layer 3: model assessment (LLM)
+        # --------------------
+        print(f"[{self.name}] Invoke layer 3...")
+
+        layer3_prompt = PROMPTS["modelling_layer3"].format(
+        model_type=model_choice,
+        model_obj=llm_model_obj,
+        metrics=json.dumps(metrics, indent=2))
+
+        explanation = self.llm(layer3_prompt)
+        self.memory.chat_memory.add_user_message(layer3_prompt)
+        self.memory.chat_memory.add_ai_message(explanation)
+
+        print(explanation)
+
+        print(f"[{self.name}] Saving metadata...")
 
         # --------------------
         # Save metadata
@@ -216,6 +237,7 @@ class ModellingAgent(BaseAgent):
             "model_type_used": model_choice,
             "model_code": model_code,
             "code_confidence": confidence,
+            "model_object": llm_model_obj,
             "metrics": metrics,
            # "llm_explanation": explanation,
         }
