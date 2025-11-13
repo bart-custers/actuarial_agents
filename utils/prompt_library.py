@@ -126,7 +126,7 @@ PROMPTS = {
     1. Summarize the model’s goodness-of-fit and calibration quality. 
     2. Highlight whether the model seems overfitted or underfitted.
     3. Mention which variables appear most influential and why.
-    4. Review the metrics and provide additional evaluation techniques to consider.
+    4. Review the metrics and provide additional evaluation techniques to consider, given the model used.
     """,
     # --------------------
     # Reviewing agent prompts

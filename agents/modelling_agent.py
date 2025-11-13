@@ -199,6 +199,8 @@ class ModellingAgent(BaseAgent):
             trainer = ModelTrainer(model_type="glm")
             trainer.train(X_train, y_train)
             model_predictions = trainer.predict(X_test)
+            llm_model_obj = trainer.model
+            model_choice = "glm"
             print(f"[{self.name}] Fallback to GLM model training")
 
         # --------------------
