@@ -99,7 +99,7 @@ PROMPTS = {
     - No explanations or comments outside the code block.
     - Do NOT read/write files.
     - You may assume `X_train`, `y_train`, and `X_test` are pandas DataFrames.
-    - The final line of your code must define: result = {'preds': preds, 'model': model}.
+    - The final line of your code must define: result = {{'preds': preds, 'model': model}}.
     - Where preds are an array-like of predictions on X_test.
     
     - Wrap the code in triple backticks like this:
