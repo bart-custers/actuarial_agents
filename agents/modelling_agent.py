@@ -216,7 +216,7 @@ class ModellingAgent(BaseAgent):
         layer3_prompt = PROMPTS["modelling_layer3"].format(
         model_type=model_choice,
         model_obj=llm_model_obj,
-        metrics=json.dumps(metrics, indent=2))
+        metrics=json.dumps(save_json_safe(metrics), indent=2))
 
         explanation = self.llm(layer3_prompt)
         self.memory.chat_memory.add_user_message(layer3_prompt)
