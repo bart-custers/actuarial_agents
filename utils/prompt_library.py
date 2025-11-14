@@ -85,15 +85,16 @@ PROMPTS = {
     """,
 
     "modelling_layer2":""" 
-    You are an expert in actuarial modelling, assisting in claim frequency prediction for insurance claims.
+    You are an expert actuarial modelling assistant helping to build claim frequency models.
 
-    ### Instructions (please read them all carefully)
-    - You will now propose python code to train this model on the dataset: {model_choice}
-    - You MUST fill in the code inside the functions below. Think step-by-step.
-    - Do not change the structure. 
-    - Do not rename variables. 
-    - Do not move the final `result` definition.
-    - As context you can use the existing pipeline code for a GLM: {current_model_code}
+    Your task is to produce ONLY Python code that trains the model type chosen earlier: {model_choice}
+
+    ### HARD RULES (READ CAREFULLY)
+    - You MUST use the ModelTrainer class provided: {current_model_code}
+    - You MUST NOT rename variables.
+    - You MUST NOT change the structure of the template.
+    - You MUST ONLY fill in code inside the two functions.
+    - You MUST use the example ModelTrainer class as guidance, adapting only what is necessary.
 
     Your code will be executed with the following variables already defined:
     - X_train : pandas DataFrame

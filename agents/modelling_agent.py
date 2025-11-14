@@ -196,12 +196,10 @@ class ModellingAgent(BaseAgent):
         if llm_model_success == True:
             model_predictions = llm_model_preds
         else:
-            trainer = ModelTrainer(model_type="glm")
+            trainer = ModelTrainer(model_type=model_choice)
             trainer.train(X_train, y_train)
             model_predictions = trainer.predict(X_test)
-            llm_model_obj = trainer.model
-            model_choice = "glm"
-            print(f"[{self.name}] Fallback to GLM model training")
+            print(f"[{self.name}] Fallback to deterministic model training")
 
         # --------------------
         # Evaluate model
