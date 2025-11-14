@@ -84,7 +84,7 @@ PROMPTS = {
     Respond concisely. Decide: USE_GLM or USE_GBM.
     """,
 
-    "modelling_layer2": """
+    "modelling_layer2":""" 
     You are an expert in actuarial modelling, assisting in claim frequency prediction for insurance claims.
 
     For this task you proposed to use the following model:
@@ -92,24 +92,79 @@ PROMPTS = {
 
     You will now propose python code to train this model on the dataset. As context you can use the existing pipeline code for a GLM:
     {current_model_code}
-
-    ### Instructions
-    - Think step-by-step, using the model_choice.
-    - ONLY output Python code inside a ```python``` code block.
-    - No explanations or comments outside the code block.
-    - Do NOT read/write files.
-    - You may assume `X_train`, `y_train`, and `X_test` are pandas DataFrames.
-    - The final line of your code must define: result = {{'preds': preds, 'model': model}}.
-    - Where preds are an array-like of predictions on X_test.
     
-    - Wrap the code in triple backticks like this:
+    ### Instructions
+    You MUST fill in the code inside the functions below. Think step-by-step.
 
-    ```python code here```
+    Do not change the structure. 
+    Do not rename variables. 
+    Do not move the final `result` definition.
 
-    At the end of your answer, output:
+    Your code will be executed with the following variables already defined:
+    - X_train : pandas DataFrame
+    - y_train : numpy array
+    - X_test  : pandas DataFrame
 
-    CONFIDENCE: <a number between 0 and 1>
-    """,
+    You MUST produce:
+    - `model` : the trained model object
+    - `preds` : predictions for X_test as a 1D numpy array
+    - At the end of your message, output: CONFIDENCE: <number between 0 and 1>
+
+    The FINAL line of your code must be:
+
+    result = {"model": model, "preds": preds}
+
+    Here is the template you must complete:
+
+    ```python
+    # ----- YOU MUST ONLY FILL IN THE TWO FUNCTIONS BELOW -----
+
+    def train_model(X_train, y_train):
+        # Train your model here.
+        # Must return a trained model object named `model`.
+
+        model = None  # REPLACE THIS BASED ON model_choice
+        return model
+
+    def generate_predictions(model, X_test):
+        # Must return predictions for X_test as a 1D array named `preds`.
+
+        preds = None  # REPLACE THIS
+        return preds
+
+    # ----- DO NOT MODIFY ANYTHING BELOW THIS LINE -----
+
+    model = train_model(X_train, y_train)
+    preds = generate_predictions(model, X_test)
+
+    result = {"model": model, "preds": preds}```
+    """
+    # You are an expert in actuarial modelling, assisting in claim frequency prediction for insurance claims.
+
+    # For this task you proposed to use the following model:
+    # {model_choice}
+
+    # You will now propose python code to train this model on the dataset. As context you can use the existing pipeline code for a GLM:
+    # {current_model_code}
+
+    # ### Instructions
+    # - Think step-by-step, using the model_choice.
+    # - ONLY output Python code inside a ```python``` code block.
+    # - No explanations or comments outside the code block.
+    # - Do NOT read/write files.
+    # - You may assume `X_train`, `y_train`, and `X_test` are pandas DataFrames.
+    # - The final line of your code must define: result = {{'preds': preds, 'model': model}}.
+    # - Where preds are an array-like of predictions on X_test.
+    
+    # - Wrap the code in triple backticks like this:
+
+    # ```python code here```
+
+    # At the end of your answer, output:
+
+    # CONFIDENCE: <a number between 0 and 1>
+    # """
+    ,
 
     "modelling_layer3": """
     You are an expert in actuarial modelling, assisting in claim frequency prediction for insurance claims. 
