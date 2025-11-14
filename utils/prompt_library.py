@@ -96,6 +96,10 @@ PROMPTS = {
     - You MUST ONLY fill in code inside the two functions.
     - You MUST use the example ModelTrainer class as guidance, adapting only what is necessary.
 
+    YOU MUST OUTPUT *ONLY ONE* PYTHON CODE BLOCK AND NOTHING ELSE.
+    NO explanations. NO text before or after. NO commentary. NO markdown except ```python.
+    If you produce anything outside the code block, the system will CRASH.
+
     Your code will be executed with the following variables already defined:
     - X_train : pandas DataFrame
     - y_train : numpy array
@@ -104,7 +108,6 @@ PROMPTS = {
     You MUST produce:
     - `model` : the trained model object
     - `preds` : predictions for X_test as a 1D numpy array
-    - At the end of your message, output: CONFIDENCE: <number between 0 and 1>
 
     The FINAL line of your code must be:
 

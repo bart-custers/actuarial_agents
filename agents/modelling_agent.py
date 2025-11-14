@@ -173,8 +173,8 @@ class ModellingAgent(BaseAgent):
         self.memory.chat_memory.add_user_message(layer2_prompt)
         self.memory.chat_memory.add_ai_message(model_code)
 
-        confidence = self._extract_confidence(layer2_prompt)
-        print(f"[{self.name}] Layer 2 confidence: {confidence:.2f}")
+        #confidence = self._extract_confidence(layer2_prompt)
+        #print(f"[{self.name}] Layer 2 confidence: {confidence:.2f}")
 
         print(model_code)
 
