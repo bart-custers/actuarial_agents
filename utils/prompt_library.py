@@ -137,7 +137,7 @@ PROMPTS = {
     model = train_model(X_train, y_train)
     preds = generate_predictions(model, X_test)
 
-    result = {"model": model, "preds": preds}```
+    result = {{"model": model, "preds": preds}}```
     """
     # You are an expert in actuarial modelling, assisting in claim frequency prediction for insurance claims.
 
