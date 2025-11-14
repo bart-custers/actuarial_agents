@@ -112,7 +112,7 @@ PROMPTS = {
 
     The FINAL line of your code must be:
 
-    result = {"model": model, "preds": preds}
+    result = {{"model": model, "preds": preds}}
 
     Here is the template you must complete:
 
