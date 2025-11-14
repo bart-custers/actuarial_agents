@@ -22,7 +22,8 @@ class DataPipeline:
         """
         # --- Step 1: Define features ---
         exposure = data['Exposure']
-        y = data['ClaimNb']
+        y = data['ClaimNb']/data["Exposure"]
+        y = y.clip(upper=10)
         X = data.drop(columns=['ClaimNb', 'Exposure', 'IDpol'], errors='ignore')
 
         numerical_features = ['VehPower', 'VehAge', 'DrivAge', 'BonusMalus', 'Area']
