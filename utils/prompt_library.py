@@ -87,18 +87,13 @@ PROMPTS = {
     "modelling_layer2":""" 
     You are an expert in actuarial modelling, assisting in claim frequency prediction for insurance claims.
 
-    For this task you proposed to use the following model:
-    {model_choice}
-
-    You will now propose python code to train this model on the dataset. As context you can use the existing pipeline code for a GLM:
-    {current_model_code}
-    
-    ### Instructions
-    You MUST fill in the code inside the functions below. Think step-by-step.
-
-    Do not change the structure. 
-    Do not rename variables. 
-    Do not move the final `result` definition.
+    ### Instructions (please read them all carefully)
+    - You will now propose python code to train this model on the dataset: {model_choice}
+    - You MUST fill in the code inside the functions below. Think step-by-step.
+    - Do not change the structure. 
+    - Do not rename variables. 
+    - Do not move the final `result` definition.
+    - As context you can use the existing pipeline code for a GLM: {current_model_code}
 
     Your code will be executed with the following variables already defined:
     - X_train : pandas DataFrame
