@@ -151,20 +151,30 @@ class CentralHub:
                 print(f"[Hub] Review decision → {action.upper()}")
                 
                 audit.record_event("reviewing", iteration, action, current_metadata, sent=msg, received=r3)
-
-                if action == "retrain_model":
+                
+                if action == "reclean_data":
+                    print("[Hub] Reviewer requested data reprocessing.\n")
                     iteration += 1
                     if iteration >= MAX_ITERATIONS:
-                        print("🚨 Maximum retraining iterations reached — aborting workflow.")
+                        print("Maximum iterations reached — aborting workflow.")
+                        current_metadata["status"] = "terminated"
+                        current_metadata["reason"] = "Exceeded maximum retraining attempts."
+                        continue_workflow = False
+                        break
+                    phase = "dataprep"
+                    current_metadata["revised_prompt"] = current_metadata.get("revision_prompt")
+                
+                elif action == "retrain_model":
+                    print("[Hub] Reviewer requested retraining.\n")
+                    iteration += 1
+                    if iteration >= MAX_ITERATIONS:
+                        print("Maximum retraining iterations reached — aborting workflow.")
                         current_metadata["status"] = "terminated"
                         current_metadata["reason"] = "Exceeded maximum retraining attempts."
                         continue_workflow = False
                         break
                     phase = "modelling"
-
-                elif action == "reclean_data":
-                    print("[Hub] Reviewer requested data reprocessing.\n")
-                    phase = "dataprep"
+                    current_metadata["revised_prompt"] = current_metadata.get("revision_prompt")
 
                 elif action == "proceed_to_explanation":
                     print("[Hub] Model approved — proceeding to explanation.\n")

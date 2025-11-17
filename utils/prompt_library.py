@@ -139,31 +139,6 @@ PROMPTS = {
     result = {{"model": model, "preds": preds}}
     ```
     """
-    # You are an expert in actuarial modelling, assisting in claim frequency prediction for insurance claims.
-
-    # For this task you proposed to use the following model:
-    # {model_choice}
-
-    # You will now propose python code to train this model on the dataset. As context you can use the existing pipeline code for a GLM:
-    # {current_model_code}
-
-    # ### Instructions
-    # - Think step-by-step, using the model_choice.
-    # - ONLY output Python code inside a ```python``` code block.
-    # - No explanations or comments outside the code block.
-    # - Do NOT read/write files.
-    # - You may assume `X_train`, `y_train`, and `X_test` are pandas DataFrames.
-    # - The final line of your code must define: result = {{'preds': preds, 'model': model}}.
-    # - Where preds are an array-like of predictions on X_test.
-    
-    # - Wrap the code in triple backticks like this:
-
-    # ```python code here```
-
-    # At the end of your answer, output:
-
-    # CONFIDENCE: <a number between 0 and 1>
-    # """
     ,
 
     "modelling_layer3": """
@@ -183,31 +158,96 @@ PROMPTS = {
     3. Mention which variables appear most influential and why.
     4. Review the metrics and provide additional evaluation techniques to consider, given the model used.
     """,
+
     # --------------------
     # Reviewing agent prompts
     # --------------------
-    "review_model": """
-    You are an actuarial model reviewer.
-    Evaluate the following model results and provide an explicit decision line
+    "review_layer1": """
+    You are an expert in actuarial modelling, assisting in claim frequency prediction for insurance claims. 
+    Your task is to evaluate the {phase} of a frequency prediction model and provide a critical review.
 
-    At the end of your response, include a line exactly in this format:
-    Status: <APPROVED | NEEDS_REVISION | RETRAIN_REQUESTED>
+    Possible phases:
+    - DataPrepAgent (cleaning / preprocessing)
+    - ModellingAgent (model training / predictive performance)
 
-    Metrics: {metrics}
-    Numeric severity: {severity}
-    Review notes: {review_notes}
+    Think step-by-step and list:
+    1) Briefly restate the assignment and your role in one sentence.
+    2) List the most relevant actions for evaluation you think are most important for this task.
+    
+    Respond concisely.
+    """,
+
+    "review_layer2_dataprep": """
+    You are an expert in actuarial modelling, assisting in claim frequency prediction for insurance claims. 
+    Your task is to evaluate the {phase} of a frequency prediction model and provide a critical review.
+
+    Think step-by-step, using the following context: 
+    - Summary of your earlier thinking: {layer1_out}
+    - The devised plan for the data processing: {plan}
+    - The used preprocessing pipeline: {used_pipeline}
+    - The confidence score for the preprocessing: {confidence}
+    - The details of the pipeline made: {adaptive_suggestion}
+    - The verification feedback received: {verification}
+    - The explanation of the data preprocessing steps: {explanation}
 
     If previous memory of dataprep, modelling and reviews exist, ensure consistency with them.
     Historical memory summary:
-    {memory_for_prompt}
+    {review_memory}
 
-    Consistency check for model coefficients:
-    {consistency_info}
-
-    Provide:
-    1. One line starting with "Status:" (e.g., "Status: APPROVED")
-    2. A short professional justification.
+    Your task:
+    - Evaluate plausibility.
+    - Identify data/model quality issues.
+    - Output a section called: ANALYSIS: <your reasoning here>
     """,
+
+    "review_layer2_modelling": """
+    You are an expert in actuarial modelling, assisting in claim frequency prediction for insurance claims. 
+    Your task is to evaluate the {phase} of a frequency prediction model and provide a critical review.
+
+    Think step-by-step, using the following context: 
+    - Summary of your earlier thinking: {layer1_out}
+    - The devised plan for the model training: {plan}
+    - The model type used: {model_type}
+    - The code used to train the model: {model_code}
+    - The performance metrics of the trained model: {model_metrics}
+    - The metrics check: {metrics_check}
+    - The explanation of the model training steps: {explanation}
+
+    If previous memory of dataprep, modelling and reviews exist, ensure consistency with them.
+    Historical memory summary:
+    {review_memory}
+
+    Your task:
+    - Evaluate plausibility.
+    - Identify model training issues.
+    - Output a section called: ANALYSIS: <your reasoning here>
+    """,
+
+    "review_layer3": """
+    You are an expert in actuarial modelling, assisting in claim frequency prediction for insurance claims. 
+    Based on the analysis: {analysis}, choose the correct next action. Think step-by-step.
+
+    Valid decisions:
+    - APPROVE → proceed to next agent
+    - NEEDS_REVISION → ask previous agent to revise output
+    - REQUEST_RETRAIN → redo model training
+    - REQUEST_RECLEAN → redo data cleaning
+    - ABORT → stop workflow entirely
+
+    ### Output format (MUST be valid JSON):
+    {{
+    "decision": "<APPROVE | NEEDS_REVISION | REQUEST_RETRAIN | REQUEST_RECLEAN | ABORT>",
+    }}
+
+    Only output the JSON. No explanation outside the JSON.
+    """,
+
+    "review_layer3": """
+    You are an expert in actuarial modelling, assisting in claim frequency prediction for insurance claims.
+
+    To be defined.
+    """,
+
     # --------------------
     # Explanation agent prompts
     # --------------------

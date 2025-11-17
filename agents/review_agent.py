@@ -1,12 +1,15 @@
 import os
-import re
+import json
 from datetime import datetime
 import numpy as np
-from utils.general_utils import save_json_safe
+import re
+from langchain.memory import ConversationBufferMemory
+from utils.general_utils import save_json_safe, make_json_compatible
 from utils.model_validation import evaluate_model_quality
 from utils.message_types import Message
 from utils.prompt_library import PROMPTS
 from agents.base_agent import BaseAgent
+
 
 class ReviewingAgent(BaseAgent):
     def __init__(self, name="reviewing", shared_llm=None, system_prompt=None, hub=None):
@@ -14,19 +17,31 @@ class ReviewingAgent(BaseAgent):
         self.llm = shared_llm
         self.system_prompt = system_prompt
         self.hub = hub
+        self.memory = ConversationBufferMemory(memory_key="chat_history", return_messages=False) # Short-term conversation memory for layered prompting
 
-    def handle_message(self, message):
-        print(f"[{self.name}] Reviewing model outputs and evaluation results...")
+    # ---------------------------
+    # Main handler
+    # ---------------------------
+    def handle_message(self, message: Message) -> Message:
+        print(f"[{self.name}] Starting review pipeline...")
 
-        if message.metadata is None:
-            message.metadata = {}
-        iteration = message.metadata.get("review_iteration", 0)
+        metadata = message.metadata or {}
+        phase = metadata.get("last_phase", "unknown")
+        iteration = metadata.get("review_iteration", 0)
 
-        # --- Load metadata from ModellingAgent ---
-        metrics = message.metadata.get("metrics", {})
-        review_notes = []
+        # --------------------
+        # Layer 1: recall & plan (LLM)
+        # --------------------
+        print(f"[{self.name}] Invoke layer 1...")
 
-        # --- Get historical memory context ---
+        layer1_prompt = PROMPTS["review_layer1"].format(phase=phase)
+        layer1_out = self.llm(layer1_prompt)
+        self.memory.chat_memory.add_user_message(layer1_prompt)
+        self.memory.chat_memory.add_ai_message(layer1_out)
+
+        # --------------------
+        # Get context from memory
+        # --------------------
         dataprep_context = self.hub.memory.get("dataprep_history", []) if self.hub else []
         model_context = self.hub.memory.get("model_history", []) if self.hub else []
         review_context = self.hub.memory.get("review_history", []) if self.hub else []
@@ -42,144 +57,140 @@ class ReviewingAgent(BaseAgent):
             "model_summary": model_context[-1] if len(model_context) > 0 else "No model history",
             "past_reviews": last_review_notes,
         }
-        memory_for_prompt = memory_summary['past_reviews']
+        review_memory = memory_summary['past_reviews']
 
-        # --- Numeric plausibility checks ---
-        severity = evaluate_model_quality(metrics)
-        if severity == "critical":
-            review_notes.append("Critical model performance issue detected.")
-        elif severity == "moderate":
-            review_notes.append("Moderate performance deviation from expected range.")
+        # Get specific metadata for review
+        if phase == "dataprep":
+            plan = metadata.get("plan", "N/A")
+            used_pipeline = metadata.get("used_pipeline", "N/A")
+            confidence = metadata.get("confidence", "N/A")
+            adaptive_suggestion = metadata.get("adaptive_suggestion", "N/A")
+            verification = metadata.get("verification", "N/A")
+            explanation = metadata.get("explanation", "N/A")
+        elif phase == "modelling":
+            plan = metadata.get("plan", "N/A")
+            model_type_used = metadata.get("model_type_used", "N/A")
+            model_code = metadata.get("model_code", "N/A")
+            model_metrics = metadata.get("model_metrics", {})
+            explanation = metadata.get("explanation", "N/A")
         else:
-            review_notes.append("Model performance within acceptable limits.")
+            print(f"[{self.name}] WARNING: Unknown phase '{phase}' for review agent.")
 
-        # --- History plausibility checks ---
-        model_history = []
-        if self.hub and self.hub.memory:
-            model_history = self.hub.memory.get("model_history", [])
+        metrics_check = None
+        if phase == "modelling" and "model_metrics" in metadata:
+            try:
+                metrics_check = evaluate_model_quality(metadata["model_metrics"])
+            except Exception:
+                metrics_check = None
 
-        consistency_info = "No prior model runs available."
-        coef_drift = None
-
-        if len(model_history) >= 1:
-            prev_run = model_history[-1]
-            previous = prev_run.get("metrics", {})
-            current = metrics['Coef']
-
-            prev_coef_raw = previous.get("Coef", None)
-            df_coef_prev = prev_coef_raw
-            prev_coef = dict(zip(df_coef_prev["Feature"], df_coef_prev["Coefficient"]))
-            curr_coef = dict(zip(current["Feature"], current["Coefficient"]))
-            
-            if prev_coef and curr_coef and set(prev_coef.keys()) == set(curr_coef.keys()):
-                prev_vals = np.array(list(prev_coef.values()))
-                curr_vals = np.array(list(curr_coef.values()))
-                coef_drift = float(np.mean(np.abs(prev_vals - curr_vals)))
-                consistency_info = f"Mean coefficient drift vs previous model: {coef_drift:.6f}"
-            else:
-                consistency_info = "Coefficient structures are incompatible — cannot compare."
+        # --------------------
+        # Layer 2: analysis (LLM)
+        # --------------------
+        print(f"[{self.name}] Invoke layer 2...")
         
-        print(f"[ReviewingAgent] Consistency info: {consistency_info}")
+        if phase == "dataprep":
+            layer2_prompt = PROMPTS["review_layer2_dataprep"].format(
+                phase=phase,
+                layer1_out=layer1_out,
+                plan=plan,
+                used_pipeline=used_pipeline,
+                confidence=confidence,
+                adaptive_suggestion=adaptive_suggestion,
+                verification=verification,
+                explanation=explanation,
+                review_memory=review_memory,
+            )
 
-        # --- LLM reasoning ---
-        review_prompt = PROMPTS["review_model"].format(
-        metrics=metrics,
-        severity=severity,
-        review_notes=review_notes,
-        memory_for_prompt=memory_for_prompt,
-        consistency_info=consistency_info,
-        )
+        elif phase == "modelling":
+            layer2_prompt = PROMPTS["review_layer2_modelling"].format(
+                phase=phase,
+                layer1_out=layer1_out,
+                plan=plan,
+                model_type_used=model_type_used,
+                model_code=model_code,
+                model_metrics=model_metrics,
+                metrics_check=metrics_check,
+                explanation=explanation,
+                review_memory=review_memory,
+            )
 
-        llm_review = self.llm(review_prompt)
-
-        # --- Extract LLM classification ---
-        match = re.search(r"Status\s*:\s*(APPROVED|NEEDS[_\s-]?REVISION|RETRAIN[_\s-]?REQUESTED)", llm_review, re.IGNORECASE)
-        if match:
-            label = match.group(1).upper().replace(" ", "_")
         else:
-            text_section = llm_review.split("[/INST]")[-1].upper()
-            if re.search(r"\bRETRAIN", text_section):
-                label = "RETRAIN_REQUESTED"
-            elif re.search(r"NEEDS", text_section):
-                label = "NEEDS_REVISION"
-            elif re.search(r"\bAPPROVED", text_section):
-                label = "APPROVED"
-            else:
-                label = severity.upper()
+            print(f"[{self.name}] WARNING: Unknown phase '{phase}' for review agent.")
 
-        status_map = {
-            "RETRAIN_REQUESTED": "retrain_requested",
-            "NEEDS_REVISION": "needs_revision",
-            "APPROVED": "approved",
-            "CRITICAL": "retrain_requested",
-            "MODERATE": "needs_revision",
-            "MINOR": "approved",
+        analysis = self.llm(layer2_prompt)
+        self.memory.chat_memory.add_user_message(layer2_prompt)
+        self.memory.chat_memory.add_ai_message(analysis)
+
+        # --------------------
+        # Layer 3: review decision (LLM)
+        # --------------------
+        print(f"[{self.name}] Invoke layer 3...")
+
+        layer3_prompt = PROMPTS["review_layer3"].format(
+            analysis=analysis)
+        review_output = self.llm(layer3_prompt)
+        self.memory.chat_memory.add_user_message(layer3_prompt)
+        self.memory.chat_memory.add_ai_message(review_output)
+
+        # Extract JSON safely
+        try:
+            decision_json = json.loads(review_output.split("```")[-1].strip())
+        except:
+            print("[ReviewingAgent] WARNING: LLM decision not valid JSON. Falling back.")
+
+        decision = decision_json.get("decision", "NEEDS_REVISION").upper()
+
+        # Routing
+        routing = {
+            "APPROVE": "proceed_to_explanation",
+            "NEEDS_REVISION": f"revise_{phase}",
+            "REQUEST_RETRAIN": "retrain_model",
+            "REQUEST_RECLEAN": "reclean_data",
+            "ABORT": "abort_workflow"
         }
-        status = status_map.get(label, "approved")
+        next_action = routing.get(decision, "needs_revision")
 
-        # --- Optional prompt revision for retraining ---
-        retrain_prompt = None
-        if status == "retrain_requested":
-            retrain_prompt = f"""
-            The reviewing agent identified critical performance issues:
-            {review_notes}.
-            Please retrain the model with improved specification,
-            e.g. additional interactions, nonlinear terms, or feature checks.
-            """
+        print(f"[{self.name}] Decision → {decision}, Routing → {next_action}")
 
-        # Escalation logic if repeated failures
-        if status == "retrain_requested":
-            if iteration >= 1:
-                print("[ReviewingAgent] Model still inadequate after retraining → escalating to DataPrepAgent.")
-                status = "reclean_requested"
-            if iteration >= 2:
-                print("[ReviewingAgent] Multiple failures detected → aborting workflow.")
-                status = "rejected"
+        # --------------------
+        # Layer 4: prompt revision (LLM)
+        # --------------------
+        print(f"[{self.name}] Invoke layer 4...")
         
-        # --- Display summary ---
-        print(f"\n--- Review Outcome ---")
-        print(f"Status: {status}")
-        print(f"Severity: {severity}")
-        print(f"Iteration: {iteration}")
-        print(f"LLM Review: {llm_review[:500]}{'...' if len(llm_review) > 500 else ''}")
-        if retrain_prompt:
-            print("\n--- Suggested Retrain Prompt ---")
-            print(retrain_prompt)
-
-        # --- Return structured Message ---
-        next_action = {
-            "approved": "proceed_to_explanation",
-            "needs_revision": "proceed_to_explanation",
-            "retrain_requested": "retrain_model",
-            "reclean_requested": "reclean_data",    
-            "rejected": "abort_workflow",           
-        }[status]
-
-        # --- Return message and log output ---
-        # Store metadata
+        # give the prompt templates to the LLM, depending on the phase
+        layer4_prompt = PROMPTS["review_layer4"].format(
+            analysis=analysis)
+        revision_prompt = self.llm(layer4_prompt)
+        
+        # --------------------
+        # Save metadata
+        # --------------------
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        metadata = {
+        metadata_out = {
             "timestamp": timestamp,
-            "status": status,
-            "numeric_severity": severity,
-            "review_notes": review_notes,
-            "llm_review": llm_review,
-            "retrain_prompt": retrain_prompt,
-            "review_iteration": iteration + 1,
+            "phase_reviewed": phase,
+            "layer1_out": layer1_out,
+            "analysis": analysis,
+            "metrics_check": metrics_check,
+            "judgement": review_output,
+            "decision": decision,
+            "revision_prompt": revision_prompt,
+            "decision": decision,
             "action": next_action,
+            "review_iteration": iteration + 1
         }
 
         results_dir = "data/results"
         os.makedirs(results_dir, exist_ok=True)
-        meta_path = os.path.join(results_dir, f"{self.name}_metadata_iteration_{iteration+1}.json")
-        save_json_safe(metadata, meta_path)
-        metadata["metadata_file"] = meta_path
+        meta_path = os.path.join(results_dir, f"{self.name}_metadata_{timestamp}.json")
+        save_json_safe(metadata_out, meta_path)
+        metadata_out["metadata_file"] = meta_path
 
         # Log to central memory
         if self.hub and self.hub.memory:
-            self.hub.memory.log_event(self.name, "review_decision", metadata)
+            self.hub.memory.log_event(self.name, "review_decision", metadata_out)
             history = self.hub.memory.get("review_history", [])
-            history.append(metadata)
+            history.append(metadata_out)
             self.hub.memory.update("review_history", history)
 
         # Return message to the hub
@@ -187,6 +198,200 @@ class ReviewingAgent(BaseAgent):
             sender=self.name,
             recipient="hub",
             type="response",
-            content=f"Model review completed ({status}).",
-            metadata=metadata,
+            content=f"Review completed. Decision: {decision}.",
+            metadata=metadata_out,
         )
+
+
+# import os
+# import re
+# from datetime import datetime
+# import numpy as np
+# from utils.general_utils import save_json_safe
+# from utils.model_validation import evaluate_model_quality
+# from utils.message_types import Message
+# from utils.prompt_library import PROMPTS
+# from agents.base_agent import BaseAgent
+
+# class ReviewingAgent(BaseAgent):
+#     def __init__(self, name="reviewing", shared_llm=None, system_prompt=None, hub=None):
+#         super().__init__(name)
+#         self.llm = shared_llm
+#         self.system_prompt = system_prompt
+#         self.hub = hub
+
+#     def handle_message(self, message):
+#         print(f"[{self.name}] Reviewing model outputs and evaluation results...")
+
+#         if message.metadata is None:
+#             message.metadata = {}
+#         iteration = message.metadata.get("review_iteration", 0)
+
+#         # --- Load metadata from ModellingAgent ---
+#         metrics = message.metadata.get("metrics", {})
+#         review_notes = []
+
+#         # --- Get historical memory context ---
+#         dataprep_context = self.hub.memory.get("dataprep_history", []) if self.hub else []
+#         model_context = self.hub.memory.get("model_history", []) if self.hub else []
+#         review_context = self.hub.memory.get("review_history", []) if self.hub else []
+
+#         # Only get last review's status & notes (instead of full history)
+#         if review_context and isinstance(review_context[-1], dict):
+#             last_review_notes = review_context[-1].get("review_notes", "No previous review notes")
+#         else:
+#             last_review_notes = "No previous review notes"
+
+#         memory_summary = {
+#             "dataprep_summary": dataprep_context[-1] if len(dataprep_context) > 0 else "No dataprep history",
+#             "model_summary": model_context[-1] if len(model_context) > 0 else "No model history",
+#             "past_reviews": last_review_notes,
+#         }
+#         memory_for_prompt = memory_summary['past_reviews']
+
+#         # --- Numeric plausibility checks ---
+#         severity = evaluate_model_quality(metrics)
+#         if severity == "critical":
+#             review_notes.append("Critical model performance issue detected.")
+#         elif severity == "moderate":
+#             review_notes.append("Moderate performance deviation from expected range.")
+#         else:
+#             review_notes.append("Model performance within acceptable limits.")
+
+#         # --- History plausibility checks ---
+#         model_history = []
+#         if self.hub and self.hub.memory:
+#             model_history = self.hub.memory.get("model_history", [])
+
+#         consistency_info = "No prior model runs available."
+#         coef_drift = None
+
+#         if len(model_history) >= 1:
+#             prev_run = model_history[-1]
+#             previous = prev_run.get("metrics", {})
+#             current = metrics['Coef']
+
+#             prev_coef_raw = previous.get("Coef", None)
+#             df_coef_prev = prev_coef_raw
+#             prev_coef = dict(zip(df_coef_prev["Feature"], df_coef_prev["Coefficient"]))
+#             curr_coef = dict(zip(current["Feature"], current["Coefficient"]))
+            
+#             if prev_coef and curr_coef and set(prev_coef.keys()) == set(curr_coef.keys()):
+#                 prev_vals = np.array(list(prev_coef.values()))
+#                 curr_vals = np.array(list(curr_coef.values()))
+#                 coef_drift = float(np.mean(np.abs(prev_vals - curr_vals)))
+#                 consistency_info = f"Mean coefficient drift vs previous model: {coef_drift:.6f}"
+#             else:
+#                 consistency_info = "Coefficient structures are incompatible — cannot compare."
+        
+#         print(f"[ReviewingAgent] Consistency info: {consistency_info}")
+
+#         # --- LLM reasoning ---
+#         review_prompt = PROMPTS["review_model"].format(
+#         metrics=metrics,
+#         severity=severity,
+#         review_notes=review_notes,
+#         memory_for_prompt=memory_for_prompt,
+#         consistency_info=consistency_info,
+#         )
+
+#         llm_review = self.llm(review_prompt)
+
+#         # --- Extract LLM classification ---
+#         match = re.search(r"Status\s*:\s*(APPROVED|NEEDS[_\s-]?REVISION|RETRAIN[_\s-]?REQUESTED)", llm_review, re.IGNORECASE)
+#         if match:
+#             label = match.group(1).upper().replace(" ", "_")
+#         else:
+#             text_section = llm_review.split("[/INST]")[-1].upper()
+#             if re.search(r"\bRETRAIN", text_section):
+#                 label = "RETRAIN_REQUESTED"
+#             elif re.search(r"NEEDS", text_section):
+#                 label = "NEEDS_REVISION"
+#             elif re.search(r"\bAPPROVED", text_section):
+#                 label = "APPROVED"
+#             else:
+#                 label = severity.upper()
+
+#         status_map = {
+#             "RETRAIN_REQUESTED": "retrain_requested",
+#             "NEEDS_REVISION": "needs_revision",
+#             "APPROVED": "approved",
+#             "CRITICAL": "retrain_requested",
+#             "MODERATE": "needs_revision",
+#             "MINOR": "approved",
+#         }
+#         status = status_map.get(label, "approved")
+
+#         # --- Optional prompt revision for retraining ---
+#         retrain_prompt = None
+#         if status == "retrain_requested":
+#             retrain_prompt = f"""
+#             The reviewing agent identified critical performance issues:
+#             {review_notes}.
+#             Please retrain the model with improved specification,
+#             e.g. additional interactions, nonlinear terms, or feature checks.
+#             """
+
+#         # Escalation logic if repeated failures
+#         if status == "retrain_requested":
+#             if iteration >= 1:
+#                 print("[ReviewingAgent] Model still inadequate after retraining → escalating to DataPrepAgent.")
+#                 status = "reclean_requested"
+#             if iteration >= 2:
+#                 print("[ReviewingAgent] Multiple failures detected → aborting workflow.")
+#                 status = "rejected"
+        
+#         # --- Display summary ---
+#         print(f"\n--- Review Outcome ---")
+#         print(f"Status: {status}")
+#         print(f"Severity: {severity}")
+#         print(f"Iteration: {iteration}")
+#         print(f"LLM Review: {llm_review[:500]}{'...' if len(llm_review) > 500 else ''}")
+#         if retrain_prompt:
+#             print("\n--- Suggested Retrain Prompt ---")
+#             print(retrain_prompt)
+
+#         # --- Return structured Message ---
+#         next_action = {
+#             "approved": "proceed_to_explanation",
+#             "needs_revision": "proceed_to_explanation",
+#             "retrain_requested": "retrain_model",
+#             "reclean_requested": "reclean_data",    
+#             "rejected": "abort_workflow",           
+#         }[status]
+
+#         # --- Return message and log output ---
+#         # Store metadata
+#         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+#         metadata = {
+#             "timestamp": timestamp,
+#             "status": status,
+#             "numeric_severity": severity,
+#             "review_notes": review_notes,
+#             "llm_review": llm_review,
+#             "retrain_prompt": retrain_prompt,
+#             "review_iteration": iteration + 1,
+#             "action": next_action,
+#         }
+
+#         results_dir = "data/results"
+#         os.makedirs(results_dir, exist_ok=True)
+#         meta_path = os.path.join(results_dir, f"{self.name}_metadata_iteration_{iteration+1}.json")
+#         save_json_safe(metadata, meta_path)
+#         metadata["metadata_file"] = meta_path
+
+#         # Log to central memory
+#         if self.hub and self.hub.memory:
+#             self.hub.memory.log_event(self.name, "review_decision", metadata)
+#             history = self.hub.memory.get("review_history", [])
+#             history.append(metadata)
+#             self.hub.memory.update("review_history", history)
+
+#         # Return message to the hub
+#         return Message(
+#             sender=self.name,
+#             recipient="hub",
+#             type="response",
+#             content=f"Model review completed ({status}).",
+#             metadata=metadata,
+#         )

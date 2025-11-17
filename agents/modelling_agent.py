@@ -12,6 +12,7 @@ from utils.prompt_library import PROMPTS
 from langchain.memory import ConversationBufferMemory
 from agents.base_agent import BaseAgent
 
+
 class ModellingAgent(BaseAgent):
     def __init__(self, name="modelling", shared_llm=None, system_prompt=None, hub=None):
         super().__init__(name)
@@ -149,14 +150,17 @@ class ModellingAgent(BaseAgent):
         # --------------------
         # Layer 1: recall & plan (LLM)
         # --------------------
-        layer1_prompt = PROMPTS["modelling_layer1"].format(
-            dataset_desc=json.dumps(dataset_desc, indent=2)
-        )
-        proposal = self.llm(layer1_prompt)
+        if "revised_prompt" in metadata and metadata["revised_prompt"]:
+            layer1_prompt = metadata["revised_prompt"]
+        else:
+            layer1_prompt = PROMPTS["modelling_layer1"].format(
+                dataset_desc=json.dumps(dataset_desc, indent=2)
+            )
+        plan = self.llm(layer1_prompt)
         self.memory.chat_memory.add_user_message(layer1_prompt)
-        self.memory.chat_memory.add_ai_message(proposal)
+        self.memory.chat_memory.add_ai_message(plan)
 
-        model_choice = self._extract_model_choice(proposal)
+        model_choice = self._extract_model_choice(plan)
         print(f"[modelling] LLM selected model type: {model_choice}")
 
         print(f"[{self.name}] Invoke layer 2...")
@@ -206,7 +210,7 @@ class ModellingAgent(BaseAgent):
         # --------------------
         print(f"[{self.name}] Invoke model evaluation...")
         evaluator = ModelEvaluation(model=trainer.model, model_type=model_choice)
-        metrics = evaluator.evaluate(y_test, model_predictions, feature_names, exposure_test)
+        model_metrics = evaluator.evaluate(y_test, model_predictions, feature_names, exposure_test)
 
         # --------------------
         # Layer 3: model assessment (LLM)
@@ -214,15 +218,15 @@ class ModellingAgent(BaseAgent):
         print(f"[{self.name}] Invoke layer 3...")
 
         layer3_prompt = PROMPTS["modelling_layer3"].format(
-        model_type=model_choice,
-        model_obj=llm_model_obj,
-        metrics=json.dumps(make_json_compatible(metrics), indent=2))
+            model_type=model_choice,
+            model_obj=llm_model_obj,
+            metrics=json.dumps(make_json_compatible(model_metrics), indent=2))
 
-        llm_evaluation = self.llm(layer3_prompt)
+        explanation = self.llm(layer3_prompt)
         self.memory.chat_memory.add_user_message(layer3_prompt)
-        self.memory.chat_memory.add_ai_message(llm_evaluation)
+        self.memory.chat_memory.add_ai_message(explanation)
 
-        print(llm_evaluation)
+        print(explanation)
 
         print(f"[{self.name}] Saving metadata...")
 
@@ -233,13 +237,13 @@ class ModellingAgent(BaseAgent):
         metadata = {
             "timestamp": timestamp,
             "status": "success",
-            "proposal": proposal,
+            "plan": plan,
             "model_type_used": model_choice,
             "model_code": model_code,
-            "code_confidence": confidence,
+         #   "code_confidence": confidence,
          #   "model_object": llm_model_obj,
-            "metrics": metrics,
-            "llm_evaluation": llm_evaluation,
+            "model_metrics": model_metrics,
+            "explanation": explanation,
         }
 
         results_dir = "data/results"
@@ -248,7 +252,7 @@ class ModellingAgent(BaseAgent):
         save_json_safe(metadata, meta_path)
         metadata["metadata_file"] = meta_path
 
-        # Log to central memory (store both deterministic summary and LLM outputs)
+        # Log to central memory
         if self.hub and self.hub.memory:
             self.hub.memory.log_event(self.name, "model_training", metadata)
             history = self.hub.memory.get("model_history", [])

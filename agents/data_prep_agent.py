@@ -14,9 +14,6 @@ from utils.data_cleaning import DataCleaning
 from utils.message_types import Message
 from agents.base_agent import BaseAgent
 
-# ---------------------------
-# Agent
-# ---------------------------
 
 class DataPrepAgent(BaseAgent):
     def __init__(self, name="dataprep", shared_llm=None, system_prompt=None, hub=None):
@@ -111,7 +108,10 @@ class DataPrepAgent(BaseAgent):
         # --------------------
         # Layer 1: recall & plan (LLM)
         # --------------------
-        plan_prompt = PROMPTS["dataprep_layer1"].format(info_dict=json.dumps(info_dict, indent=2))
+        if "revised_prompt" in metadata and metadata["revised_prompt"]:
+            plan_prompt = metadata["revised_prompt"]
+        else:
+            plan_prompt = PROMPTS["dataprep_layer1"].format(info_dict=json.dumps(info_dict, indent=2))
         summary1 = self.llm(plan_prompt)
         self.memory.chat_memory.add_user_message(plan_prompt)
         self.memory.chat_memory.add_ai_message(summary1)
@@ -245,7 +245,7 @@ class DataPrepAgent(BaseAgent):
         save_json_safe(metadata, meta_path)
         metadata["metadata_file"] = meta_path
 
-        # Log to central memory (store both deterministic summary and LLM outputs)
+        # Log to central memory
         if self.hub and self.hub.memory:
             self.hub.memory.log_event(self.name, "data_preparation", metadata)
             self.hub.memory.update("last_data_prep_summary", explanation)
