@@ -26,7 +26,7 @@ class ReviewingAgent(BaseAgent):
         print(f"[{self.name}] Starting review pipeline...")
 
         metadata = message.metadata or {}
-        phase = metadata.get("last_phase", "unknown")
+        phase = metadata.get("phase_before_review", "unknown")
         iteration = metadata.get("review_iteration", 0)
 
         # --------------------
