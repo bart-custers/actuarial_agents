@@ -19,6 +19,32 @@ class ReviewingAgent(BaseAgent):
         self.hub = hub
         self.memory = ConversationBufferMemory(memory_key="chat_history", return_messages=False) # Short-term conversation memory for layered prompting
 
+    def extract_json_block(self, text):
+        """
+        Extracts the first valid JSON object from arbitrary LLM output.
+        Returns: dict or None
+        """
+        import re, json
+
+        # Regex to capture JSON object, tolerant to whitespace and newlines
+        pattern = r'\{[^{}]*\}|(\{(?:[^{}]|(?1))*\})'
+
+        matches = re.findall(pattern, text, flags=re.DOTALL)
+        if not matches:
+            return None
+
+        # Each match may be in group 0 or group 1
+        for m in matches:
+            candidate = m if isinstance(m, str) and m.strip() else None
+            if not candidate:
+                continue
+            try:
+                return json.loads(candidate)
+            except Exception:
+                continue
+
+        return None
+    
     # ---------------------------
     # Main handler
     # ---------------------------
@@ -134,21 +160,25 @@ class ReviewingAgent(BaseAgent):
 
         print(review_output)
 
-        # Extract JSON safely
-        try:
-            decision_json = json.loads(review_output.split("```")[-1].strip())
-        except:
-            print("[ReviewingAgent] WARNING: LLM decision not valid JSON. Falling back.")
-            decision_json = {}
+        # Extract decision from LLM output
+        decision_json = self.extract_json_block(review_output)
 
-        decision = decision_json.get("decision", "NEEDS_REVISION").upper()
+        if decision_json is None:
+            print("[ReviewingAgent] WARNING: LLM decision not valid JSON. Falling back.")
+            decision_json = {
+            "decision": "ABORT"}
+
+        # Ensure required key exists
+        if "decision" not in decision_json:
+            decision_json["decision"] = "ABORT"
+
+        decision = decision_json.get("decision", "ABORT").upper()
 
         # Routing
         routing = {
             "APPROVE": "proceed_to_explanation",
-            "NEEDS_REVISION": f"revise_{phase}",
-            "REQUEST_RETRAIN": "retrain_model",
             "REQUEST_RECLEAN": "reclean_data",
+            "REQUEST_RETRAIN": "retrain_model",
             "ABORT": "abort_workflow"
         }
         next_action = routing.get(decision, "needs_revision")

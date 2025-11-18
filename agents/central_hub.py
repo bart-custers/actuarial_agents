@@ -173,8 +173,13 @@ class CentralHub:
 
                 # ========= ROUTE BASED ON DECISION =========
 
+                # --- APPROVED → EXPLANATION ---
+                if action == "proceed_to_explanation":
+                    print("[Hub] Proceeding to explanation.\n")
+                    phase = "explanation"
+                
                 # --- RECLEAN DATA ---
-                if action == "reclean_data":
+                elif action == "reclean_data":
                     iteration += 1
                     if iteration >= MAX_ITERATIONS:
                         print("Maximum iterations reached — aborting workflow.")
@@ -199,10 +204,11 @@ class CentralHub:
                     current_metadata["revised_prompt"] = current_metadata.get("revision_prompt")
                     continue
 
-                # --- APPROVED → EXPLANATION ---
-                elif action == "proceed_to_explanation":
-                    print("[Hub] Proceeding to explanation.\n")
-                    phase = "explanation"
+                # --- ABORT ---
+                elif action == "abort_workflow":
+                    print("Error detected — aborting workflow.")
+                    current_metadata["status"] = "terminated"
+                    continue_workflow = False
 
                 else:
                     print(f"[Hub] Unknown review action '{action}' — defaulting to explanation.")
