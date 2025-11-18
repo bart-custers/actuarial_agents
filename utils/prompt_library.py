@@ -186,7 +186,6 @@ PROMPTS = {
     - The devised plan for the data processing: {plan}
     - The used preprocessing pipeline: {used_pipeline}
     - The confidence score for the preprocessing: {confidence}
-    - The details of the pipeline made: {adaptive_suggestion}
     - The verification feedback received: {verification}
     - The explanation of the data preprocessing steps: {explanation}
 
@@ -208,7 +207,6 @@ PROMPTS = {
     - Summary of your earlier thinking: {layer1_out}
     - The devised plan for the model training: {plan}
     - The model type used: {model_type}
-    - The code used to train the model: {model_code}
     - The performance metrics of the trained model: {model_metrics}
     - The metrics check: {metrics_check}
     - The explanation of the model training steps: {explanation}
