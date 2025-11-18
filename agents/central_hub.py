@@ -173,10 +173,16 @@ class CentralHub:
 
                 # ========= ROUTE BASED ON DECISION =========
 
-                # --- APPROVED → EXPLANATION ---
-                if action == "proceed_to_explanation":
-                    print("[Hub] Proceeding to explanation.\n")
-                    phase = "explanation"
+                prev_phase = current_metadata.get("phase_before_review")
+
+                # --- APPROVED ---
+                if action == "proceed":
+                    if prev_phase == "dataprep":
+                        print("[Hub] Dataprep approved → proceeding to modelling.\n")
+                        phase = "modelling"
+                    elif prev_phase == "modelling":
+                        print("[Hub] Modelling approved → proceeding to explanation.\n")
+                        phase = "explanation"
                 
                 # --- RECLEAN DATA ---
                 elif action == "reclean_data":

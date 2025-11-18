@@ -153,7 +153,7 @@ class ReviewingAgent(BaseAgent):
 
         # Routing
         routing = {
-            "approve": "proceed_to_explanation",
+            "approve": "proceed",
             "request_reclean": "reclean_data",
             "request_retrain": "retrain_model",
             "abort": "abort_workflow"
@@ -173,7 +173,11 @@ class ReviewingAgent(BaseAgent):
             analysis=analysis,
             decision=decision,
             base_prompt=PROMPTS[f"{phase}_layer1"])
-        revision_prompt = self.llm(layer4_prompt)
+        
+        if decision in ["approve", "abort"]:
+            revision_prompt = None
+        else:
+            revision_prompt = self.llm(layer4_prompt)
         
         # --------------------
         # Save metadata

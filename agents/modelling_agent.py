@@ -150,7 +150,7 @@ class ModellingAgent(BaseAgent):
         # --------------------
         # Layer 1: recall & plan (LLM)
         # --------------------
-        if "revised_prompt" in metadata and metadata["revised_prompt"]:
+        if metadata.get("revised_prompt"):
             layer1_prompt = metadata["revised_prompt"]
         else:
             layer1_prompt = PROMPTS["modelling_layer1"].format(
