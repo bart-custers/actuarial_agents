@@ -80,6 +80,8 @@ class DataPrepAgent(BaseAgent):
     def handle_message(self, message: Message) -> Message:
         print(f"[{self.name}] Starting data preparation...")
 
+        metadata = message.metadata or {}
+
         # --------------------
         # Load dataset
         # --------------------

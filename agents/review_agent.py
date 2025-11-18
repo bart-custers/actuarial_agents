@@ -159,7 +159,10 @@ class ReviewingAgent(BaseAgent):
         
         # give the prompt templates to the LLM, depending on the phase
         layer4_prompt = PROMPTS["review_layer4"].format(
-            analysis=analysis)
+            phase=phase,
+            analysis=analysis,
+            decision=decision,
+            base_prompt=PROMPTS[f"{phase}_layer1"])
         revision_prompt = self.llm(layer4_prompt)
         
         # --------------------

@@ -242,10 +242,31 @@ PROMPTS = {
     Only output the JSON. No explanation outside the JSON.
     """,
 
-    "review_layer3": """
+    "review_layer4": """
     You are an expert in actuarial modelling, assisting in claim frequency prediction for insurance claims.
 
-    To be defined.
+    Your task is to improve the following prompt so that the agent performs better in the next iteration.
+
+    Context:
+    - Phase under review: {phase}
+    - Reviewer detected issues: {analysis}
+    - Reviewer decision: {decision}
+
+    Here is the ORIGINAL prompt used by the agent: 
+    <<< ORIGINAL_PROMPT >>>
+    {base_prompt}
+    <<< END >>>
+
+    Rewrite this prompt to address the issues above.
+
+    Guidelines:
+    - Keep the structure of the original prompt.
+    - Highlight specific improvements needed.
+    - Do NOT change the agent identity or role.
+    - Do NOT remove required output fields.
+
+    Return only the revised prompt. No explanations.
+
     """,
 
     # --------------------
