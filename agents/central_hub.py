@@ -159,12 +159,6 @@ class CentralHub:
                 print("\n--- Review Completed ---")
                 print(r3.content)
 
-                # Show part of the LLM review
-                if r3.metadata and "llm_review" in r3.metadata:
-                    print("\n--- LLM Review ---")
-                    rt = r3.metadata["llm_review"]
-                    print(rt[:600] + ("..." if len(rt) > 600 else ""))
-
                 action = current_metadata.get("action", "proceed_to_explanation")
                 print(f"[Hub] Review decision → {action.upper()}")
 

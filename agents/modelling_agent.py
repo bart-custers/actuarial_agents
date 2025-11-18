@@ -117,6 +117,8 @@ class ModellingAgent(BaseAgent):
     def handle_message(self, message: Message) -> Message:
         print(f"[{self.name}] Starting modelling pipeline...")
 
+        metadata = message.metadata or {}
+
         processed_paths = message.metadata.get("processed_paths", None)
         artifacts_dir = "data/artifacts"
         os.makedirs(artifacts_dir, exist_ok=True)
