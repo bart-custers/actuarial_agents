@@ -225,19 +225,13 @@ PROMPTS = {
     You are an expert in actuarial modelling, assisting in claim frequency prediction for insurance claims. 
     Based on the analysis: {analysis}, choose the correct next action. Think step-by-step.
 
-    Valid decisions:
+    Valid actions:
     - APPROVE → proceed to next agent
-    - NEEDS_REVISION → ask previous agent to revise output
-    - REQUEST_RETRAIN → redo model training
     - REQUEST_RECLEAN → redo data cleaning
+    - REQUEST_RETRAIN → redo model training
     - ABORT → stop workflow entirely
 
-    ### Output format (MUST be valid JSON):
-    {{
-    "decision": "<APPROVE | NEEDS_REVISION | REQUEST_RETRAIN | REQUEST_RECLEAN | ABORT>",
-    }}
-
-    Only output the JSON. No explanation outside the JSON.
+    Do not provide explanations. The final line of your answer should contain: Decision: APPROVE or REQUEST_RECLEAN or REQUEST_RETRAIN or ABORT.
     """,
 
     "review_layer4": """
