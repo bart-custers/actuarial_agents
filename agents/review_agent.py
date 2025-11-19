@@ -9,6 +9,8 @@ from utils.model_validation import evaluate_model_quality
 from utils.message_types import Message
 from utils.prompt_library import PROMPTS
 from agents.base_agent import BaseAgent
+from utils.consistency import compare_dataprep_consistency_snapshots, summarize_dataprep_snapshot_comparison
+
 
 
 class ReviewingAgent(BaseAgent):
@@ -66,14 +68,16 @@ class ReviewingAgent(BaseAgent):
         else:
             last_review_notes = "No previous review notes"
 
-        memory_summary = {
-            "dataprep_summary": dataprep_context[-1] if len(dataprep_context) > 0 else "No dataprep history",
-            "model_summary": model_context[-1] if len(model_context) > 0 else "No model history",
-            "past_reviews": last_review_notes,
-        }
-        review_memory = memory_summary['past_reviews']
+        # memory_summary = {
+        #     "dataprep_summary": dataprep_context[-1] if len(dataprep_context) > 0 else "No dataprep history",
+        #     "model_summary": model_context[-1] if len(model_context) > 0 else "No model history",
+        #     "past_reviews": last_review_notes,
+        # }
+        review_memory = last_review_notes
 
-        # Get specific metadata for review
+        # --------------------
+        # Get metadata for review
+        # --------------------
         if phase == "dataprep":
             plan = metadata.get("plan", "N/A")
             used_pipeline = metadata.get("used_pipeline", "N/A")
@@ -136,14 +140,38 @@ class ReviewingAgent(BaseAgent):
         self.memory.chat_memory.add_ai_message(analysis)
 
         # --------------------
+        # Perform consistency checks
+        # --------------------
+        consistency_summary = ""
+        if phase == "dataprep":
+            snapshot = metadata.get("consistency_snapshot", "unknown")
+            dataprep_snapshot_history = self.hub.memory.get("dataprep_snapshots", [])
+            comparison = compare_dataprep_consistency_snapshots(snapshot, dataprep_snapshot_history)
+            consistency_summary = summarize_dataprep_snapshot_comparison(comparison)
+        else:
+            consistency_summary = "No dataframe available for consistency review."
+
+        # --------------------
         # Layer 3: review decision (LLM)
         # --------------------
         print(f"[{self.name}] Invoke layer 3...")
 
         layer3_prompt = PROMPTS["review_layer3"].format(
-            analysis=analysis)
-        review_output = self.llm(layer3_prompt)
-        self.memory.chat_memory.add_user_message(layer3_prompt)
+            phase=phase,
+            consistency_summary=consistency_summary)
+        
+        consistency_check = self.llm(layer3_prompt)
+
+        # --------------------
+        # Layer 4: review decision (LLM)
+        # --------------------
+        print(f"[{self.name}] Invoke layer 4...")
+
+        layer4_prompt = PROMPTS["review_layer4"].format(
+            analysis=analysis,
+            consistency_check=consistency_check)
+        review_output = self.llm(layer4_prompt)
+        self.memory.chat_memory.add_user_message(layer4_prompt)
         self.memory.chat_memory.add_ai_message(review_output)
 
         print(review_output)
@@ -163,12 +191,12 @@ class ReviewingAgent(BaseAgent):
         print(f"[{self.name}] Decision → {decision}, Routing → {next_action}")
 
         # --------------------
-        # Layer 4: prompt revision (LLM)
+        # Layer 5: prompt revision (LLM)
         # --------------------
-        print(f"[{self.name}] Invoke layer 4...")
+        print(f"[{self.name}] Invoke layer 5...")
         
         # give the prompt templates to the LLM, depending on the phase
-        layer4_prompt = PROMPTS["review_layer4"].format(
+        layer5_prompt = PROMPTS["review_layer5"].format(
             phase=phase,
             analysis=analysis,
             decision=decision,
@@ -177,7 +205,7 @@ class ReviewingAgent(BaseAgent):
         if decision in ["approve", "abort"]:
             revision_prompt = None
         else:
-            revision_prompt = self.llm(layer4_prompt)
+            revision_prompt = self.llm(layer5_prompt)
         
         # --------------------
         # Save metadata
@@ -209,6 +237,10 @@ class ReviewingAgent(BaseAgent):
             history = self.hub.memory.get("review_history", [])
             history.append(metadata_out)
             self.hub.memory.update("review_history", history)
+        
+        if decision == "approve" and phase == "dataprep":
+            dataprep_snapshot_history.append(snapshot)
+            self.hub.memory.update("dataprep_snapshots", dataprep_snapshot_history)
 
         # Return message to the hub
         return Message(

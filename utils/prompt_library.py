@@ -218,12 +218,21 @@ PROMPTS = {
     Your task:
     - Evaluate plausibility.
     - Identify model training issues.
-    - Output a section called: ANALYSIS: <your reasoning here>
+    - Output a section called: ANALYSIS: <your reasoning here>, be concise.
     """,
 
     "review_layer3": """
     You are an expert in actuarial modelling, assisting in claim frequency prediction for insurance claims. 
-    Based on the analysis: {analysis}, choose the correct next action. Think step-by-step.
+    In addition to the previous analyses, now assess the consistency of the outcome of phase: {phase}. 
+    
+    A summary on the consistency is already provided in: {consistency_summary}.
+    
+    Provide a judgement on consistency. Think step-by-step. Be concise.
+    """,
+
+    "review_layer4": """
+    You are an expert in actuarial modelling, assisting in claim frequency prediction for insurance claims. 
+    Based on the analysis: {analysis} and {consistency_check}, choose the correct next action. Think step-by-step.
 
     Valid actions:
     - APPROVE → proceed to next agent
@@ -234,7 +243,7 @@ PROMPTS = {
     Do not provide explanations. The final line of your answer should contain: Decision: APPROVE or REQUEST_RECLEAN or REQUEST_RETRAIN or ABORT.
     """,
 
-    "review_layer4": """
+    "review_layer5": """
     You are an expert in actuarial modelling, assisting in claim frequency prediction for insurance claims.
 
     Your task is to improve the following prompt so that the agent performs better in the next iteration.

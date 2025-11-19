@@ -13,6 +13,7 @@ from utils.data_pipeline import DataPipeline
 from utils.data_cleaning import DataCleaning
 from utils.message_types import Message
 from agents.base_agent import BaseAgent
+from utils.consistency import dataprep_consistency_snapshot
 
 
 class DataPrepAgent(BaseAgent):
@@ -217,6 +218,11 @@ class DataPrepAgent(BaseAgent):
         # Save metadata
         # --------------------
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+        # Store snapshot
+        snapshot = dataprep_consistency_snapshot(df_processed, target="ClaimNb")
+
+        # Store metadata
         metadata = {
             "timestamp": timestamp,
             "status": "success",
@@ -227,6 +233,7 @@ class DataPrepAgent(BaseAgent):
             "comparison": comparison_summary,
             "verification": verification,
             "explanation": explanation,
+            "consistency_snapshot": snapshot,
             "processed_paths": {
                 "X_train": X_train_path,
                 "X_test": X_test_path,
