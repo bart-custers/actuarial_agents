@@ -161,6 +161,8 @@ class ReviewingAgent(BaseAgent):
             consistency_summary=consistency_summary)
         
         consistency_check = self.llm(layer3_prompt)
+        self.memory.chat_memory.add_user_message(layer3_prompt)
+        self.memory.chat_memory.add_ai_message(consistency_check)
 
         # --------------------
         # Layer 4: review decision (LLM)

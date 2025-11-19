@@ -220,7 +220,7 @@ class DataPrepAgent(BaseAgent):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
         # Store snapshot
-        snapshot = dataprep_consistency_snapshot(df_processed, target="ClaimNb")
+        snapshot = dataprep_consistency_snapshot(chosen_results, target="ClaimNb")
 
         # Store metadata
         metadata = {
