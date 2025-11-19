@@ -227,7 +227,7 @@ PROMPTS = {
     
     A summary on the consistency is already provided in: {consistency_summary}.
     
-    Provide a judgement on consistency. Think step-by-step. Be concise.
+    - Output a section called: ANALYSIS: <your reasoning here>, be concise. Think step-by-step. Be concise.
     """,
 
     "review_layer4": """
