@@ -151,6 +151,8 @@ class ReviewingAgent(BaseAgent):
         else:
             consistency_summary = "No dataframe available for consistency review."
 
+        print(consistency_summary)
+
         # --------------------
         # Layer 3: review decision (LLM)
         # --------------------
@@ -205,8 +207,10 @@ class ReviewingAgent(BaseAgent):
             base_prompt=PROMPTS[f"{phase}_layer1"])
         
         if decision in ["approve", "abort"]:
+            print(f"[{self.name}] Skip layer 5...")
             revision_prompt = None
         else:
+            print(f"[{self.name}] Invoke layer 5...")
             revision_prompt = self.llm(layer5_prompt)
         
         # --------------------
