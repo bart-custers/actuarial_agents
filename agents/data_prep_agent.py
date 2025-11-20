@@ -22,7 +22,7 @@ class DataPrepAgent(BaseAgent):
         self.llm = shared_llm
         self.system_prompt = system_prompt
         self.hub = hub
-        self.memory = ConversationBufferMemory(memory_key="chat_history", return_messages=False) # Short-term conversation memory for layered prompting
+        self.memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True, k=1) # Short-term conversation memory for layered prompting
 
     # --------------------------
     # Helper functions

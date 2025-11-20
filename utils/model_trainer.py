@@ -33,9 +33,9 @@ class ModelTrainer:
 
             # Small grid => quick but effective tuning
             param_grid = {
-                "max_iter": [100, 200, 300],
-                "learning_rate": [0.01, 0.05, 0.1],
-                "max_depth": [3, 4, 5]
+                "max_iter": [200, 300],
+                "learning_rate": [0.01, 0.05],
+                "max_depth": [4, 5]
             }
 
             search = GridSearchCV(
