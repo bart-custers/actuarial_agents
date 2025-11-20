@@ -197,7 +197,7 @@ PROMPTS = {
     Your task:
     - Evaluate plausibility.
     - Identify data/model quality issues.
-    - Output a section called: ANALYSIS: <your reasoning here>, be concise and use 500 words max.
+    - Output a section called: ANALYSIS: <your reasoning here>, be concise and use 150 words max.
     """,
 
     "review_layer2_modelling": """
@@ -228,7 +228,7 @@ PROMPTS = {
     
     A summary on the consistency is already provided in: {consistency_summary}.
     
-    - Output a section called: ANALYSIS: <your reasoning here>, be concise and use 500 words max. Think step-by-step. Be concise.
+    - Output a section called: ANALYSIS: <your reasoning here>, be concise and use 150 words max. Think step-by-step. Be concise.
     """,
 
     "review_layer4": """

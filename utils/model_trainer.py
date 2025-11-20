@@ -29,7 +29,7 @@ class ModelTrainer:
         elif self.model_type == "gbm":
             # ----- Simple Hyperparameter Tuning for GBM -----
 
-            gbm = HistGradientBoostingRegressor(random_state=42, loss="tweedie", tweedie_power=1.0, verbose=1)
+            gbm = HistGradientBoostingRegressor(random_state=42, loss="poisson", verbose=1)
 
             # Small grid => quick but effective tuning
             param_grid = {
