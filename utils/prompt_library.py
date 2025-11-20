@@ -207,7 +207,7 @@ PROMPTS = {
     Think step-by-step, using the following context: 
     - Summary of your earlier thinking: {layer1_out}
     - The devised plan for the model training: {plan}
-    - The model type used: {model_type}
+    - The model type used: {model_type_used}
     - The performance metrics of the trained model: {model_metrics}
     - The metrics check: {metrics_check}
     - The explanation of the model training steps: {explanation}

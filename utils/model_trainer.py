@@ -22,16 +22,14 @@ class ModelTrainer:
     def train(self, X_train, y_train, exposure_train):
         """Fit model according to selected type."""
         if self.model_type == "glm":
-            # Poisson GLM (standard actuarial frequency model)
             self.model = PoissonRegressor(alpha=1e-6, max_iter=500)
             self.model.fit(X_train, y_train)
 
         elif self.model_type == "gbm":
-            # ----- Simple Hyperparameter Tuning for GBM -----
 
             gbm = HistGradientBoostingRegressor(random_state=42, loss="poisson", verbose=1)
 
-            # Small grid => quick but effective tuning
+            # Small grid just for testing
             param_grid = {
                 "max_iter": [200, 300],
                 "learning_rate": [0.01, 0.05],
@@ -49,7 +47,6 @@ class ModelTrainer:
 
             search.fit(X_train, y_train, sample_weight=exposure_train)
 
-            # Best tuned model
             self.model = search.best_estimator_
 
         else:
