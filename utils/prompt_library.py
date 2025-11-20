@@ -103,6 +103,7 @@ PROMPTS = {
     Your code will be executed with the following variables already defined:
     - X_train : pandas DataFrame
     - y_train : numpy array
+    - exposure_train : numpy array
     - X_test  : pandas DataFrame
 
     You MUST produce:
@@ -133,7 +134,7 @@ PROMPTS = {
 
     # ----- DO NOT MODIFY ANYTHING BELOW THIS LINE -----
 
-    model = train_model(X_train, y_train)
+    model = train_model(X_train, y_train, exposure_train)
     preds = generate_predictions(model, X_test)
 
     result = {{"model": model, "preds": preds}}

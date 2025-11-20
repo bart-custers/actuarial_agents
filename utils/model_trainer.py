@@ -19,7 +19,7 @@ class ModelTrainer:
         self.offset = offset
         self.model = None
 
-    def train(self, X_train, y_train):
+    def train(self, X_train, y_train, exposure_train):
         """Fit model according to selected type."""
         if self.model_type == "glm":
             # Poisson GLM (standard actuarial frequency model)
@@ -29,7 +29,7 @@ class ModelTrainer:
         elif self.model_type == "gbm":
             # ----- Simple Hyperparameter Tuning for GBM -----
 
-            gbm = HistGradientBoostingRegressor(random_state=42, loss="tweedie", tweedie_variance_power=1.0, verbose=1)
+            gbm = HistGradientBoostingRegressor(random_state=42, loss="tweedie", tweedie_power=1.0, verbose=1)
 
             # Small grid => quick but effective tuning
             param_grid = {
@@ -47,7 +47,7 @@ class ModelTrainer:
                 verbose=2
             )
 
-            search.fit(X_train, y_train)
+            search.fit(X_train, y_train, sample_weight=exposure_train)
 
             # Best tuned model
             self.model = search.best_estimator_

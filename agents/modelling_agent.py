@@ -52,7 +52,7 @@ class ModellingAgent(BaseAgent):
         match = re.search(r"```python(.*?)```", text, re.DOTALL)
         return match.group(1).strip() if match else None
     
-    def _apply_llm_pipeline(self, X_train, y_train, X_test, model_code: str):
+    def _apply_llm_pipeline(self, X_train, y_train, exposure_train, X_test, model_code: str):
         """Executes LLM-generated model training code safely, returning predictions."""
         code = self.extract_code_block(model_code)
         if code is None:
@@ -68,6 +68,7 @@ class ModellingAgent(BaseAgent):
             "np": np,
             "X_train": X_train,
             "y_train": y_train,
+            "exposure_train": exposure_train,
             "X_test": X_test,
         }
 
@@ -138,6 +139,7 @@ class ModellingAgent(BaseAgent):
         X_test = pd.read_csv(processed_paths["X_test"])
         y_train = pd.read_csv(processed_paths["y_train"]).values.ravel()
         y_test = pd.read_csv(processed_paths["y_test"]).values.ravel()
+        exposure_train = pd.read_csv(processed_paths["exposure_train"]).values.ravel()
         exposure_test = pd.read_csv(processed_paths["exposure_test"]).values.ravel()
         feature_names = pd.read_pickle(os.path.join(artifacts_dir, "feature_names.pkl"))
 
@@ -165,11 +167,11 @@ class ModellingAgent(BaseAgent):
         model_choice = self._extract_model_choice(plan)
         print(f"[modelling] LLM selected model type: {model_choice}")
 
-        print(f"[{self.name}] Invoke layer 2...")
-
         # --------------------
         # Layer 2: model code (LLM)
         # --------------------
+        print(f"[{self.name}] Invoke layer 2...")
+
         layer2_prompt = PROMPTS["modelling_layer2"].format(
         model_choice=model_choice,
         current_model_code=open("utils/model_trainer.py").read(),
@@ -203,7 +205,7 @@ class ModellingAgent(BaseAgent):
             model_predictions = llm_model_preds
         else:
             trainer = ModelTrainer(model_type=model_choice)
-            trainer.train(X_train, y_train)
+            trainer.train(X_train, y_train, exposure_train)
             model_predictions = trainer.predict(X_test)
             print(f"[{self.name}] Fallback to deterministic model training")
 
