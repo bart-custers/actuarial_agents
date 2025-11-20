@@ -193,7 +193,7 @@ class ModellingAgent(BaseAgent):
 
         # Attempt LLM pipeline
         try:
-            llm_model_preds, llm_model_obj = self._apply_llm_pipeline(X_train, y_train, X_test, model_code)
+            llm_model_preds, llm_model_obj = self._apply_llm_pipeline(X_train, y_train, exposure_train, X_test, model_code)
             llm_model_success = True
         except Exception as e:
             llm_model_preds, llm_model_obj = None, None
