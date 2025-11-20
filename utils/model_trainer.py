@@ -29,7 +29,7 @@ class ModelTrainer:
         elif self.model_type == "gbm":
             # ----- Simple Hyperparameter Tuning for GBM -----
 
-            gbm = GradientBoostingRegressor(random_state=42)
+            gbm = GradientBoostingRegressor(random_state=42, loss="poisson", verbose=1)
 
             # Small grid => quick but effective tuning
             param_grid = {
@@ -44,6 +44,7 @@ class ModelTrainer:
                 scoring="neg_mean_poisson_deviance",
                 cv=3,
                 n_jobs=-1,
+                verbose=2
             )
 
             search.fit(X_train, y_train)
