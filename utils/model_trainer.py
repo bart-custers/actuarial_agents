@@ -4,7 +4,7 @@ import pandas as pd
 import joblib
 
 from sklearn.linear_model import PoissonRegressor
-from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.model_selection import GridSearchCV
 
 class ModelTrainer:
@@ -29,7 +29,7 @@ class ModelTrainer:
         elif self.model_type == "gbm":
             # ----- Simple Hyperparameter Tuning for GBM -----
 
-            gbm = GradientBoostingRegressor(random_state=42, loss="poisson", verbose=1)
+            gbm = HistGradientBoostingRegressor(random_state=42, loss="tweedie", tweedie_variance_power=1.0, verbose=1)
 
             # Small grid => quick but effective tuning
             param_grid = {

@@ -139,6 +139,8 @@ class ReviewingAgent(BaseAgent):
         self.memory.chat_memory.add_user_message(layer2_prompt)
         self.memory.chat_memory.add_ai_message(analysis)
 
+        print (analysis)
+
         # --------------------
         # Perform consistency checks
         # --------------------
@@ -197,7 +199,6 @@ class ReviewingAgent(BaseAgent):
         # --------------------
         # Layer 5: prompt revision (LLM)
         # --------------------
-        print(f"[{self.name}] Invoke layer 5...")
         
         # give the prompt templates to the LLM, depending on the phase
         layer5_prompt = PROMPTS["review_layer5"].format(
