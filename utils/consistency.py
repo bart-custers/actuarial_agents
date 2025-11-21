@@ -49,7 +49,7 @@ def dataprep_consistency_snapshot(df: pd.DataFrame, target: str = None) -> Dict[
     return snapshot
 
 
-# Compare snapshots
+# Compare dataprep snapshots
 def compare_dataprep_consistency_snapshots(current: Dict[str, Any],history: List[Dict[str, Any]]) -> Dict[str, Any]:
     """Compares current snapshot to all historical snapshots."""
     if not history:
@@ -58,12 +58,11 @@ def compare_dataprep_consistency_snapshots(current: Dict[str, Any],history: List
             "summary": "No historical dataprep snapshots available."
         }
 
+    comparison = {}
     prev = history[-1]  # most recent snapshot
 
     def collect_hist(key):
         return [snapshot[key] for snapshot in history if key in snapshot]
-
-    comparison = {}
 
     # Row/column count changes
     comparison["row_count_change"] = current["n_rows"] - prev["n_rows"]
@@ -147,7 +146,7 @@ def summarize_dataprep_snapshot_comparison(comp: Dict[str, Any]) -> str:
             lines.append(f"  • {col}: {prev} → {curr}")
 
     if comp["column_order_changed"]:
-        lines.append("- Column order changed (structural drift).")
+        lines.append("- Column order changed.")
 
     if comp.get("target_distribution_drift"):
         if comp["target_distribution_drift"]:
@@ -157,5 +156,104 @@ def summarize_dataprep_snapshot_comparison(comp: Dict[str, Any]) -> str:
 
     if len(lines) == 1:
         lines.append("No meaningful inconsistencies detected.")
+
+    return "\n".join(lines)
+
+
+# Compare modelling snapshots
+def compare_modelling_consistency_snapshots(current: Dict[str, Any], history: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """
+    Compare current model metrics snapshot to historical records.
+    Returns a structured drift analysis.
+    """
+    if not history:
+        return {
+            "status": "no_history",
+            "summary": "No historical model metric snapshots available."
+        }
+
+    comparison = {}
+    prev = history[-1]
+
+    # Metric analysis
+    scalar_metrics = ["RMSE", "MAE", "R2", "Poisson_Deviance", "Gini_score"]
+    scalar_drift = {}
+
+    for m in scalar_metrics:
+        curr_val = current.get(m)
+        hist_vals = [snap.get(m) for snap in history if snap.get(m) is not None]
+
+        if curr_val is None or len(hist_vals) < 1:
+            continue
+
+        mean_prev = np.mean(hist_vals)
+        diff = curr_val - mean_prev
+
+        if mean_prev != 0:
+            pct_diff = diff / mean_prev
+        else:
+            pct_diff = 0
+
+        if abs(pct_diff) > 0.05:
+            scalar_drift[m] = {
+                "current": curr_val,
+                "avg_history": float(mean_prev),
+                "pct_change": round(pct_diff, 4)
+            }
+
+    comparison["scalar_metric_drift"] = scalar_drift
+
+    # Feature analysis
+    curr_imp = current.get("Feature_Importance", {})
+    prev_imp = prev.get("Feature_Importance", {})
+
+    feature_drift = {}
+
+    # Features that appear/disappear
+    added = set(curr_imp.keys()) - set(prev_imp.keys())
+    removed = set(prev_imp.keys()) - set(curr_imp.keys())
+
+    if added:
+        feature_drift["new_features"] = list(added)
+    if removed:
+        feature_drift["removed_features"] = list(removed)
+
+    comparison["feature_importance_drift"] = feature_drift
+
+    return comparison
+
+
+# Summarize comparison for LLM input
+def summarize_modelling_snapshot_comparison(comp: Dict[str, Any]) -> str:
+    if comp.get("status") == "no_history":
+        return "No historical model metric snapshots exist."
+
+    lines = ["### Model Metrics Consistency Summary"]
+
+    # scalar drifts
+    if comp["scalar_metric_drift"]:
+        lines.append("- Analysis of scalar metrics:")
+        for m, d in comp["scalar_metric_drift"].items():
+            lines.append(
+                f"  • {m}: {d['current']:.4f} vs hist avg {d['avg_history']:.4f} "
+                f"(change {d['pct_change']:+.3f})"
+            )
+
+    # feature importance drift
+    feat = comp["feature_importance_drift"]
+
+    if "new_features" in feat:
+        lines.append(f"- New features introduced: {', '.join(feat['new_features'])}")
+
+    if "removed_features" in feat:
+        lines.append(f"- Features removed since last model: {', '.join(feat['removed_features'])}")
+
+    if "importance_changes" in feat:
+        lines.append("- Feature importance magnitude changes:")
+        for f, info in feat["importance_changes"].items():
+            lines.append(
+                f"  • {f}: {info['previous']:.3f} → {info['current']:.3f} "
+                f"(Δ {info['change']:+.4f})"
+            )
 
     return "\n".join(lines)

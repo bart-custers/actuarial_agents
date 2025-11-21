@@ -19,33 +19,11 @@ class ModellingAgent(BaseAgent):
         self.llm = shared_llm
         self.system_prompt = system_prompt
         self.hub = hub
-        self.memory = ConversationBufferMemory(memory_key="chat_history", return_messages=False) # Short-term conversation memory for layered prompting
+        self.memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True, k=1) # Short-term conversation memory for layered prompting
 
     # -------------------------------
     # Helper functions
     # -------------------------------
-    # def _apply_llm_pipeline(self, df: pd.DataFrame, suggestion_text: str):
-    #     """Executes LLM-generated preprocessing code safely."""
-    #     code = self.extract_code_block(suggestion_text)
-    #     if code is None:
-    #         raise ValueError("No Python code block found in LLM suggestion.")
-
-    #     # Safety: forbid imports or system calls
-    #     if "import os" in code or "subprocess" in code or "open(" in code:
-    #         raise ValueError("Unsafe code detected.")
-
-    #     # Local execution namespace
-    #     local_env = {"df": df.copy(), "np": np, "pd": pd}
-
-    #     try:
-    #         exec(code, {}, local_env)
-    #     except Exception as e:
-    #         raise ValueError(f"Adaptive preprocessing code failed: {e}")
-
-    #     if "df" not in local_env:
-    #         raise ValueError("Adaptive code did not modify df.")
-
-    #     return local_env["df"]
     @staticmethod
     def extract_code_block(text: str) -> str | None:
         """Extract ```python ... ``` code block from LLM output."""
@@ -83,21 +61,25 @@ class ModellingAgent(BaseAgent):
 
         result = local_env["result"]
         if not isinstance(result, dict):
-            raise ValueError("`result` must be a dictionary containing 'preds' and 'model'.")
+            raise ValueError("`result` must be a dictionary.")
 
-        if "preds" not in result or "model" not in result:
-            raise ValueError("`result` dictionary must include both 'preds' and 'model' keys.")
+        if "preds_train" not in result or "preds_test" not in result or "model" not in result:
+            raise ValueError("`result` dictionary must include all keys.")
 
-        preds = result["preds"]
+        preds_train = result["preds_train"]
+        preds_test = result["preds_test"]
         model = result["model"]
 
         # --- Validate predictions ---
-        if not isinstance(preds, (pd.Series, np.ndarray, list)):
-            raise ValueError("`predictions` must be array-like.")
-        preds = np.asarray(preds).ravel()
+        if not isinstance(preds_train, (pd.Series, np.ndarray, list)):
+            raise ValueError("`train predictions` must be array-like.")
+        preds_train = np.asarray(preds_train).ravel()
 
-        print(f"[{self.name}] ✅ Adaptive model produced {len(preds)} predictions.")
-        return preds, model
+        if not isinstance(preds_test, (pd.Series, np.ndarray, list)):
+            raise ValueError("`train predictions` must be array-like.")
+        preds_test = np.asarray(preds_test).ravel()
+
+        return preds_train, preds_test, model
     
     def _extract_model_choice(self, llm_text: str) -> str:
         text = llm_text.lower()
@@ -193,28 +175,30 @@ class ModellingAgent(BaseAgent):
 
         # Attempt LLM pipeline
         try:
-            llm_model_preds, llm_model_obj = self._apply_llm_pipeline(X_train, y_train, exposure_train, X_test, model_code)
+            llm_model_preds_train, llm_model_preds_test, llm_model_obj = self._apply_llm_pipeline(X_train, y_train, exposure_train, X_test, model_code)
             llm_model_success = True
         except Exception as e:
-            llm_model_preds, llm_model_obj = None, None
+            llm_model_preds_train, llm_model_preds_test, llm_model_obj = None, None, None
             llm_model_success = False
             print(f"[{self.name}] LLM model training failed: {e}")
 
         # Fallback pipeline
         if llm_model_success == True:
-            model_predictions = llm_model_preds
+            model_train_predictions = llm_model_preds_train
+            model_test_predictions = llm_model_preds_test
         else:
             print(f"[{self.name}] Fallback to deterministic model training")
             trainer = ModelTrainer(model_type=model_choice)
             trainer.train(X_train, y_train, exposure_train)
-            model_predictions = trainer.predict(X_test)
+            model_train_predictions = trainer.predict(X_train)
+            model_test_predictions = trainer.predict(X_test)
 
         # --------------------
         # Evaluate model
         # --------------------
         print(f"[{self.name}] Invoke model evaluation...")
         evaluator = ModelEvaluation(model=trainer.model, model_type=model_choice)
-        model_metrics = evaluator.evaluate(y_test, model_predictions, feature_names, exposure_test)
+        model_metrics = evaluator.evaluate(y_test, model_test_predictions, feature_names, exposure_test)
 
         # --------------------
         # Layer 3: model assessment (LLM)
@@ -238,6 +222,21 @@ class ModellingAgent(BaseAgent):
         # Save metadata
         # --------------------
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+        # Store model predictions
+        predictions_dir = "data/evaluation"
+        os.makedirs(predictions_dir, exist_ok=True)
+
+        train_pred_path = os.path.join(predictions_dir, "model_train_predictions.csv")
+        test_pred_path = os.path.join(predictions_dir, "model_test_predictions.csv")
+
+        pd.DataFrame({"train_prediction": model_train_predictions}).to_csv(train_pred_path, index=False)
+        pd.DataFrame({"test_prediction": model_test_predictions}).to_csv(test_pred_path, index=False)
+
+        # Store snapshot
+        snapshot = model_metrics
+
+        # Store metadata
         metadata = {
             "timestamp": timestamp,
             "status": "success",
@@ -248,6 +247,8 @@ class ModellingAgent(BaseAgent):
          #   "model_object": llm_model_obj,
             "model_metrics": model_metrics,
             "explanation": explanation,
+            "consistency_snapshot": snapshot,
+            "model_predictions_path":predictions_dir,
         }
 
         results_dir = "data/results"
@@ -271,106 +272,3 @@ class ModellingAgent(BaseAgent):
             content=f"Model trained and evaluated successfully.",
             metadata=metadata,
         )
-
-
-# import os
-# import pandas as pd
-# from datetime import datetime
-# from utils.general_utils import save_json_safe
-# from utils.message_types import Message
-# from utils.model_trainer import ModelTrainer
-# from utils.prompt_library import PROMPTS
-# from agents.base_agent import BaseAgent
-
-# class ModellingAgent(BaseAgent):
-#     def __init__(self, name="modelling", shared_llm=None, system_prompt=None, model_type="glm", hub=None):
-#         super().__init__(name)
-#         self.llm = shared_llm
-#         self.system_prompt = system_prompt
-#         self.model_type = model_type
-#         self.hub = hub
-
-#     def handle_message(self, message: Message) -> Message:
-#         print(f"[{self.name}] Starting model training ({self.model_type})...")
-
-#         # --- Initiate paths ---
-#         processed_paths = message.metadata.get("processed_paths", None)
-#         artifacts_dir = "data/artifacts"
-#         os.makedirs(artifacts_dir, exist_ok=True)
-
-#         if processed_paths is None:
-#             return Message(
-#                 sender=self.name,
-#                 recipient=message.sender,
-#                 type="error",
-#                 content="Missing processed dataset paths.",
-#             )
-
-#         # --- Load data ---
-#         X_train = pd.read_csv(processed_paths["X_train"])
-#         X_test = pd.read_csv(processed_paths["X_test"])
-#         y_train = pd.read_csv(processed_paths["y_train"]).values.ravel()
-#         y_test = pd.read_csv(processed_paths["y_test"]).values.ravel()
-#         exposure_train = pd.read_csv(processed_paths["exposure_train"]).values.ravel()
-#         exposure_test = pd.read_csv(processed_paths["exposure_test"]).values.ravel()
-#         feature_names = pd.read_pickle(os.path.join(artifacts_dir, "feature_names.pkl"))
-
-#         # --- Train model ---
-#         trainer = ModelTrainer(model_type=self.model_type)
-#         trainer.train(X_train, y_train)
-#         preds = trainer.predict(X_test)
-#         metrics = trainer.evaluate(y_test, preds, feature_names, exposure_test)
-
-#         # --- Save model and evaluation ---
-#         model_path = os.path.join(artifacts_dir, f"model_{self.model_type}.pkl")
-#         preds_path = os.path.join(artifacts_dir, f"predictions.csv")
-
-#         trainer.save(model_path)
-#         pd.DataFrame({"y_true": y_test, "y_pred": preds}).to_csv(preds_path, index=False)
-        
-#         plot_path = metrics.get("Calibration Plot", None)
-#         if plot_path and os.path.exists(plot_path):
-#             from IPython.display import Image, display
-#             print("\n--- Calibration / Lift Chart ---")
-#             display(Image(filename=plot_path))
-
-#         # --- LLM Explanation ---
-#         modelling_prompt = PROMPTS["modelling"].format(
-#         metrics=metrics,
-#         )
-
-#         explanation = self.llm(modelling_prompt) if self.llm else "No LLM backend available."
-
-#         # --- Return message and log output ---
-#         # Store metadata
-#         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-#         metadata = {
-#             "timestamp": timestamp,
-#             "status": "success",
-#             "model_path": model_path,
-#             "preds_path": preds_path,
-#             "metrics": metrics,
-#             "llm_explanation": explanation,
-#         }
-
-#         results_dir = "data/results"
-#         os.makedirs(results_dir, exist_ok=True)
-#         meta_path = os.path.join(results_dir, f"{self.name}_metadata.json")
-#         save_json_safe(metadata, meta_path)
-#         metadata["metadata_file"] = meta_path
-
-#         # Log to central memory
-#         if self.hub and self.hub.memory:
-#             self.hub.memory.log_event(self.name, "model_trained", metadata)
-#             history = self.hub.memory.get("model_history", [])
-#             history.append(metadata)
-#             self.hub.memory.update("model_history", history)
-
-#         # Return message to the hub
-#         return Message(
-#             sender=self.name,
-#             recipient="hub",
-#             type="response",
-#             content=f"Model ({self.model_type}) trained and evaluated successfully.",
-#             metadata=metadata,
-#         )
