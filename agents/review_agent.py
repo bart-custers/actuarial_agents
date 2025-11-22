@@ -38,7 +38,7 @@ class ReviewingAgent(BaseAgent):
     # Main handler
     # ---------------------------
     def handle_message(self, message: Message) -> Message:
-        print(f"[{self.name}] Starting review pipeline...")
+        print(f"[{self.name}] Starting review...")
 
         metadata = message.metadata or {}
         phase = metadata.get("phase_before_review", "unknown")
@@ -166,8 +166,9 @@ class ReviewingAgent(BaseAgent):
             impact_analysis_input=impact_analysis_input)
             impact_analysis_output = self.llm(layer4_prompt)
         
-        print(impact_analysis_output)
-
+        if impact_analysis_output is not None:
+            print(impact_analysis_output)
+            
         # --------------------
         # Layer 5: review decision (LLM)
         # --------------------
