@@ -74,13 +74,13 @@ class ReviewingAgent(BaseAgent):
             confidence = metadata.get("confidence", "N/A")
           #  adaptive_suggestion = metadata.get("adaptive_suggestion", "N/A")
             verification = metadata.get("verification", "N/A")
-            explanation = metadata.get("explanation", "N/A")
+          #  explanation = metadata.get("explanation", "N/A")
         elif phase == "modelling":
             plan = metadata.get("plan", "N/A")
             model_type_used = metadata.get("model_type_used", "N/A")
           #  model_code = metadata.get("model_code", "N/A")
             model_metrics = metadata.get("model_metrics", {})
-            explanation = metadata.get("explanation", "N/A")
+          #  explanation = metadata.get("explanation", "N/A")
         else:
             print(f"[{self.name}] WARNING: Unknown phase '{phase}' for review agent.")
 
@@ -98,7 +98,7 @@ class ReviewingAgent(BaseAgent):
                 confidence=confidence,
               #  adaptive_suggestion=adaptive_suggestion,
                 verification=verification,
-                explanation=explanation,
+              #  explanation=explanation,
                 review_memory=review_memory,
             )
 
@@ -110,7 +110,7 @@ class ReviewingAgent(BaseAgent):
                 model_type_used=model_type_used,
               #  model_code=model_code,
                 model_metrics=model_metrics,
-                explanation=explanation,
+              #  explanation=explanation,
                 review_memory=review_memory,
             )
 
@@ -143,7 +143,7 @@ class ReviewingAgent(BaseAgent):
         print(consistency_summary)
 
         # --------------------
-        # Layer 3: review decision (LLM)
+        # Layer 3: consistency checks (LLM)
         # --------------------
         print(f"[{self.name}] Invoke layer 3...")
 
@@ -206,6 +206,8 @@ class ReviewingAgent(BaseAgent):
         # --------------------
         # Save metadata
         # --------------------
+        print(f"[{self.name}] Saving metadata...")
+        
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         metadata_out = {
             "timestamp": timestamp,

@@ -34,6 +34,184 @@ class ModelEvaluation:
 
         # Gini relative to uniform line
         return (2 * gini_sum / n) - (n + 1) / n
+    
+    def calibration_plot(y_true, y_pred, exposure, model_type="model"):
+        """
+        Creates a calibration/lift plot comparing actual vs predicted claim rates
+        across prediction deciles.
+
+        Parameters
+        ----------
+        y_true : array-like
+            Observed claim counts.
+        y_pred : array-like
+            Model-predicted claim counts.
+        exposure : array-like
+            Exposure values for each observation.
+        model_label : str
+            Used for plot title and filename.
+
+        Returns
+        -------
+        decile_summary : pd.DataFrame
+            Table containing decile-level aggregated metrics.
+        """
+
+        # --- Compute rates ---
+        actual_rate = np.asarray(y_true) / np.asarray(exposure)
+        predicted_rate = np.asarray(y_pred) / np.asarray(exposure)
+
+        df = pd.DataFrame({
+            "ActualRate": actual_rate,
+            "PredictedRate": predicted_rate,
+            "Exposure": exposure
+        })
+
+        # Assign deciles based on predicted rate
+        df["Decile"] = pd.qcut(df["PredictedRate"], q=10, labels=False, duplicates="drop")
+
+        # Aggregate metrics by decile
+        decile_summary = (
+            df.groupby("Decile")
+            .agg({
+                "ActualRate": "mean",
+                "PredictedRate": "mean",
+                "Exposure": "sum"
+            })
+            .reset_index()
+        )
+
+        # --- Plot ---
+        fig, ax1 = plt.subplots(figsize=(8, 5))
+
+        ax1.plot(decile_summary["Decile"], decile_summary["ActualRate"],
+                marker="o", label="Actual Rate")
+        ax1.plot(decile_summary["Decile"], decile_summary["PredictedRate"],
+                marker="x", label="Predicted Rate")
+        ax1.set_xlabel("Decile (by predicted rate)")
+        ax1.set_ylabel("Average Claim Rate")
+        ax1.legend(loc="upper left")
+        ax1.grid(True)
+
+        ax2 = ax1.twinx()
+        ax2.bar(decile_summary["Decile"], decile_summary["Exposure"],
+                alpha=0.3, width=0.8, label="Total Exposure")
+        ax2.set_ylabel("Total Exposure")
+        ax2.legend(loc="upper right")
+
+        plt.title(f"Calibration Plot ({model_type.upper()})")
+        plt.tight_layout()
+
+        # --- Save plot ---
+        results_dir = "data/results/evaluation"
+        os.makedirs(results_dir, exist_ok=True)
+        plot_path = os.path.join(results_dir, f"calibration_{model_type}.png")
+        plt.savefig(plot_path)
+        plt.close(fig)
+
+        return decile_summary                
+
+    def prediction_comparison_features(
+        X_matrix,
+        feature_names,
+        preds_current,
+        preds_previous,
+        set_name,
+        model_type):
+
+        X = pd.DataFrame(X_matrix, columns=feature_names)
+        X["_pred_cur"] = preds_current
+        X["_pred_prev"] = preds_previous
+
+        rows = []
+
+        for feature in feature_names:
+            try:
+                grouped = (
+                    X.groupby(feature)[["_pred_cur", "_pred_prev"]]
+                    .mean()
+                    .reset_index()
+                )
+            except Exception:
+                continue
+
+            grouped["diff"] = grouped["_pred_cur"] - grouped["_pred_prev"]
+            grouped["abs_diff"] = grouped["diff"].abs()
+
+            top_rows = grouped.nlargest(5, "abs_diff")
+
+            for _, r in top_rows.iterrows():
+                rows.append({
+                    "Feature": feature,
+                    "Value": r[feature],
+                    "Prev_Pred": r["_pred_prev"],
+                    "Cur_Pred": r["_pred_cur"],
+                    "Diff": r["diff"],
+                    "AbsDiff": r["abs_diff"],
+                })
+
+        deviation_table = pd.DataFrame(rows).sort_values("AbsDiff", ascending=False)
+
+        n_features = len(feature_names)
+        n_cols = 3
+        n_rows = int(np.ceil(n_features / n_cols))
+
+        fig, axes = plt.subplots(n_rows, n_cols, figsize=(6 * n_cols, 5 * n_rows))
+        axes = axes.flatten()
+
+        for i, feature in enumerate(feature_names):
+
+            ax = axes[i]
+
+            try:
+                grouped = (
+                    X.groupby(feature)[["_pred_cur", "_pred_prev"]]
+                    .mean()
+                    .reset_index()
+                    .sort_values(feature)
+                )
+            except Exception:
+                continue
+
+            ax.plot(
+                grouped[feature], grouped["_pred_cur"],
+                linestyle="--", marker="o", label="Current Model"
+            )
+            ax.plot(
+                grouped[feature], grouped["_pred_prev"],
+                linestyle="-", marker="s", label="Previous Model"
+            )
+
+            ax.fill_between(
+                grouped[feature],
+                grouped["_pred_cur"],
+                grouped["_pred_prev"],
+                alpha=0.3,
+                color="salmon"
+            )
+
+            ax.set_title(f"{set_name.capitalize()} Predictions by {feature}")
+            ax.set_xlabel(feature)
+            ax.set_ylabel("Mean Prediction")
+            ax.grid(True)
+            ax.legend()
+
+        # Remove any unused axes
+        for j in range(i + 1, n_rows * n_cols):
+            fig.delaxes(axes[j])
+
+        plt.tight_layout()
+
+        results_dir = "data/results/evaluation"
+        os.makedirs(results_dir, exist_ok=True)
+        plot_path = os.path.join(
+            results_dir, f"prediction_comparison_{model_type}_{set_name}.png"
+        )
+
+        plt.savefig(plot_path)
+        plt.close(fig)
+
+        return deviation_table
 
     def evaluate(self, y_true, y_pred, feature_names=None, exposure=None):
         """Compute evaluation metrics and plots."""
@@ -78,185 +256,38 @@ class ModelEvaluation:
         metrics["Feature_Importance"] = coef_df
 
         # Calibration / Lift plot
-        if exposure is not None:
-            actual_rate = y_true / exposure
-            predicted_rate = y_pred / exposure
-
-            df = pd.DataFrame({
-                "ActualRate": actual_rate,
-                "PredictedRate": predicted_rate,
-                "Exposure": exposure
-            })
-            df["Decile"] = pd.qcut(df["PredictedRate"], q=10, labels=False, duplicates="drop")
-
-            decile_summary = (
-                df.groupby("Decile")
-                .agg({
-                    "ActualRate": "mean",
-                    "PredictedRate": "mean",
-                    "Exposure": "sum"
-                })
-                .reset_index()
-            )
-
-            fig, ax1 = plt.subplots(figsize=(8, 5))
-            ax1.plot(decile_summary["Decile"], decile_summary["ActualRate"],
-                     marker="o", label="Actual Rate", color="blue")
-            ax1.plot(decile_summary["Decile"], decile_summary["PredictedRate"],
-                     marker="x", label="Predicted Rate", color="orange")
-            ax1.set_xlabel("Decile (by predicted rate)")
-            ax1.set_ylabel("Average Claim Rate")
-            ax1.legend(loc="upper left")
-            ax1.grid(True)
-
-            ax2 = ax1.twinx()
-            ax2.bar(decile_summary["Decile"], decile_summary["Exposure"],
-                    alpha=0.3, color="cornflowerblue", width=0.8, label="Total Exposure")
-            ax2.set_ylabel("Total Exposure")
-            ax2.legend(loc="upper right")
-
-            plt.title(f"Calibration Plot ({self.model_type.upper()})")
-            plt.tight_layout()
-
-            results_dir = "data/results/evaluation"
-            os.makedirs(results_dir, exist_ok=True)
-            plot_path = os.path.join(results_dir, f"calibration_{self.model_type}.png")
-            plt.savefig(plot_path)
-            plt.close(fig)
-
-            metrics["Calibration Plot"] = plot_path
+        metrics["Calibration_table"] = self.calibration_plot(y_true, y_pred, exposure, self.model_type)
 
         return metrics
 
-    def compare_prediction_deviations(X: pd.DataFrame,
-                                    pred1: np.ndarray,
-                                    pred2: np.ndarray,
-                                    top_k: int = 3):
-        """
-        For each feature, computes average predictions by feature value
-        and returns a table containing only the top absolute deviations.
+    def evaluate_features(self,
+        X_train, X_test,
+        preds_train_current, preds_train_previous,
+        preds_test_current, preds_test_previous,
+        feature_names):
 
-        Parameters
-        ----------
-        X : pd.DataFrame
-            Feature dataset (train or test).
-        pred1 : array-like
-            Predictions from model 1.
-        pred2 : array-like
-            Predictions from model 2.
-        top_k : int
-            Number of largest absolute deviations to show per feature.
+        # Checks
+        if not isinstance(X_train, pd.DataFrame):
+            X_train = pd.DataFrame(X_train, columns=feature_names)
+        if not isinstance(X_test, pd.DataFrame):
+            X_test = pd.DataFrame(X_test, columns=feature_names)
 
-        Returns
-        -------
-        pd.DataFrame
-            Table with largest absolute deviations.
-        """
+        # Create tables with comparisons of predictions per feature
+        train_preds_comparison = self.prediction_comparison_features(
+            X_train, feature_names,
+            preds_train_current, preds_train_previous,
+            set_name="train",
+            model_type=self.model_type
+        )
 
-        df = X.copy()
-        df["_pred_old"] = pred1
-        df["_pred_new"] = pred2
+        test_preds_comparison = self.prediction_comparison_features(
+            X_test, feature_names,
+            preds_test_current, preds_test_previous,
+            set_name="test",
+            model_type=self.model_type
+)
 
-        rows = []
-
-        for feature in X.columns:
-            try:
-                grouped = (
-                    df.groupby(feature)[["_pred_old", "_pred_new"]]
-                    .mean()
-                    .reset_index()
-                )
-            except Exception:
-                continue
-
-            grouped["diff"] = grouped["_pred_new"] - grouped["_pred_old"]
-            grouped["abs_diff"] = grouped["diff"].abs()
-
-            top_rows = grouped.nlargest(top_k, "abs_diff")
-
-            for _, r in top_rows.iterrows():
-                rows.append({
-                    "Feature": feature,
-                    "Value": r[feature],
-                    "Old_Pred": r["_pred_old"],
-                    "New_Pred": r["_pred_new"],
-                    "Diff": r["diff"],
-                    "AbsDiff": r["abs_diff"]
-                })
-
-        result = pd.DataFrame(rows)
-
-        # Sort entire table by absolute deviation
-        result = result.sort_values("AbsDiff", ascending=False).reset_index(drop=True)
-
-        return result
-
-    def plot_feature_comparisons(X_matrix, feature_names, preds_current, preds_previous, 
-        set_name, model_type):
-        """
-        Compare current vs previous predictions by feature.
-        Uses X_train / X_test.
-        """
-
-        X = pd.DataFrame(X_matrix, columns=feature_names)
-        X["_pred_cur"] = preds_current
-        X["_pred_prev"] = preds_previous
-
-        n_features = len(feature_names)
-        n_cols = 3
-        n_rows = int(np.ceil(n_features / n_cols))
-
-        fig, axes = plt.subplots(n_rows, n_cols, figsize=(6 * n_cols, 5 * n_rows))
-        axes = axes.flatten()
-
-        for i, feature in enumerate(feature_names):
-
-            ax = axes[i]
-
-            try:
-                grouped = (
-                    X.groupby(feature)[["_pred_cur", "_pred_prev"]]
-                    .mean()
-                    .reset_index()
-                    .sort_values(feature)
-                )
-            except Exception:
-                # Non-groupable features (e.g., high cardinality)
-                continue
-
-            ax.plot(
-                grouped[feature], grouped["_pred_cur"],
-                linestyle="--", marker="o", label="Current Model"
-            )
-            ax.plot(
-                grouped[feature], grouped["_pred_prev"],
-                linestyle="-", marker="s", label="Previous Model"
-            )
-
-            ax.fill_between(
-                grouped[feature],
-                grouped["_pred_cur"],
-                grouped["_pred_prev"],
-                alpha=0.3,
-                color="salmon")
-
-            ax.set_title(f"{set_name.capitalize()} Predictions by {feature}")
-            ax.set_xlabel(feature)
-            ax.set_ylabel("Mean Prediction")
-            ax.grid(True)
-            ax.legend()
-
-        # Remove unused axes
-        for j in range(i + 1, n_rows * n_cols):
-            fig.delaxes(axes[j])
-
-        plt.tight_layout()
-
-        results_dir = "data/results/evaluation"
-        os.makedirs(results_dir, exist_ok=True)
-        out_path = os.path.join(
-            results_dir, f"prediction_comparisons_{model_type}_{set_name}.png")        
-        plt.savefig(out_path)
-        plt.close(fig)
-    
-    
+        return {
+            "train_preds_comparison": train_preds_comparison,
+            "test_preds_comparison": test_preds_comparison,
+        }

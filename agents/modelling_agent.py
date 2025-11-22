@@ -216,11 +216,11 @@ class ModellingAgent(BaseAgent):
 
         print(explanation)
 
-        print(f"[{self.name}] Saving metadata...")
-
         # --------------------
         # Save metadata
         # --------------------
+        print(f"[{self.name}] Saving metadata...")
+
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
         # Store model predictions

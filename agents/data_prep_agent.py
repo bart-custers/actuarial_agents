@@ -133,8 +133,6 @@ class DataPrepAgent(BaseAgent):
         confidence = self._extract_confidence(suggestion)
         print(f"[{self.name}] Layer 2 confidence: {confidence:.2f}")
 
-        print(suggestion)
-
         # === Apply deterministic pipeline
         det_pipe = DataCleaning()
         deterministic_results = det_pipe.clean(df)
@@ -150,8 +148,6 @@ class DataPrepAgent(BaseAgent):
 
         # === Compare pipelines
         comparison_summary = self._compare_pipelines(deterministic_results, adaptive_results)
-
-        print(comparison_summary)
 
         print(f"[{self.name}] Invoke layer 3...")
 
@@ -212,11 +208,11 @@ class DataPrepAgent(BaseAgent):
         explain_prompt = PROMPTS["dataprep_layer4"].format(verification=verification)
         explanation = self.llm(explain_prompt)
 
-        print(f"[{self.name}] Finalize...")
-
         # --------------------
         # Save metadata
         # --------------------
+        print(f"[{self.name}] Saving metadata...")
+
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
         # Store snapshot

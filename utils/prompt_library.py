@@ -175,7 +175,7 @@ PROMPTS = {
     1) Briefly restate the assignment and your role in one sentence.
     2) List the most relevant actions for evaluation you think are most important for this task.
     
-    Respond concisely.
+    Respond concisely. Use maximum 250 words.
     """,
 
     "review_layer2_dataprep": """
