@@ -156,6 +156,7 @@ class ReviewingAgent(BaseAgent):
         # Layer 4: impact analysis (LLM)
         # --------------------
 
+        impact_analysis_output = None
         if phase == "dataprep":
             print(f"[{self.name}] No impact analysis - proceed to review decision...")
         elif phase == "modelling":
@@ -164,8 +165,6 @@ class ReviewingAgent(BaseAgent):
             layer4_prompt = PROMPTS["review_layer4"].format(
             impact_analysis_input=impact_analysis_input)
             impact_analysis_output = self.llm(layer4_prompt)
-        else:
-            None
         
         print(impact_analysis_output)
 
