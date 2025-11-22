@@ -139,8 +139,16 @@ class ReviewingAgent(BaseAgent):
             consistency_summary = summarize_modelling_snapshot_comparison(comparison)
         else:
             consistency_summary = "No dataframe available for consistency review."
-
+        
         print(consistency_summary)
+
+        # --------------------
+        # Perform impact analysis
+        # --------------------
+
+        call the function: evaluate_features() for impact analysis!!!
+        add to LLM
+        
 
         # --------------------
         # Layer 3: consistency checks (LLM)
@@ -207,7 +215,7 @@ class ReviewingAgent(BaseAgent):
         # Save metadata
         # --------------------
         print(f"[{self.name}] Saving metadata...")
-        
+
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         metadata_out = {
             "timestamp": timestamp,

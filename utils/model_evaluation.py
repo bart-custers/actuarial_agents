@@ -35,7 +35,7 @@ class ModelEvaluation:
         # Gini relative to uniform line
         return (2 * gini_sum / n) - (n + 1) / n
     
-    def calibration_plot(y_true, y_pred, exposure, model_type="model"):
+    def calibration_plot(self, y_true, y_pred, exposure, model_type="model"):
         """
         Creates a calibration/lift plot comparing actual vs predicted claim rates
         across prediction deciles.
@@ -277,17 +277,14 @@ class ModelEvaluation:
             X_train, feature_names,
             preds_train_current, preds_train_previous,
             set_name="train",
-            model_type=self.model_type
-        )
+            model_type=self.model_type)
 
         test_preds_comparison = self.prediction_comparison_features(
             X_test, feature_names,
             preds_test_current, preds_test_previous,
             set_name="test",
-            model_type=self.model_type
-)
+            model_type=self.model_type)
 
         return {
             "train_preds_comparison": train_preds_comparison,
-            "test_preds_comparison": test_preds_comparison,
-        }
+            "test_preds_comparison": test_preds_comparison}
