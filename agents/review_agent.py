@@ -156,9 +156,9 @@ class ReviewingAgent(BaseAgent):
         # Layer 4: impact analysis (LLM)
         # --------------------
 
-        impact_analysis_output = None
         if phase == "dataprep":
-            print(f"[{self.name}] No impact analysis - proceed to review decision...")
+            print(f"[{self.name}] No impact analysis - skip layer 4...")
+            impact_analysis_output = "No impact analysis for dataprep"
         elif phase == "modelling":
             print(f"[{self.name}] Invoke layer 4...")
             impact_analysis_input = metadata.get("impact_analysis", "unknown")
@@ -166,9 +166,8 @@ class ReviewingAgent(BaseAgent):
             impact_analysis_input=impact_analysis_input)
             impact_analysis_output = self.llm(layer4_prompt)
         
-        if impact_analysis_output is not None:
-            print(impact_analysis_output)
-            
+        print(impact_analysis_output)
+
         # --------------------
         # Layer 5: review decision (LLM)
         # --------------------
