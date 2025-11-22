@@ -138,12 +138,6 @@ class ReviewingAgent(BaseAgent):
         print(consistency_summary)
 
         # --------------------
-        # Perform impact analysis
-        # --------------------
-
-        # PLACE HERE THE IMPACT ANALYSIS
-
-        # --------------------
         # Layer 3: consistency checks (LLM)
         # --------------------
         print(f"[{self.name}] Invoke layer 3...")
@@ -159,15 +153,33 @@ class ReviewingAgent(BaseAgent):
         print(consistency_check)
 
         # --------------------
-        # Layer 4: review decision (LLM)
+        # Layer 4: impact analysis (LLM)
         # --------------------
-        print(f"[{self.name}] Invoke layer 4...")
 
-        layer4_prompt = PROMPTS["review_layer4"].format(
+        if phase == "dataprep":
+            print(f"[{self.name}] No impact analysis - proceed to review decision...")
+        elif phase == "modelling":
+            print(f"[{self.name}] Invoke layer 4...")
+            impact_analysis_input = metadata.get("impact_analysis", "unknown")
+            layer4_prompt = PROMPTS["review_layer4"].format(
+            impact_analysis_input=impact_analysis_input)
+            impact_analysis_output = self.llm(layer4_prompt)
+        else:
+            None
+        
+        print(impact_analysis_output)
+
+        # --------------------
+        # Layer 5: review decision (LLM)
+        # --------------------
+        print(f"[{self.name}] Invoke layer 5...")
+
+        layer5_prompt = PROMPTS["review_layer5"].format(
             analysis=analysis,
-            consistency_check=consistency_check)
-        review_output = self.llm(layer4_prompt)
-        self.memory.chat_memory.add_user_message(layer4_prompt)
+            consistency_check=consistency_check,
+            impact_analysis_output=impact_analysis_output)
+        review_output = self.llm(layer5_prompt)
+        self.memory.chat_memory.add_user_message(layer5_prompt)
         self.memory.chat_memory.add_ai_message(review_output)
 
         print(review_output)
@@ -187,22 +199,22 @@ class ReviewingAgent(BaseAgent):
         print(f"[{self.name}] Decision → {decision}, Routing → {next_action}")
 
         # --------------------
-        # Layer 5: prompt revision (LLM)
+        # Layer 6: prompt revision (LLM)
         # --------------------
         
         # give the prompt templates to the LLM, depending on the phase
-        layer5_prompt = PROMPTS["review_layer5"].format(
+        layer6_prompt = PROMPTS["review_layer6"].format(
             phase=phase,
             analysis=analysis,
             decision=decision,
             base_prompt=PROMPTS[f"{phase}_layer1"])
         
         if decision in ["approve", "abort"]:
-            print(f"[{self.name}] Skip layer 5...")
+            print(f"[{self.name}] Skip layer 6...")
             revision_prompt = None
         else:
-            print(f"[{self.name}] Invoke layer 5...")
-            revision_prompt = self.llm(layer5_prompt)
+            print(f"[{self.name}] Invoke layer 6...")
+            revision_prompt = self.llm(layer6_prompt)
         
         # --------------------
         # Save metadata

@@ -238,7 +238,16 @@ PROMPTS = {
 
     "review_layer4": """
     You are an expert in actuarial modelling, assisting in claim frequency prediction for insurance claims. 
-    Based on the analysis: {analysis} and {consistency_check}, choose the correct next action. Think step-by-step.
+    In addition to the previous analyses, now assess the impact analysis that compares the current predictions to the previous predictions. 
+    
+    A summary on the impact analysis is already provided in: {impact_analysis_input}.
+    
+    - Output a section called: ANALYSIS: <your reasoning here>, be concise and use 150 words max. Think step-by-step. Be concise.
+    """,
+
+    "review_layer5": """
+    You are an expert in actuarial modelling, assisting in claim frequency prediction for insurance claims. 
+    Based on the analysis: {analysis} and {consistency_check} and {impact_analysis_output}, choose the correct next action. Think step-by-step.
 
     Valid actions:
     - APPROVE → proceed to next agent
@@ -249,7 +258,7 @@ PROMPTS = {
     Do not provide explanations. The final line of your answer should contain: Decision: APPROVE or REQUEST_RECLEAN or REQUEST_RETRAIN or ABORT.
     """,
 
-    "review_layer5": """
+    "review_layer6": """
     You are an expert in actuarial modelling, assisting in claim frequency prediction for insurance claims.
 
     Your task is to improve the following prompt so that the agent performs better in the next iteration.
