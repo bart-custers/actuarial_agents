@@ -145,9 +145,6 @@ def summarize_dataprep_snapshot_comparison(comp: Dict[str, Any]) -> str:
         for col, (prev, curr) in comp["type_changes"].items():
             lines.append(f"  • {col}: {prev} → {curr}")
 
-    if comp["column_order_changed"]:
-        lines.append("- Column order changed.")
-
     if comp.get("target_distribution_drift"):
         if comp["target_distribution_drift"]:
             lines.append("- Target distribution drift:")

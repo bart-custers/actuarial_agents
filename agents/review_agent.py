@@ -201,19 +201,24 @@ class ReviewingAgent(BaseAgent):
         # --------------------
         # Layer 6: prompt revision (LLM)
         # --------------------
+        print(f"[{self.name}] Invoke layer 6...")
         
-        # give the prompt templates to the LLM, depending on the phase
-        layer6_prompt = PROMPTS["review_layer6"].format(
+        if decision in ["approve", "abort"]:
+            layer6_prompt = PROMPTS["review_layer6"].format(
+            phase=phase,
+            analysis=analysis,
+            consistency_check=consistency_check,
+            impact_analysis_output=impact_analysis_output,
+            review_output=review_output)
+            final_report = self.llm(layer6_prompt)
+            revision_prompt = None
+        else:
+            layer6_prompt = PROMPTS["review_revision"].format(
             phase=phase,
             analysis=analysis,
             decision=decision,
             base_prompt=PROMPTS[f"{phase}_layer1"])
-        
-        if decision in ["approve", "abort"]:
-            print(f"[{self.name}] Skip layer 6...")
-            revision_prompt = None
-        else:
-            print(f"[{self.name}] Invoke layer 6...")
+            final_report = None
             revision_prompt = self.llm(layer6_prompt)
         
         # --------------------
@@ -227,6 +232,9 @@ class ReviewingAgent(BaseAgent):
             "phase_reviewed": phase,
             "layer1_out": layer1_out,
             "analysis": analysis,
+            "consistency_summary": consistency_summary,
+            "consistency_check": consistency_check,
+            "impact_analysis_output": impact_analysis_output,
             "judgement": review_output,
             "decision": decision,
             "revision_prompt": revision_prompt,
