@@ -146,18 +146,27 @@ PROMPTS = {
     You are an expert in actuarial modelling, assisting in claim frequency prediction for insurance claims. 
     Your task is to review the model performance.
 
-    The following model ({model_type}) was trained for claim frequency prediction. 
-    This is the model object: {model_obj}
+    The model ({model_type}) was trained for claim frequency prediction. Use the following context:
 
-    Here are the evaluation results:
-
-    {metrics}
+    - Evaluation results: {metrics}
+    - Comparison of actual and predicted values: {act_vs_exp}
 
     Think step-by-step and provide a concise summary that includes:
     1. Summarize the model’s goodness-of-fit and calibration quality. 
     2. Highlight whether the model seems overfitted or underfitted.
     3. Mention which variables appear most influential and why.
-    4. Review the metrics and provide additional evaluation techniques to consider, given the model used.
+    4. Summarize the comparison of actual vs predicted values over features.
+    """,
+
+    "modelling_layer4": """
+    You are an expert in actuarial modelling, assisting in claim frequency prediction for insurance claims. 
+    Your task is to review the model performance.
+
+    Think step-by-step and complete the following task:
+    For the trained model, compare the predictions to the predictions of the previous model. 
+    Use the table provided in: {impact_analysis_tables}
+
+    Be concise, use 250 words maximum.
     """,
 
     # --------------------
@@ -175,7 +184,7 @@ PROMPTS = {
     1) Briefly restate the assignment and your role in one sentence.
     2) List the most relevant actions for evaluation you think are most important for this task.
     
-    Respond concisely. Use maximum 250 words.
+    Respond concisely. Use maximum 100 words.
     """,
 
     "review_layer2_dataprep": """
@@ -184,11 +193,9 @@ PROMPTS = {
 
     Think step-by-step, using the following context: 
     - Summary of your earlier thinking: {layer1_out}
-    - The devised plan for the data processing: {plan}
     - The used preprocessing pipeline: {used_pipeline}
     - The confidence score for the preprocessing: {confidence}
     - The verification feedback received: {verification}
-    - The explanation of the data preprocessing steps: {explanation}
 
     If previous memory of dataprep, modelling and reviews exist, ensure consistency with them.
     Historical memory summary:
@@ -206,10 +213,9 @@ PROMPTS = {
 
     Think step-by-step, using the following context: 
     - Summary of your earlier thinking: {layer1_out}
-    - The devised plan for the model training: {plan}
     - The model type used: {model_type_used}
     - The performance metrics of the trained model: {model_metrics}
-    - The explanation of the model training steps: {explanation}
+    - The model evaluation from the modelling agent: {evaluation}
 
     If previous memory of dataprep, modelling and reviews exist, ensure consistency with them.
     Historical memory summary:

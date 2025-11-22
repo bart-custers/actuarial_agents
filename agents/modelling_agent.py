@@ -3,6 +3,7 @@ import pandas as pd
 import json
 import numpy as np
 import re
+import glob
 from datetime import datetime
 from utils.general_utils import save_json_safe, make_json_compatible
 from utils.message_types import Message
@@ -93,6 +94,29 @@ class ModellingAgent(BaseAgent):
     def _extract_confidence(self, text):
         match = re.search(r"confidence:\s*([\d\.]+)", text.lower())
         return float(match.group(1)) if match else 0.5
+
+    def load_latest_predictions(folder="data/final"):
+        # Find all prediction files
+        train_files = glob(os.path.join(folder, "train_predictions_*.csv"))
+        test_files  = glob(os.path.join(folder, "test_predictions_*.csv"))
+
+        # Check that files exist
+        if not train_files or not test_files:
+            raise FileNotFoundError(f"No prediction files found in folder: {folder}")
+
+        # Sort files by date descending (latest first)
+        train_files.sort(reverse=True)
+        test_files.sort(reverse=True)
+
+        # Take the latest file
+        latest_train_file = train_files[0]
+        latest_test_file  = test_files[0]
+
+        latest_train_preds = pd.read_csv(latest_train_file)
+        latest_test_preds  = pd.read_csv(latest_test_file)
+
+        return latest_train_preds, latest_test_preds 
+
 
     # -------------------------------
     # Main handler
@@ -197,8 +221,17 @@ class ModellingAgent(BaseAgent):
         # Evaluate model
         # --------------------
         print(f"[{self.name}] Invoke model evaluation...")
+        # Get high over metrics
         evaluator = ModelEvaluation(model=trainer.model, model_type=model_choice)
         model_metrics = evaluator.evaluate(y_test, model_test_predictions, feature_names, exposure_test)
+        
+        # Perform actual vs expected
+        act_vs_exp = None
+
+        # Perform impact analysis
+        preds_train_previous, preds_test_previous = self.load_latest_predictions()
+        impact_analysis_tables = evaluator.evaluate_features(X_train, X_test, model_train_predictions, preds_train_previous,
+        model_test_predictions, preds_test_previous, feature_names)
 
         # --------------------
         # Layer 3: model assessment (LLM)
@@ -207,14 +240,26 @@ class ModellingAgent(BaseAgent):
 
         layer3_prompt = PROMPTS["modelling_layer3"].format(
             model_type=model_choice,
-            model_obj=llm_model_obj,
+            act_vs_exp=act_vs_exp,
             metrics=json.dumps(make_json_compatible(model_metrics), indent=2))
 
-        explanation = self.llm(layer3_prompt)
+        evaluation = self.llm(layer3_prompt)
         self.memory.chat_memory.add_user_message(layer3_prompt)
-        self.memory.chat_memory.add_ai_message(explanation)
+        self.memory.chat_memory.add_ai_message(evaluation)
 
-        print(explanation)
+        print(evaluation)
+
+        # --------------------
+        # Layer 4: impact analysis (LLM)
+        # --------------------
+        print(f"[{self.name}] Invoke layer 4...")
+
+        layer4_prompt = PROMPTS["modelling_layer4"].format(
+            impact_analysis_tables=impact_analysis_tables)
+
+        impact_analysis = self.llm(layer4_prompt)
+
+        print(impact_analysis)
 
         # --------------------
         # Save metadata
@@ -246,7 +291,9 @@ class ModellingAgent(BaseAgent):
          #   "code_confidence": confidence,
          #   "model_object": llm_model_obj,
             "model_metrics": model_metrics,
-            "explanation": explanation,
+            "act_vs_exp": act_vs_exp,
+            "evaluation": evaluation,
+            "impact_analysis": impact_analysis,
             "consistency_snapshot": snapshot,
             "model_predictions_path":predictions_dir,
         }

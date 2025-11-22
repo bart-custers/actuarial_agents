@@ -8,6 +8,7 @@ from utils.general_utils import save_json_safe, make_json_compatible
 from utils.message_types import Message
 from utils.prompt_library import PROMPTS
 from agents.base_agent import BaseAgent
+from utils.model_evaluation import ModelEvaluation
 from utils.consistency import compare_dataprep_consistency_snapshots, summarize_dataprep_snapshot_comparison, compare_modelling_consistency_snapshots, summarize_modelling_snapshot_comparison
 
 
@@ -69,18 +70,15 @@ class ReviewingAgent(BaseAgent):
         # Get metadata for review
         # --------------------
         if phase == "dataprep":
-            plan = metadata.get("plan", "N/A")
             used_pipeline = metadata.get("used_pipeline", "N/A")
             confidence = metadata.get("confidence", "N/A")
           #  adaptive_suggestion = metadata.get("adaptive_suggestion", "N/A")
             verification = metadata.get("verification", "N/A")
-          #  explanation = metadata.get("explanation", "N/A")
         elif phase == "modelling":
-            plan = metadata.get("plan", "N/A")
             model_type_used = metadata.get("model_type_used", "N/A")
           #  model_code = metadata.get("model_code", "N/A")
             model_metrics = metadata.get("model_metrics", {})
-          #  explanation = metadata.get("explanation", "N/A")
+            evaluation = metadata.get("evaluation", "N/A")
         else:
             print(f"[{self.name}] WARNING: Unknown phase '{phase}' for review agent.")
 
@@ -93,12 +91,10 @@ class ReviewingAgent(BaseAgent):
             layer2_prompt = PROMPTS["review_layer2_dataprep"].format(
                 phase=phase,
                 layer1_out=layer1_out,
-                plan=plan,
                 used_pipeline=used_pipeline,
                 confidence=confidence,
               #  adaptive_suggestion=adaptive_suggestion,
                 verification=verification,
-              #  explanation=explanation,
                 review_memory=review_memory,
             )
 
@@ -106,11 +102,10 @@ class ReviewingAgent(BaseAgent):
             layer2_prompt = PROMPTS["review_layer2_modelling"].format(
                 phase=phase,
                 layer1_out=layer1_out,
-                plan=plan,
                 model_type_used=model_type_used,
               #  model_code=model_code,
                 model_metrics=model_metrics,
-              #  explanation=explanation,
+                evaluation=evaluation,
                 review_memory=review_memory,
             )
 
@@ -146,9 +141,7 @@ class ReviewingAgent(BaseAgent):
         # Perform impact analysis
         # --------------------
 
-        call the function: evaluate_features() for impact analysis!!!
-        add to LLM
-        
+        # PLACE HERE THE IMPACT ANALYSIS
 
         # --------------------
         # Layer 3: consistency checks (LLM)
