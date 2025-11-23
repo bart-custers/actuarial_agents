@@ -4,7 +4,7 @@ from datetime import datetime
 import numpy as np
 import re
 from langchain.memory import ConversationBufferMemory
-from utils.general_utils import save_json_safe, make_json_compatible
+from utils.general_utils import save_json_safe, generate_review_report_txt
 from utils.message_types import Message
 from utils.prompt_library import PROMPTS
 from agents.base_agent import BaseAgent
@@ -203,6 +203,7 @@ class ReviewingAgent(BaseAgent):
         print(f"[{self.name}] Invoke layer 6...")
         
         if decision in ["approve", "abort"]:
+            revision_prompt = None
             layer6_prompt = PROMPTS["review_layer6"].format(
             phase=phase,
             analysis=analysis,
@@ -210,7 +211,6 @@ class ReviewingAgent(BaseAgent):
             impact_analysis_output=impact_analysis_output,
             review_output=review_output)
             final_report = self.llm(layer6_prompt)
-            revision_prompt = None
         else:
             layer6_prompt = PROMPTS["review_revision"].format(
             phase=phase,
@@ -226,6 +226,15 @@ class ReviewingAgent(BaseAgent):
         print(f"[{self.name}] Saving metadata...")
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+        # Store review report
+        report_path = f"data/final/review_report_{timestamp}.txt"
+        if phase == "dataprep":
+            model_metrics = None
+        generate_review_report_txt(report_path, phase, model_metrics, analysis, consistency_summary, consistency_check, impact_analysis_output,
+                               review_output, final_report)
+
+        # Store metadata
         metadata_out = {
             "timestamp": timestamp,
             "phase_reviewed": phase,

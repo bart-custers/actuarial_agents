@@ -23,3 +23,49 @@ def save_json_safe(data, path):
     with open(path, "w") as f:
         json.dump(safe_data, f, indent=2)
     return path
+
+def generate_review_report_txt(report_path, 
+                               phase, 
+                               model_metrics, 
+                               analysis, 
+                               consistency_summary, 
+                               consistency_check,
+                               impact_analysis_output,
+                               review_output,
+                               final_report):
+    """
+    Creates a txt report combining all review agent outputs.
+    """
+
+    lines = []
+    lines.append("==== MODEL REVIEW REPORT ====")
+    lines.append(f"Phase: {phase}")
+    lines.append("")
+    lines.append("=== ANALYSIS OF RESULTS ===")
+    if model_metrics is None:
+        lines.append("No model metrics available.")
+    else:
+        for k, v in model_metrics.items():
+            if k == "Feature_Importance":
+                continue  # skip large frames in text
+            lines.append(f"- {k}: {v}")
+    lines.append(analysis)
+
+    lines.append("\n=== CONSISTENCY CHECK ===")
+    lines.append(consistency_summary)
+    lines.append(consistency_check)
+
+    lines.append("\n=== IMPACT ANALYSIS ===")
+    lines.append(impact_analysis_output)
+
+    lines.append("\n=== REVIEW FEEDBACK ===")
+    lines.append(review_output)
+
+    lines.append("\n=== FINAL SUMMARY ===")
+    lines.append(final_report)
+
+    # Write to disk
+    with open(report_path, "w") as f:
+        f.write("\n".join(lines))
+
+    return report_path
