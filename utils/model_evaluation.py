@@ -112,6 +112,7 @@ class ModelEvaluation:
         return decile_summary                
 
     def prediction_comparison_features(
+        self,
         X_matrix,
         feature_names,
         preds_current,
@@ -288,3 +289,10 @@ class ModelEvaluation:
         return {
             "train_preds_comparison": train_preds_comparison,
             "test_preds_comparison": test_preds_comparison}
+    
+     X_matrix,
+        feature_names,
+        preds_current,
+        preds_previous,
+        set_name,
+        model_type):
