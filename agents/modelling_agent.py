@@ -113,8 +113,8 @@ class ModellingAgent(BaseAgent):
         latest_train_file = train_files[0]
         latest_test_file  = test_files[0]
 
-        latest_train_preds = pd.read_csv(latest_train_file)
-        latest_test_preds  = pd.read_csv(latest_test_file)
+        latest_train_preds = pd.read_csv(latest_train_file).iloc[:, 0].values.ravel()
+        latest_test_preds  = pd.read_csv(latest_test_file).iloc[:, 0].values.ravel()
 
         return latest_train_preds, latest_test_preds 
 
