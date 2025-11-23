@@ -204,6 +204,11 @@ def compare_modelling_consistency_snapshots(current: Dict[str, Any], history: Li
     curr_imp = current.get("Feature_Importance", {})
     prev_imp = prev.get("Feature_Importance", {})
 
+    if isinstance(curr_imp, list):
+        curr_imp = dict(curr_imp)
+    if isinstance(prev_imp, list):
+        prev_imp = dict(prev_imp)
+
     feature_drift = {}
 
     # Features that appear/disappear
