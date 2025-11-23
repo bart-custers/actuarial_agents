@@ -98,8 +98,8 @@ class ModellingAgent(BaseAgent):
     @staticmethod
     def load_latest_predictions(folder="data/final"):
         # Find all prediction files
-        train_files = glob(os.path.join(folder, "train_predictions_*.csv"))
-        test_files  = glob(os.path.join(folder, "test_predictions_*.csv"))
+        train_files = glob.glob(os.path.join(folder, "train_predictions_*.csv"))
+        test_files  = glob.glob(os.path.join(folder, "test_predictions_*.csv"))
 
         # Check that files exist
         if not train_files or not test_files:
