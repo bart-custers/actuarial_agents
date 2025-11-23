@@ -95,6 +95,7 @@ class ModellingAgent(BaseAgent):
         match = re.search(r"confidence:\s*([\d\.]+)", text.lower())
         return float(match.group(1)) if match else 0.5
 
+    @staticmethod
     def load_latest_predictions(folder="data/final"):
         # Find all prediction files
         train_files = glob(os.path.join(folder, "train_predictions_*.csv"))
@@ -155,7 +156,7 @@ class ModellingAgent(BaseAgent):
             "features": X_train.columns.tolist(),
         }
 
-        print(f"[{self.name}] Invoke layer 1...")
+        print(f"[{self.name}] Invoke layer 1...model selection")
 
         # --------------------
         # Layer 1: recall & plan (LLM)
@@ -176,7 +177,7 @@ class ModellingAgent(BaseAgent):
         # --------------------
         # Layer 2: model code (LLM)
         # --------------------
-        print(f"[{self.name}] Invoke layer 2...")
+        print(f"[{self.name}] Invoke layer 2...develop model code")
 
         layer2_prompt = PROMPTS["modelling_layer2"].format(
         model_choice=model_choice,
@@ -236,7 +237,7 @@ class ModellingAgent(BaseAgent):
         # --------------------
         # Layer 3: model assessment (LLM)
         # --------------------
-        print(f"[{self.name}] Invoke layer 3...")
+        print(f"[{self.name}] Invoke layer 3...analyse model evaluation")
 
         layer3_prompt = PROMPTS["modelling_layer3"].format(
             model_type=model_choice,
@@ -252,7 +253,7 @@ class ModellingAgent(BaseAgent):
         # --------------------
         # Layer 4: impact analysis (LLM)
         # --------------------
-        print(f"[{self.name}] Invoke layer 4...")
+        print(f"[{self.name}] Invoke layer 4...analyse impact analysis")
 
         layer4_prompt = PROMPTS["modelling_layer4"].format(
             impact_analysis_tables=impact_analysis_tables)

@@ -38,16 +38,16 @@ class ReviewingAgent(BaseAgent):
     # Main handler
     # ---------------------------
     def handle_message(self, message: Message) -> Message:
-        print(f"[{self.name}] Starting review...")
-
+        
         metadata = message.metadata or {}
         phase = metadata.get("phase_before_review", "unknown")
         iteration = metadata.get("review_iteration", 0)
+        print(f"[{self.name}] Starting {phase} review iteration {iteration}...")
 
         # --------------------
         # Layer 1: recall & plan (LLM)
         # --------------------
-        print(f"[{self.name}] Invoke layer 1...")
+        print(f"[{self.name}] Invoke layer 1...planning")
 
         layer1_prompt = PROMPTS["review_layer1"].format(phase=phase)
         layer1_out = self.llm(layer1_prompt)
@@ -85,7 +85,7 @@ class ReviewingAgent(BaseAgent):
         # --------------------
         # Layer 2: analysis (LLM)
         # --------------------
-        print(f"[{self.name}] Invoke layer 2...")
+        print(f"[{self.name}] Invoke layer 2...result analysis")
         
         if phase == "dataprep":
             layer2_prompt = PROMPTS["review_layer2_dataprep"].format(
@@ -140,7 +140,7 @@ class ReviewingAgent(BaseAgent):
         # --------------------
         # Layer 3: consistency checks (LLM)
         # --------------------
-        print(f"[{self.name}] Invoke layer 3...")
+        print(f"[{self.name}] Invoke layer 3...consistency check")
 
         layer3_prompt = PROMPTS["review_layer3"].format(
             phase=phase,
@@ -160,7 +160,7 @@ class ReviewingAgent(BaseAgent):
             print(f"[{self.name}] No impact analysis - skip layer 4...")
             impact_analysis_output = "No impact analysis for dataprep"
         elif phase == "modelling":
-            print(f"[{self.name}] Invoke layer 4...")
+            print(f"[{self.name}] Invoke layer 4...impact analysis")
             impact_analysis_input = metadata.get("impact_analysis", "unknown")
             layer4_prompt = PROMPTS["review_layer4"].format(
             impact_analysis_input=impact_analysis_input)
@@ -171,7 +171,7 @@ class ReviewingAgent(BaseAgent):
         # --------------------
         # Layer 5: review decision (LLM)
         # --------------------
-        print(f"[{self.name}] Invoke layer 5...")
+        print(f"[{self.name}] Invoke layer 5...review decision")
 
         layer5_prompt = PROMPTS["review_layer5"].format(
             analysis=analysis,
@@ -199,10 +199,9 @@ class ReviewingAgent(BaseAgent):
 
         # --------------------
         # Layer 6: prompt revision (LLM)
-        # --------------------
-        print(f"[{self.name}] Invoke layer 6...")
-        
+        # --------------------       
         if decision in ["approve", "abort"]:
+            print(f"[{self.name}] Invoke layer 6...create final review report")
             revision_prompt = None
             layer6_prompt = PROMPTS["review_layer6"].format(
             phase=phase,
@@ -212,6 +211,7 @@ class ReviewingAgent(BaseAgent):
             review_output=review_output)
             final_report = self.llm(layer6_prompt)
         else:
+            print(f"[{self.name}] Invoke layer 6...create revision prompt")
             layer6_prompt = PROMPTS["review_revision"].format(
             phase=phase,
             analysis=analysis,

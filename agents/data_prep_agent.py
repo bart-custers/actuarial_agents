@@ -106,7 +106,7 @@ class DataPrepAgent(BaseAgent):
             "cat_vars": df.select_dtypes(exclude="number").columns.tolist(),
         }
 
-        print(f"[{self.name}] Invoke layer 1...")
+        print(f"[{self.name}] Invoke layer 1...planning")
 
         # --------------------
         # Layer 1: recall & plan (LLM)
@@ -119,7 +119,7 @@ class DataPrepAgent(BaseAgent):
         self.memory.chat_memory.add_user_message(plan_prompt)
         self.memory.chat_memory.add_ai_message(summary1)
         
-        print(f"[{self.name}] Invoke layer 2...")
+        print(f"[{self.name}] Invoke layer 2...develop data preparation")
 
         # --------------------
         # Layer 2: suggestions (LLM)
@@ -149,7 +149,7 @@ class DataPrepAgent(BaseAgent):
         # === Compare pipelines
         comparison_summary = self._compare_pipelines(deterministic_results, adaptive_results)
 
-        print(f"[{self.name}] Invoke layer 3...")
+        print(f"[{self.name}] Invoke layer 3...choose pipeline")
 
         # --------------------
         # Layer 3: verification (LLM)
@@ -200,7 +200,7 @@ class DataPrepAgent(BaseAgent):
         joblib.dump(df_processed["feature_names"], features_path)
         joblib.dump(preprocess_pipe.preprocessor, preproc_path)
 
-        print(f"[{self.name}] Invoke layer 4...")
+        print(f"[{self.name}] Invoke layer 4...summarize")
 
         # --------------------
         # Layer 4: LLM inspects result
