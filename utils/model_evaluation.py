@@ -213,6 +213,99 @@ class ModelEvaluation:
         plt.close(fig)
 
         return deviation_table
+    
+    def actual_vs_predicted_features(
+        self,
+        X_matrix,
+        feature_names,
+        preds_current,
+        y_true,
+        set_name,
+        model_type):
+
+        X = pd.DataFrame(X_matrix, columns=feature_names)
+        X["_pred_cur"] = preds_current
+        X["_actual"] = y_true
+
+        rows = []
+
+        for feature in feature_names:
+            try:
+                grouped = (
+                    X.groupby(feature)[["_pred_cur", "_actual"]]
+                    .mean()
+                    .reset_index()
+                )
+            except Exception:
+                continue
+
+            grouped["diff"] = grouped["_pred_cur"] - grouped["_actual"]
+            grouped["abs_diff"] = grouped["diff"].abs()
+
+            top_rows = grouped.nlargest(5, "abs_diff")
+
+            for _, r in top_rows.iterrows():
+                rows.append({
+                    "Feature": feature,
+                    "Value": r[feature],
+                    "Cur_Pred": r["_pred_cur"],
+                    "Actual": r["_actual"],
+                    "Diff": r["diff"],
+                    "AbsDiff": r["abs_diff"],
+                })
+
+        deviation_table = pd.DataFrame(rows).sort_values("AbsDiff", ascending=False)
+
+        n_features = len(feature_names)
+        n_cols = 3
+        n_rows = int(np.ceil(n_features / n_cols))
+
+        fig, axes = plt.subplots(n_rows, n_cols, figsize=(6*n_cols, 5*n_rows))
+        axes = axes.flatten()
+
+        for i, feature in enumerate(feature_names):
+            ax = axes[i]
+            try:
+                grouped = (
+                    X.groupby(feature)[["_pred_cur", "_actual"]]
+                    .mean()
+                    .reset_index()
+                    .sort_values(feature)
+                )
+            except Exception:
+                continue
+
+            ax.plot(grouped[feature], grouped["_pred_cur"], marker="o", label="Current Model")
+            ax.plot(grouped[feature], grouped["_actual"], marker="x", label="Actual")
+
+            ax.fill_between(
+                grouped[feature],
+                grouped["_pred_cur"],
+                grouped["_actual"],
+                alpha=0.3,
+                color="green",
+                label="Curr - Actual"
+            )
+
+            ax.set_title(f"{set_name}: {feature}")
+            ax.set_xlabel(feature)
+            ax.set_ylabel("Mean Prediction / Actual")
+            ax.grid(True)
+            ax.legend()
+
+        # Remove unused axes
+        for j in range(i+1, n_rows*n_cols):
+            fig.delaxes(axes[j])
+
+        plt.tight_layout()
+
+        results_dir = "data/results/evaluation"
+        os.makedirs(results_dir, exist_ok=True)
+        plot_path = os.path.join(results_dir, f"Act_vs_Exp_{model_type}_{set_name}.png")
+        plt.savefig(plot_path)
+        plt.close(fig)
+
+        return deviation_table
 
     def evaluate(self, y_true, y_pred, feature_names=None, exposure=None):
         """Compute evaluation metrics and plots."""
@@ -261,7 +354,7 @@ class ModelEvaluation:
 
         return metrics
 
-    def evaluate_features(self,
+    def evaluate_predicted(self,
         X_train, X_test,
         preds_train_current, preds_train_previous,
         preds_test_current, preds_test_previous,
@@ -289,3 +382,32 @@ class ModelEvaluation:
         return {
             "train_preds_comparison": train_preds_comparison,
             "test_preds_comparison": test_preds_comparison}
+    
+    def evaluate_act_vs_exp(self,
+        X_train, X_test,
+        preds_train_current, y_train,
+        preds_test_current, y_test,
+        feature_names):
+
+        # Checks
+        if not isinstance(X_train, pd.DataFrame):
+            X_train = pd.DataFrame(X_train, columns=feature_names)
+        if not isinstance(X_test, pd.DataFrame):
+            X_test = pd.DataFrame(X_test, columns=feature_names)
+
+        # Create tables with comparisons of predictions per feature
+        train_act_vs_exp = self.actual_vs_predicted_features(
+            X_train, feature_names,
+            preds_train_current, y_train,
+            set_name="train",
+            model_type=self.model_type)
+
+        test_act_vs_exp = self.actual_vs_predicted_features(
+            X_test, feature_names,
+            preds_test_current, y_test,
+            set_name="test",
+            model_type=self.model_type)
+
+        return {
+            "train_act_vs_exp": train_act_vs_exp,
+            "test_act_vs_exp": test_act_vs_exp}

@@ -227,11 +227,12 @@ class ModellingAgent(BaseAgent):
         model_metrics = evaluator.evaluate(y_test, model_test_predictions, feature_names, exposure_test)
         
         # Perform actual vs expected
-        act_vs_exp = None
+        act_vs_exp = evaluator.evaluate_act_vs_exp(X_train, X_test, model_train_predictions, y_train,
+        model_test_predictions, y_test, feature_names)
 
         # Perform impact analysis
         preds_train_previous, preds_test_previous = self.load_latest_predictions()
-        impact_analysis_tables = evaluator.evaluate_features(X_train, X_test, model_train_predictions, preds_train_previous,
+        impact_analysis_tables = evaluator.evaluate_predicted(X_train, X_test, model_train_predictions, preds_train_previous,
         model_test_predictions, preds_test_previous, feature_names)
 
         # --------------------
