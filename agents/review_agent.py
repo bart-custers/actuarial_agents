@@ -203,12 +203,7 @@ class ReviewingAgent(BaseAgent):
         if decision in ["approve", "abort"]:
             print(f"[{self.name}] Invoke layer 6...create final review report")
             revision_prompt = None
-            layer6_prompt = PROMPTS["review_layer6"].format(
-            phase=phase,
-            analysis=analysis,
-            consistency_check=consistency_check,
-            impact_analysis_output=impact_analysis_output,
-            review_output=review_output)
+            layer6_prompt = PROMPTS["review_layer6"]
             final_report = self.llm(layer6_prompt)
         else:
             print(f"[{self.name}] Invoke layer 6...create revision prompt")

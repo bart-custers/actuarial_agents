@@ -261,15 +261,7 @@ PROMPTS = {
     "review_layer6": """
     You are an expert in actuarial modelling, assisting in claim frequency prediction for insurance claims.
 
-    Based on the whole review process, create a short summary report of max 500 words.
-
-    Use as input:
-    - The reviewed phase: {phase}
-    - The analysis of high over metrics: {analysis}
-    - The consistency check: {consistency_check}
-    - The impact analysis on predictions: {impact_analysis_output}
-    - The decision made: {review_output}
-
+    Based on the whole review process you just performed, create a short summary report of max 500 words.
     Output a section called: REPORT: <your reasoning here>, be concise and use 500 words max.
 
     """,
