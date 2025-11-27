@@ -1,4 +1,5 @@
 import os
+import joblib
 import pandas as pd
 import json
 import numpy as np
@@ -211,6 +212,7 @@ class ModellingAgent(BaseAgent):
         if llm_model_success == True:
             model_train_predictions = llm_model_preds_train
             model_test_predictions = llm_model_preds_test
+            trainer = llm_model_obj
         else:
             print(f"[{self.name}] Fallback to deterministic model training")
             trainer = ModelTrainer(model_type=model_choice)
@@ -270,12 +272,16 @@ class ModellingAgent(BaseAgent):
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
-        # Store model predictions
-        predictions_dir = "data/evaluation"
-        os.makedirs(predictions_dir, exist_ok=True)
+        # Store model
+        storage_dir = "data/final"
+        os.makedirs(storage_dir, exist_ok=True)
 
-        train_pred_path = os.path.join(predictions_dir, "model_train_predictions.csv")
-        test_pred_path = os.path.join(predictions_dir, "model_test_predictions.csv")
+        model_path = os.path.join(storage_dir, f"{model_choice}_{timestamp}.joblib")
+        joblib.dump(trainer, model_path)
+
+        # Store model predictions
+        train_pred_path = os.path.join(storage_dir, "model_train_predictions.csv")
+        test_pred_path = os.path.join(storage_dir, "model_test_predictions.csv")
 
         pd.DataFrame({"train_prediction": model_train_predictions}).to_csv(train_pred_path, index=False)
         pd.DataFrame({"test_prediction": model_test_predictions}).to_csv(test_pred_path, index=False)
@@ -297,7 +303,7 @@ class ModellingAgent(BaseAgent):
             "evaluation": evaluation,
             "impact_analysis": impact_analysis,
             "consistency_snapshot": snapshot,
-            "model_predictions_path":predictions_dir,
+            "model_predictions_path": storage_dir,
         }
 
         results_dir = "data/results"
