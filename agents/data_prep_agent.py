@@ -6,7 +6,8 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 from typing import Dict, Any, List
-from langchain_community.memory import ConversationBufferMemory
+#from langchain_community.memory import ConversationBufferMemory
+from langchain_core.chat_history import ChatMessageHistory
 from utils.general_utils import save_json_safe
 from utils.prompt_library import PROMPTS
 from utils.data_pipeline import DataPipeline
@@ -22,7 +23,7 @@ class DataPrepAgent(BaseAgent):
         self.llm = shared_llm
         self.system_prompt = system_prompt
         self.hub = hub
-        self.memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True, k=1) # Short-term conversation memory for layered prompting
+        self.memory = ChatMessageHistory(memory_key="chat_history", return_messages=True, k=1) # Short-term conversation memory for layered prompting
 
     # --------------------------
     # Helper functions
