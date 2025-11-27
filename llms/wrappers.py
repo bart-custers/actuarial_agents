@@ -1,7 +1,8 @@
 import os
 from google.colab import drive
 from langchain_openai import ChatOpenAI
-from langchain.schema import HumanMessage
+#from langchain.schema import HumanMessage
+from langchain_core.messages import HumanMessage
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 from langchain.llms import HuggingFacePipeline
 
