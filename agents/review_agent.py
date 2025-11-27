@@ -3,7 +3,7 @@ import json
 from datetime import datetime
 import numpy as np
 import re
-from langchain_core.memory import ConversationBufferMemory
+from langchain_community.memory import ConversationBufferMemory
 from utils.general_utils import save_json_safe, generate_review_report_txt
 from utils.message_types import Message
 from utils.prompt_library import PROMPTS

@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 from typing import Dict, Any, List
-from langchain_core.memory import ConversationBufferMemory
+from langchain_community.memory import ConversationBufferMemory
 from utils.general_utils import save_json_safe
 from utils.prompt_library import PROMPTS
 from utils.data_pipeline import DataPipeline

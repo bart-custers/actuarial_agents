@@ -10,7 +10,7 @@ from utils.message_types import Message
 from utils.model_trainer import ModelTrainer
 from utils.model_evaluation import ModelEvaluation
 from utils.prompt_library import PROMPTS
-from langchain_core.memory import ConversationBufferMemory
+from langchain_community.memory import ConversationBufferMemory
 from agents.base_agent import BaseAgent
 
 
