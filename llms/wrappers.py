@@ -4,7 +4,8 @@ from langchain_openai import ChatOpenAI
 #from langchain.schema import HumanMessage
 from langchain_core.messages import HumanMessage
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
-from langchain.llms import HuggingFacePipeline
+#from langchain.llms import HuggingFacePipeline
+from langchain_community.llms import HuggingFacePipeline
 
 drive.mount("/content/drive", force_remount=False)
 model_cache_dir = "/content/drive/MyDrive/Thesis/model_cache"
