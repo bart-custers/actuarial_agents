@@ -10,7 +10,7 @@ from utils.message_types import Message
 from utils.model_trainer import ModelTrainer
 from utils.model_evaluation import ModelEvaluation
 from utils.prompt_library import PROMPTS
-from langchain_community.memory import ConversationBufferMemory
+#from langchain_community.memory import ConversationBufferMemory
 from agents.base_agent import BaseAgent
 
 
@@ -20,7 +20,7 @@ class ModellingAgent(BaseAgent):
         self.llm = shared_llm
         self.system_prompt = system_prompt
         self.hub = hub
-        self.memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True, k=1) # Short-term conversation memory for layered prompting
+       # self.memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True, k=1) # Short-term conversation memory for layered prompting
 
     # -------------------------------
     # Helper functions
@@ -168,8 +168,8 @@ class ModellingAgent(BaseAgent):
                 dataset_desc=json.dumps(dataset_desc, indent=2)
             )
         plan = self.llm(layer1_prompt)
-        self.memory.chat_memory.add_user_message(layer1_prompt)
-        self.memory.chat_memory.add_ai_message(plan)
+       # self.memory.chat_memory.add_user_message(layer1_prompt)
+       # self.memory.chat_memory.add_ai_message(plan)
 
         model_choice = self._extract_model_choice(plan)
         print(f"[modelling] LLM selected model type: {model_choice}")
@@ -185,8 +185,8 @@ class ModellingAgent(BaseAgent):
         )
         
         model_code = self.llm(layer2_prompt)
-        self.memory.chat_memory.add_user_message(layer2_prompt)
-        self.memory.chat_memory.add_ai_message(model_code)
+      # self.memory.chat_memory.add_user_message(layer2_prompt)
+       # self.memory.chat_memory.add_ai_message(model_code)
 
         #confidence = self._extract_confidence(layer2_prompt)
         #print(f"[{self.name}] Layer 2 confidence: {confidence:.2f}")
@@ -245,8 +245,8 @@ class ModellingAgent(BaseAgent):
             metrics=json.dumps(make_json_compatible(model_metrics), indent=2))
 
         evaluation = self.llm(layer3_prompt)
-        self.memory.chat_memory.add_user_message(layer3_prompt)
-        self.memory.chat_memory.add_ai_message(evaluation)
+     #   self.memory.chat_memory.add_user_message(layer3_prompt)
+      #  self.memory.chat_memory.add_ai_message(evaluation)
 
         print(evaluation)
 

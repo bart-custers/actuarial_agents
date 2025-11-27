@@ -7,7 +7,6 @@ import numpy as np
 from datetime import datetime
 from typing import Dict, Any, List
 #from langchain_community.memory import ConversationBufferMemory
-from langchain_core.chat_history import ChatMessageHistory
 from utils.general_utils import save_json_safe
 from utils.prompt_library import PROMPTS
 from utils.data_pipeline import DataPipeline
@@ -23,7 +22,7 @@ class DataPrepAgent(BaseAgent):
         self.llm = shared_llm
         self.system_prompt = system_prompt
         self.hub = hub
-        self.memory = ChatMessageHistory(memory_key="chat_history", return_messages=True, k=1) # Short-term conversation memory for layered prompting
+    #    self.memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True, k=1) # Short-term conversation memory for layered prompting
 
     # --------------------------
     # Helper functions
@@ -117,8 +116,8 @@ class DataPrepAgent(BaseAgent):
         else:
             plan_prompt = PROMPTS["dataprep_layer1"].format(info_dict=json.dumps(info_dict, indent=2))
         summary1 = self.llm(plan_prompt)
-        self.memory.chat_memory.add_user_message(plan_prompt)
-        self.memory.chat_memory.add_ai_message(summary1)
+       # self.memory.chat_memory.add_user_message(plan_prompt)
+      #  self.memory.chat_memory.add_ai_message(summary1)
         
         print(f"[{self.name}] Invoke layer 2...develop data preparation")
 
@@ -128,8 +127,8 @@ class DataPrepAgent(BaseAgent):
         suggestion_prompt = PROMPTS["dataprep_layer2"].format(summary1=summary1,info_dict=json.dumps(info_dict, indent=2),pipeline_code=open("utils/data_pipeline.py").read())
         suggestion = self.llm(suggestion_prompt)
 
-        self.memory.chat_memory.add_user_message(suggestion_prompt)
-        self.memory.chat_memory.add_ai_message(suggestion)
+       # self.memory.chat_memory.add_user_message(suggestion_prompt)
+       # self.memory.chat_memory.add_ai_message(suggestion)
 
         confidence = self._extract_confidence(suggestion)
         print(f"[{self.name}] Layer 2 confidence: {confidence:.2f}")
@@ -158,8 +157,8 @@ class DataPrepAgent(BaseAgent):
         verify_prompt = PROMPTS["dataprep_layer3"].format(comparison=json.dumps(comparison_summary, indent=2),confidence=confidence)
         verification = self.llm(verify_prompt)
 
-        self.memory.chat_memory.add_user_message(verify_prompt)
-        self.memory.chat_memory.add_ai_message(verification)
+      #  self.memory.chat_memory.add_user_message(verify_prompt)
+       # self.memory.chat_memory.add_ai_message(verification)
 
          # Decide based on verification judgment
         use_adaptive = "USE_ADAPTIVE" in verification.upper() and adaptive_success

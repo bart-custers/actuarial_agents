@@ -3,7 +3,7 @@ import json
 from datetime import datetime
 import numpy as np
 import re
-from langchain_community.memory import ConversationBufferMemory
+#from langchain_community.memory import ConversationBufferMemory
 from utils.general_utils import save_json_safe, generate_review_report_txt
 from utils.message_types import Message
 from utils.prompt_library import PROMPTS
@@ -18,7 +18,7 @@ class ReviewingAgent(BaseAgent):
         self.llm = shared_llm
         self.system_prompt = system_prompt
         self.hub = hub
-        self.memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True, k=1) # Short-term conversation memory for layered prompting
+      #  self.memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True, k=1) # Short-term conversation memory for layered prompting
 
     def _extract_decision(self, llm_text: str) -> str:
         text = llm_text.lower()
@@ -51,8 +51,8 @@ class ReviewingAgent(BaseAgent):
 
         layer1_prompt = PROMPTS["review_layer1"].format(phase=phase)
         layer1_out = self.llm(layer1_prompt)
-        self.memory.chat_memory.add_user_message(layer1_prompt)
-        self.memory.chat_memory.add_ai_message(layer1_out)
+      #  self.memory.chat_memory.add_user_message(layer1_prompt)
+      #  self.memory.chat_memory.add_ai_message(layer1_out)
 
         # --------------------
         # Get context from memory
@@ -113,8 +113,8 @@ class ReviewingAgent(BaseAgent):
             print(f"[{self.name}] WARNING: Unknown phase '{phase}' for review agent.")
 
         analysis = self.llm(layer2_prompt)
-        self.memory.chat_memory.add_user_message(layer2_prompt)
-        self.memory.chat_memory.add_ai_message(analysis)
+      #  self.memory.chat_memory.add_user_message(layer2_prompt)
+       # self.memory.chat_memory.add_ai_message(analysis)
 
         print (analysis)
 
@@ -147,8 +147,8 @@ class ReviewingAgent(BaseAgent):
             consistency_summary=consistency_summary)
         
         consistency_check = self.llm(layer3_prompt)
-        self.memory.chat_memory.add_user_message(layer3_prompt)
-        self.memory.chat_memory.add_ai_message(consistency_check)
+     #   self.memory.chat_memory.add_user_message(layer3_prompt)
+      #  self.memory.chat_memory.add_ai_message(consistency_check)
 
         print(consistency_check)
 
@@ -178,8 +178,8 @@ class ReviewingAgent(BaseAgent):
             consistency_check=consistency_check,
             impact_analysis_output=impact_analysis_output)
         review_output = self.llm(layer5_prompt)
-        self.memory.chat_memory.add_user_message(layer5_prompt)
-        self.memory.chat_memory.add_ai_message(review_output)
+      #  self.memory.chat_memory.add_user_message(layer5_prompt)
+      #  self.memory.chat_memory.add_ai_message(review_output)
 
         print(review_output)
 
