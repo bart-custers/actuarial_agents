@@ -41,6 +41,8 @@ This thesis is grounded in three interconnected areas of research:
 
 ### Architecture
 
+![alt text](thesis_architecture_v3.png)
+
 <figure align="center">
   <img src="C:/Users/bart_/Documents/Thesis/project_management/thesis_architecture_v3_no_background.png" alt="High-level architecture of the agent team" width="600">
   <figcaption><strong>Figure 1.</strong> High-level architecture of the generative AI agent team for actuarial risk classification.</figcaption>
