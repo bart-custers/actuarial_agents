@@ -58,9 +58,9 @@ PROMPTS = {
     1. Was the model confident about the adaptive pipeline?
     2. How does the adaptive pipeline compare to the deterministic pipeline?
     
-    Task: Decide whether the adaptive pipeline should be used. 
+    Task: Decide whether the adaptive pipeline should be used. Justify in a short bullet list
     
-    The final line of your answer should contain: Decision: USE_ADAPTIVE or KEEP_BASELINE, and justify in a short bullet list.
+    The final line of your answer should contain: Decision: USE_ADAPTIVE or KEEP_BASELINE.
     """,
 
     "dataprep_layer4": """
