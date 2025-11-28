@@ -83,14 +83,26 @@ class ModellingAgent(BaseAgent):
 
         return preds_train, preds_test, model
     
+    # def _extract_model_choice(self, llm_text: str) -> str:
+    #     text = llm_text.lower()
+
+    #     if "use_gbm" in text:
+    #         return "gbm"
+
+    #     if "use_glm" in text:
+    #         return "glm"
+    
     def _extract_model_choice(self, llm_text: str) -> str:
-        text = llm_text.lower()
+        text = llm_text
+        # 1) Prefer explicit Decision: line (the prompt already asks for this)
+        m = re.search(r'^\s*Decision\s*:\s*(USE_GLM|USE_GBM)\s*$', text, flags=re.IGNORECASE | re.MULTILINE)
+        if m:
+            return "glm" if m.group(1).upper() == "USE_GLM" else "gbm"
 
-        if "use_gbm" in text:
-            return "gbm"
-
-        if "use_glm" in text:
-            return "glm"
+        # 2) Look for short explicit phrase "Decision: USE_GLM" inside any line (more tolerant)
+        m2 = re.search(r'Decision\s*:\s*(USE_GLM|USE_GBM)', text, flags=re.IGNORECASE)
+        if m2:
+            return "glm" if m2.group(1).upper() == "USE_GLM" else "gbm"
     
     def _extract_confidence(self, text):
         match = re.search(r"confidence:\s*([\d\.]+)", text.lower())
