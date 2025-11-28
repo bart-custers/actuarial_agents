@@ -74,6 +74,20 @@ class DataPrepAgent(BaseAgent):
             "feature_overlap": feature_overlap,
             "shape_diff": (det_shape, adapt_shape),
         }
+    
+    def _extract_dataprep_choice(self, llm_text: str) -> str:
+        text = llm_text
+
+        # 1) Prefer explicit Decision: line
+        m = re.search(r'^\s*Decision\s*:\s*(USE_ADAPTIVE|KEEP_BASELINE)\s*$',
+                    text, flags=re.IGNORECASE | re.MULTILINE)
+        if m:
+            return "adaptive" if m.group(1).upper() == "USE_ADAPTIVE" else "baseline"
+
+        # 2) tolerant Decision: anywhere
+        m2 = re.search(r'Decision\s*:\s*(USE_ADAPTIVE|KEEP_BASELINE)', text, flags=re.IGNORECASE)
+        if m2:
+            return "adaptive" if m2.group(1).upper() == "USE_ADAPTIVE" else "baseline"
 
     # ---------------------------
     # Main handler
@@ -161,7 +175,16 @@ class DataPrepAgent(BaseAgent):
        # self.memory.chat_memory.add_ai_message(verification)
 
          # Decide based on verification judgment
-        use_adaptive = "USE_ADAPTIVE" in verification.upper() and adaptive_success
+        decision = self._extract_dataprep_choice(verification)
+        if decision == "adaptive" and adaptive_success:
+            use_adaptive = True
+        elif decision == "baseline":
+            use_adaptive = False
+        else:
+            # fallback behavior if unclear
+            use_adaptive = False
+
+        #use_adaptive = "USE_ADAPTIVE" in verification.upper() and adaptive_success
         chosen_results = adaptive_results if use_adaptive else deterministic_results
         chosen_pipeline_name = "adaptive" if use_adaptive else "deterministic"
 

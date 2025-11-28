@@ -83,15 +83,6 @@ class ModellingAgent(BaseAgent):
 
         return preds_train, preds_test, model
     
-    # def _extract_model_choice(self, llm_text: str) -> str:
-    #     text = llm_text.lower()
-
-    #     if "use_gbm" in text:
-    #         return "gbm"
-
-    #     if "use_glm" in text:
-    #         return "glm"
-    
     def _extract_model_choice(self, llm_text: str) -> str:
         text = llm_text
         # 1) Prefer explicit Decision: line (the prompt already asks for this)
