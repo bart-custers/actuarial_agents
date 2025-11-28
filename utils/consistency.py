@@ -71,7 +71,12 @@ def compare_dataprep_consistency_snapshots(current: Dict[str, Any],history: List
     # Row count trends over history
     all_rows = collect_hist("n_rows")
     if len(all_rows) > 1:
-        comparison["row_count_trend"] = {"mean": float(np.mean(all_rows))}
+        comparison["row_count_trend"] = {
+            "min": float(np.min(all_rows)),
+            "max": float(np.max(all_rows)),
+            "mean": float(np.mean(all_rows)),
+            "std": float(np.std(all_rows))
+        }
 
     # Missing value drift
     missing_drift = {}
