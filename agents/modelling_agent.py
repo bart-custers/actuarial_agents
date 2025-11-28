@@ -280,8 +280,8 @@ class ModellingAgent(BaseAgent):
         joblib.dump(trainer, model_path)
 
         # Store model predictions
-        train_pred_path = os.path.join(storage_dir, "model_train_predictions.csv")
-        test_pred_path = os.path.join(storage_dir, "model_test_predictions.csv")
+        train_pred_path = os.path.join(storage_dir, f"train_predictions_{timestamp}.csv")
+        test_pred_path = os.path.join(storage_dir, f"test_predictions_{timestamp}.csv")
 
         pd.DataFrame({"train_prediction": model_train_predictions}).to_csv(train_pred_path, index=False)
         pd.DataFrame({"test_prediction": model_test_predictions}).to_csv(test_pred_path, index=False)

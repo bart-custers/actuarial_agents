@@ -53,11 +53,14 @@ PROMPTS = {
     Compare deterministic vs adaptive pipelines:
     {comparison}
     The model gave confidence={confidence}.
-    Should the adaptive pipeline be used? Justify clearly and decide: USE_ADAPTIVE or KEEP_BASELINE.
+
+    Think step-by-step.
+    Should the adaptive pipeline be used? Decide: USE_ADAPTIVE or KEEP_BASELINE, and justify in a short bullet list.
     """,
 
     "dataprep_layer4": """
     Summarize the verified data preparation and reasoning.
+    Think step-by-step.
     Include stability, differences, and final rationale.
     Verification feedback: {verification}.
     """,
@@ -81,14 +84,15 @@ PROMPTS = {
     4. Justify your choice in 3–5 bullet points (actuarial + ML reasoning).
     5. State any risks or pitfalls you anticipate for this model type.
 
-    Respond concisely. Decide: USE_GLM or USE_GBM.
+    Respond concisely. The final line of your answer should contain: Decision: USE_GLM or USE_GBM.
     """,
 
     "modelling_layer2":""" 
     You are an expert actuarial modelling assistant helping to build claim frequency models.
 
     Your task is to produce ONLY Python code that trains the model type chosen earlier: {model_choice}
-
+    Think step-by-step.
+    
     ### HARD RULES (READ CAREFULLY)
     - You MUST use the ModelTrainer class provided: {current_model_code}
     - You MUST NOT rename variables.
@@ -184,7 +188,7 @@ PROMPTS = {
     1) Briefly restate the assignment and your role in one sentence.
     2) List the most relevant actions for evaluation you think are most important for this task.
     
-    Respond concisely. Use maximum 100 words.
+    Respond concisely. Use maximum 100 words in bullet points.
     """,
 
     "review_layer2_dataprep": """
@@ -204,7 +208,7 @@ PROMPTS = {
     Your task:
     - Evaluate plausibility.
     - Identify data/model quality issues.
-    - Output a section called: ANALYSIS: <your reasoning here>, be concise and use 150 words max.
+    - Output a section called: ANALYSIS: <your reasoning here>, be concise and use 200 words maximum in bullet points.
     """,
 
     "review_layer2_modelling": """
@@ -224,7 +228,7 @@ PROMPTS = {
     Your task:
     - Evaluate plausibility.
     - Identify model training issues.
-    - Output a section called: ANALYSIS: <your reasoning here>, be concise and use 500 words max.
+    - Output a section called: ANALYSIS: <your reasoning here>, be concise and use 200 words maximum in bullet points.
     """,
 
     "review_layer3": """
@@ -233,7 +237,7 @@ PROMPTS = {
     
     A summary on the consistency is already provided in: {consistency_summary}.
     
-    - Output a section called: ANALYSIS: <your reasoning here>, be concise and use 150 words max. Think step-by-step. Be concise.
+    - Output a section called: ANALYSIS: <your reasoning here>, be concise and use 200 words maximum in bullet points. Think step-by-step. Be concise.
     """,
 
     "review_layer4": """
@@ -242,7 +246,7 @@ PROMPTS = {
     
     A summary on the impact analysis is already provided in: {impact_analysis_input}.
     
-    - Output a section called: ANALYSIS: <your reasoning here>, be concise and use 150 words max. Think step-by-step. Be concise.
+    - Output a section called: ANALYSIS: <your reasoning here>, be concise and use 200 words maximum in bullet points. Think step-by-step. Be concise.
     """,
 
     "review_layer5": """

@@ -248,7 +248,7 @@ class ReviewingAgent(BaseAgent):
 
         results_dir = "data/results"
         os.makedirs(results_dir, exist_ok=True)
-        meta_path = os.path.join(results_dir, f"{self.name}_metadata_{timestamp}.json")
+        meta_path = os.path.join(results_dir, f"{self.name}_metadata_{phase}_{timestamp}.json")
         save_json_safe(metadata_out, meta_path)
         metadata_out["metadata_file"] = meta_path
 

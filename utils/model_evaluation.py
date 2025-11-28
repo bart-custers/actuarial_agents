@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -103,9 +104,10 @@ class ModelEvaluation:
         plt.tight_layout()
 
         # --- Save plot ---
-        results_dir = "data/results/evaluation"
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        results_dir = "data/evaluation"
         os.makedirs(results_dir, exist_ok=True)
-        plot_path = os.path.join(results_dir, f"calibration_{model_type}.png")
+        plot_path = os.path.join(results_dir, f"calibration_{model_type}_{timestamp}.png")
         plt.savefig(plot_path)
         plt.close(fig)
 
@@ -203,10 +205,11 @@ class ModelEvaluation:
 
         plt.tight_layout()
 
-        results_dir = "data/results/evaluation"
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        results_dir = "data/evaluation"
         os.makedirs(results_dir, exist_ok=True)
         plot_path = os.path.join(
-            results_dir, f"prediction_comparison_{model_type}_{set_name}.png"
+            results_dir, f"prediction_comparison_{model_type}_{set_name}_{timestamp}.png"
         )
 
         plt.savefig(plot_path)
@@ -299,9 +302,10 @@ class ModelEvaluation:
 
         plt.tight_layout()
 
-        results_dir = "data/results/evaluation"
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        results_dir = "data/evaluation"
         os.makedirs(results_dir, exist_ok=True)
-        plot_path = os.path.join(results_dir, f"Act_vs_Exp_{model_type}_{set_name}.png")
+        plot_path = os.path.join(results_dir, f"Act_vs_Exp_{model_type}_{set_name}_{timestamp}.png")
         plt.savefig(plot_path)
         plt.close(fig)
 
