@@ -55,7 +55,12 @@ PROMPTS = {
     The model gave confidence={confidence}.
 
     Think step-by-step.
-    Should the adaptive pipeline be used? Decide: USE_ADAPTIVE or KEEP_BASELINE, and justify in a short bullet list.
+    1. Was the model confident about the adaptive pipeline?
+    2. How does the adaptive pipeline compare to the deterministic pipeline?
+    
+    Task: Decide whether the adaptive pipeline should be used. 
+    
+    The final line of your answer should contain: Decision: USE_ADAPTIVE or KEEP_BASELINE, and justify in a short bullet list.
     """,
 
     "dataprep_layer4": """
