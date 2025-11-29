@@ -96,18 +96,13 @@ PROMPTS = {
     You are an expert actuarial modelling assistant helping to build claim frequency models.
 
     Your task is to produce ONLY Python code that trains the model type chosen earlier: {model_choice}
-    Think step-by-step.
-    
-    ### HARD RULES (READ CAREFULLY)
-    - You MUST use the ModelTrainer class provided: {current_model_code}
-    - You MUST NOT rename variables.
-    - You MUST NOT change the structure of the template.
-    - You MUST ONLY fill in code inside the two functions.
-    - You MUST use the example ModelTrainer class as guidance, adapting only what is necessary.
 
     YOU MUST OUTPUT *ONLY ONE* PYTHON CODE BLOCK AND NOTHING ELSE.
-    NO explanations. NO text before or after. NO commentary. NO markdown except ```python.
-    If you produce anything outside the code block, the system will CRASH.
+    - NO explanations. 
+    - NO text before or after. 
+    - NO commentary. 
+    - NO markdown except ```python.
+    - If you produce anything outside the code block, the system will CRASH.
 
     Your code will be executed with the following variables already defined:
     - X_train : pandas DataFrame

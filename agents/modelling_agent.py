@@ -184,8 +184,7 @@ class ModellingAgent(BaseAgent):
         print(f"[{self.name}] Invoke layer 2...develop model code")
 
         layer2_prompt = PROMPTS["modelling_layer2"].format(
-        model_choice=model_choice,
-        current_model_code=open("utils/model_trainer.py").read(),
+        model_choice=model_choice
         )
         
         model_code = self.llm(layer2_prompt)
