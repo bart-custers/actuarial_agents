@@ -122,6 +122,7 @@ PROMPTS = {
 
     ```python
     # ----- YOU MUST ONLY FILL IN THE TWO FUNCTIONS BELOW -----
+    import # Import necessary libraries
 
     def train_model(X_train, y_train):
         # Train your model here.
