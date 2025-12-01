@@ -12,8 +12,8 @@ def group_fairness(df, pred_col='Prediction', true_col='ClaimNb', storage_dir='s
     df['pred_bin'] = pd.qcut(df[pred_col], q=5, labels=False) + 1
     
     # Create age groups
-    bins = [0, 25, 75, 120]  # adjust max age
-    labels = ['young', 'middle', 'old']
+    bins = [0, 25, 100]
+    labels = ['young', 'other']
     df['age_group'] = pd.cut(df['DrivAge'], bins=bins, labels=labels, right=False)
     
     # Create population density groups
@@ -47,6 +47,10 @@ def group_fairness(df, pred_col='Prediction', true_col='ClaimNb', storage_dir='s
     plt.ylabel('Mean difference (predicted - actual)')
     plt.title('Mean difference per bin by age group')
     plt.legend()
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    age_plot_path = os.path.join(storage_dir, f'group_fairness_plot_age_{timestamp}.png')
+    plt.savefig(age_plot_path)
     plt.show()
     
     # Density groups
@@ -60,7 +64,7 @@ def group_fairness(df, pred_col='Prediction', true_col='ClaimNb', storage_dir='s
     plt.legend()
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    density_plot_path = os.path.join(storage_dir, f'group_fairness_plots_{timestamp}.png')
+    density_plot_path = os.path.join(storage_dir, f'group_fairness_plot_density_{timestamp}.png')
     plt.savefig(density_plot_path)
 
     plt.show()
