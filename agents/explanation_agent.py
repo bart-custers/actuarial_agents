@@ -26,10 +26,8 @@ class ExplanationAgent(BaseAgent):
         # --------------------        
         print(f"[{self.name}] Invoke layer 1...belief revision")
         dataprep_verification = metadata.get("verification", {})
-        print(dataprep_verification)
         dataprep_explanation = metadata.get("explanation", {})
         modelling_evaluation = metadata.get("evaluation", {})
-        print(modelling_evaluation)
         modelling_analysis = metadata.get("impact_analysis", {})
         reviewing_analysis = metadata.get("analysis", {})
         reviewing_consistency = metadata.get("consistency_check", {})

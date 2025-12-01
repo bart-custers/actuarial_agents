@@ -194,7 +194,7 @@ class ModellingAgent(BaseAgent):
         #confidence = self._extract_confidence(layer2_prompt)
         #print(f"[{self.name}] Layer 2 confidence: {confidence:.2f}")
 
-        print(model_code)
+      #  print(model_code)
 
         # --------------------
         # Model training
@@ -287,6 +287,24 @@ class ModellingAgent(BaseAgent):
 
         pd.DataFrame({"train_prediction": model_train_predictions}).to_csv(train_pred_path, index=False)
         pd.DataFrame({"test_prediction": model_test_predictions}).to_csv(test_pred_path, index=False)
+
+        # Store df including predictions
+        train_df = X_train.copy()
+        train_df['ClaimNb'] = y_train
+        train_df['Exposure'] = exposure_train
+        train_df['Prediction'] = model_train_predictions
+
+        test_df = X_test.copy()
+        test_df['ClaimNb'] = y_test
+        test_df['Exposure'] = exposure_test
+        test_df['Prediction'] = model_test_predictions
+
+        df_predictions = pd.concat([train_df, test_df], axis=0).reset_index(drop=True)
+        full_path = os.path.join(storage_dir, f"df_predictions_{timestamp}.csv")
+        df_predictions.to_csv(full_path, index=False)
+
+        from utils.fairness import group_fairness
+        group_fairness(df_predictions, 'Prediction', 'ClaimNb', storage_dir)
 
         # Store snapshot
         snapshot = model_metrics
