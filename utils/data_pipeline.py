@@ -26,7 +26,7 @@ class DataPipeline:
         y = y.clip(upper=10)
         X = data.drop(columns=['ClaimNb', 'Exposure', 'IDpol'], errors='ignore')
 
-        numerical_features = ['VehPower', 'VehAge', 'DrivAge', 'BonusMalus', 'Area']
+        numerical_features = ['VehPower', 'VehAge', 'DrivAge', 'BonusMalus', 'Area', 'Density']
         categorical_features = ['VehBrand', 'Region', 'VehGas']
         self.actions_log.append(f"Defined {len(numerical_features)} numerical and {len(categorical_features)} categorical features.")
 
