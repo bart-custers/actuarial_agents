@@ -13,12 +13,12 @@ from agents.review_agent import ReviewingAgent
 from agents.explanation_agent import ExplanationAgent
 
 class CentralHub:  
-    def __init__(self):
+    def __init__(self, backend="llama7b"):
         self.memory = CentralMemory("data/memory/central_memory.json")
 
         # Shared LLM for all agents
         self.shared_llm = LLMWrapper(
-            backend="llama7b",
+            backend=backend,
             system_prompt="You are a helpful actuarial assistant that can handle multiple reasoning tasks.",
         )
 

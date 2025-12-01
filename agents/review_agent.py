@@ -116,7 +116,7 @@ class ReviewingAgent(BaseAgent):
       #  self.memory.chat_memory.add_user_message(layer2_prompt)
        # self.memory.chat_memory.add_ai_message(analysis)
 
-        print (analysis)
+      #  print (analysis)
 
         # --------------------
         # Perform consistency checks
@@ -135,7 +135,7 @@ class ReviewingAgent(BaseAgent):
         else:
             consistency_summary = "No dataframe available for consistency review."
         
-        print(consistency_summary)
+     #   print(consistency_summary)
 
         # --------------------
         # Layer 3: consistency checks (LLM)
@@ -150,7 +150,7 @@ class ReviewingAgent(BaseAgent):
      #   self.memory.chat_memory.add_user_message(layer3_prompt)
       #  self.memory.chat_memory.add_ai_message(consistency_check)
 
-        print(consistency_check)
+      #  print(consistency_check)
 
         # --------------------
         # Layer 4: impact analysis (LLM)
@@ -166,7 +166,7 @@ class ReviewingAgent(BaseAgent):
             impact_analysis_input=impact_analysis_input)
             impact_analysis_output = self.llm(layer4_prompt)
         
-        print(impact_analysis_output)
+      #  print(impact_analysis_output)
 
         # --------------------
         # Layer 5: review decision (LLM)

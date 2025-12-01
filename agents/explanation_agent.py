@@ -5,6 +5,7 @@ from utils.message_types import Message
 from utils.prompt_library import PROMPTS
 from agents.base_agent import BaseAgent
 
+
 class ExplanationAgent(BaseAgent):
     def __init__(self, name="explanation", shared_llm=None, system_prompt=None, hub=None):
         super().__init__(name)
@@ -12,45 +13,77 @@ class ExplanationAgent(BaseAgent):
         self.system_prompt = system_prompt
         self.hub = hub
     
+    # ---------------------------
+    # Main handler
+    # ---------------------------
     def handle_message(self, message):
-        print(f"[{self.name}] Explaining results and checking consistency...")
+        print(f"[{self.name}] Explaining results...")
 
         metadata = message.metadata or {}
-        model_metrics = metadata.get("metrics", {})
-        review_notes = metadata.get("review_notes", [])
-        llm_review = metadata.get("llm_review", "")
-        predictions_path = metadata.get("predictions_path", None)
 
-        # --- Step 0. Get historical memory context ---
-        if self.hub and self.hub.memory:
-            review_history = self.hub.memory.get("review_history", [])
-            explanation_history = self.hub.memory.get("explanation_history", [])
-        else:
-            review_history, explanation_history = [], []
+        # --------------------
+        # Layer 1: summarize and assess beliefs
+        # --------------------        
+        print(f"[{self.name}] Invoke layer 1...belief revision")
+        dataprep_verification = metadata.get("verification", {})
+        print(dataprep_verification)
+        dataprep_explanation = metadata.get("explanation", {})
+        modelling_evaluation = metadata.get("evaluation", {})
+        print(modelling_evaluation)
+        modelling_analysis = metadata.get("impact_analysis", {})
+        reviewing_analysis = metadata.get("analysis", {})
+        reviewing_consistency = metadata.get("consistency_check", {})
+        reviewing_decision = metadata.get("judgement", {})
 
-        # Extract only useful + small elements for prompting
-        last_review = review_history[-1] if review_history else {"status": "No previous review", "review_notes": []}
-        last_review_status = last_review.get('status', 'N/A')
-        last_review_for_prompt = last_review.get('review_notes', [])
-        last_explanation = explanation_history[-1] if explanation_history else {"consistency_summary": "No previous explanation", "belief_revision_summary": "No previous explanation"} 
+        PHASES = {
+        "dataprep": ["verification", "explanation"],
+        "modelling": ["evaluation", "impact_analysis"],
+        "reviewing": ["analysis", "consistency_check", "judgement"]
+        }
 
-        # --- Define prompt templates ---
-        consistency_prompt = PROMPTS["consistency_prompt"].format(
-        model_metrics=model_metrics,
-        review_notes=review_notes,
-        last_review_status=last_review_status,
-        last_review_for_prompt=last_review_for_prompt
-        )
+        belief_state = {}
 
-        belief_revision_prompt = PROMPTS["belief_revision_prompt"].format(
-        llm_review=llm_review,
-        review_notes=review_notes,
-        last_review_for_prompt=last_review_for_prompt,
-        )
+        for phase, keys in PHASES.items():
+            # Extract metadata items for the phase
+            items = [metadata.get(key, {}) for key in keys]
 
-        # --- Run the LLM ---
-        consistency_explanation = self.llm(consistency_prompt)
-        belief_revision_explanation = self.llm(belief_revision_prompt)
+            # Build the phase prompt using the standard template
+            summary_prompt = PROMPTS["summary_prompt"].format(
+                item1=items[0] if len(items) > 0 else None,
+                item2=items[1] if len(items) > 1 else None,
+                item3=items[2] if len(items) > 2 else None,
+            )
+
+            # Query the LLM
+            belief_state[phase] = self.llm(summary_prompt)
+        
+        belief_dir = "data/memory"
+        os.makedirs(belief_dir, exist_ok=True)
+        meta_path = os.path.join(belief_dir, f"{self.name}_belief_state.json")
+        save_json_safe(belief_state, meta_path)
+
+        # Now assess the belief
+        belief_revision_prompt = PROMPTS["belief_revision_prompt"].format(belief_summary = belief_state)
+        belief_assessment = self.llm(belief_revision_prompt)
+
+        # --------------------
+        # Layer 2: TCAV
+        # --------------------   
+
+
+        
+        # --------------------
+        # Layer 3: fairness assessment
+        # --------------------  
+        # 
+        # 
+        # 
+        # 
+        # --------------------
+        # Layer 4: end report
+        # --------------------  
+
+
 
         # --- Return message and log output ---
         # Store metadata
@@ -58,10 +91,7 @@ class ExplanationAgent(BaseAgent):
         metadata = {
             "timestamp": timestamp,
             "status": "explained",
-            "consistency_summary": consistency_explanation,
-            "belief_revision_summary": belief_revision_explanation,
-            "model_metrics": model_metrics,
-            "review_notes": review_notes,
+
         }
 
         results_dir = "data/results"
@@ -74,9 +104,7 @@ class ExplanationAgent(BaseAgent):
         explanation_file = os.path.join(results_dir, f"explanation_report_{timestamp}.txt")
         with open(explanation_file, "w") as f:
             f.write("--- CONSISTENCY ANALYSIS ---\n")
-            f.write(consistency_explanation + "\n\n")
             f.write("--- BELIEF REVISION ---\n")
-            f.write(belief_revision_explanation + "\n")
 
         print(f"\n--- Explanation Outputs ---")
         print(f"Report saved to: {explanation_file}")

@@ -301,48 +301,47 @@ PROMPTS = {
     # --------------------
     # Explanation agent prompts
     # --------------------
-    "consistency_prompt": """
-    You are an actuarial explanation specialist.
+    "summary_prompt": """
+    You are an expert in actuarial modelling, assisting in explaining an agent workflow for claim frequency prediction.
 
-    Compare current model results to the previous run stored in memory.
+    Your goal is to:
+    1. Extract the main ideas from each item.
+    2. Summarize the belief of the agent.
 
-    Current Metrics:
-    {model_metrics}
+    Items:
+    Item 1: {item1}
+    Item 2: {item2}
+    Item 3: {item3}
 
-    Current Review Notes:
-    {review_notes}
-
-    Previous Review Outcome:
-    Status: {last_review_status}
-    Notes: {last_review_for_prompt}
-
-    Identify:
-    - Whether the model is consistent with prior iterations (metrics, direction of coefficients)
-    - Any drift or unexplained changes
-    - Any contradictory findings or explanations.
-
-    Provide a concise stability summary in plain English.
+    Summarize the belief of the agent in 200 words.
     """,
 
     "belief_revision_prompt": """
-    You are a reasoning assistant performing belief revision for model interpretation.
-    Given the current explanation, past review notes, and current metrics,
-    update the overall understanding of the model performance and rationale.
+    You are an expert in actuarial modelling, assisting in explaining an agent workflow for claim frequency prediction.
+    Your goal is to assess the clarity, validity, confidence level, and potential issues in the beliefs.
 
-    Ensure that your belief update resolves contradictions and forms a coherent explanation.
+    You are given a belief summary for data preparation, modelling, and reviewing:
 
-    Use this structure:
-    1. Consistent beliefs (what remains stable)
-    2. Revised beliefs (what changed and why)
-    3. Remaining uncertainties
+    [BELIEF SUMMARY]
+    {belief_summary}
 
-    Current LLM review:
-    {llm_review}
+    Your tasks:
 
-    Review notes:
-    {review_notes}
+    1. **Identify Beliefs**
+    Review all explicit or implicit beliefs expressed in the summary.
 
-    Last Review Notes:
-    {last_review_for_prompt}
+    2. **Assess Validity & Stability**
+    - Determine whether the beliefs are well-supported.
+    - Highlight any inconsistencies or unclear reasoning.
+    - Flag any beliefs that require verification or caution.
+    - Check whether beliefs are conflicting with good actuarial practice.
+
+    3. **Indicate needed actions**
+    Indicate whether the workflow can be approved, or whether additional actions are needed.
+
+    - Be concise and neutral.
+    - Do not speculate beyond the provided summary.
+    - Maintain high precision and avoid hallucination.
+    - Use maximum 500 words.
     """
 }
