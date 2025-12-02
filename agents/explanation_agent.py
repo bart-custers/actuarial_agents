@@ -80,6 +80,7 @@ class ExplanationAgent(BaseAgent):
         belief_revision_prompt = PROMPTS["belief_revision_prompt"].format(belief_summary = belief_state)
         belief_assessment = self.llm(belief_revision_prompt)
 
+        print(belief_revision_prompt)
         print(belief_assessment)
 
         # --------------------
