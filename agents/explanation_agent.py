@@ -80,6 +80,8 @@ class ExplanationAgent(BaseAgent):
         belief_revision_prompt = PROMPTS["belief_revision_prompt"].format(belief_summary = belief_state)
         belief_assessment = self.llm(belief_revision_prompt)
 
+        print(belief_assessment)
+
         # --------------------
         # Layer 2: TCAV
         # --------------------   
@@ -94,11 +96,14 @@ class ExplanationAgent(BaseAgent):
         df_predictions = self.load_latest_prediction_df()
         table_age, table_density = group_fairness(df_predictions, 'Prediction', 'ClaimNb', 'data/final')
 
-        #call prompt
+        fairness_prompt = PROMPTS["fairness_prompt"].format(
+            table_age=table_age,
+            table_density=table_density
+        )
+        fairness_assessment = self.llm(fairness_prompt)
 
-        # 
-        # 
-        # 
+        print(fairness_assessment)
+
         # --------------------
         # Layer 4: end report
         # --------------------  

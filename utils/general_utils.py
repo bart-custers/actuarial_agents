@@ -1,4 +1,5 @@
 import json
+import re
 import numpy as np
 import pandas as pd
 
@@ -69,3 +70,15 @@ def generate_review_report_txt(report_path,
         f.write("\n".join(lines))
 
     return report_path
+
+def extract_analysis(text: str) -> str:
+    """
+    Extract the ANALYSIS: section from a larger string.
+    Returns the extracted text, or the original text if no match is found.
+    """
+    match = re.search(
+        r"ANALYSIS:(.*?)(?:\n[A-Z]+:|\Z)",
+        text,
+        flags=re.DOTALL
+    )
+    return match.group(1).strip() if match else text

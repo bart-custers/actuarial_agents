@@ -6,7 +6,7 @@ import numpy as np
 import re
 import glob
 from datetime import datetime
-from utils.general_utils import save_json_safe, make_json_compatible
+from utils.general_utils import save_json_safe, make_json_compatible, extract_analysis
 from utils.message_types import Message
 from utils.model_trainer import ModelTrainer
 from utils.model_evaluation import ModelEvaluation
@@ -172,8 +172,6 @@ class ModellingAgent(BaseAgent):
                 dataset_desc=json.dumps(dataset_desc, indent=2)
             )
         plan = self.llm(layer1_prompt)
-       # self.memory.chat_memory.add_user_message(layer1_prompt)
-       # self.memory.chat_memory.add_ai_message(plan)
 
         model_choice = self._extract_model_choice(plan)
         print(f"[modelling] LLM selected model type: {model_choice}")
@@ -188,13 +186,9 @@ class ModellingAgent(BaseAgent):
         )
         
         model_code = self.llm(layer2_prompt)
-      # self.memory.chat_memory.add_user_message(layer2_prompt)
-       # self.memory.chat_memory.add_ai_message(model_code)
 
         #confidence = self._extract_confidence(layer2_prompt)
         #print(f"[{self.name}] Layer 2 confidence: {confidence:.2f}")
-
-      #  print(model_code)
 
         # --------------------
         # Model training
@@ -250,10 +244,7 @@ class ModellingAgent(BaseAgent):
             metrics=json.dumps(make_json_compatible(model_metrics), indent=2))
 
         evaluation = self.llm(layer3_prompt)
-        match = re.search(r"ANALYSIS:(.*?)(?:\n[A-Z]+:|\Z)", evaluation, flags=re.DOTALL)
-        evaluation_text = match.group(1).strip() if match else evaluation
-
-      #  print(evaluation)
+        evaluation_text = extract_analysis(evaluation)
 
         # --------------------
         # Layer 4: impact analysis (LLM)
@@ -264,10 +255,7 @@ class ModellingAgent(BaseAgent):
             impact_analysis_tables=impact_analysis_tables)
 
         impact_analysis = self.llm(layer4_prompt)
-        match = re.search(r"ANALYSIS:(.*?)(?:\n[A-Z]+:|\Z)", impact_analysis, flags=re.DOTALL)
-        impact_analysis_text = match.group(1).strip() if match else impact_analysis
-
-      #  print(impact_analysis)
+        impact_analysis_text = extract_analysis(impact_analysis)
 
         # --------------------
         # Save metadata

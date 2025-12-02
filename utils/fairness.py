@@ -53,6 +53,7 @@ def group_fairness(df, pred_col='Prediction', true_col='ClaimNb', storage_dir='s
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     age_plot_path = os.path.join(storage_dir, f'group_fairness_plot_age_{timestamp}.png')
     plt.savefig(age_plot_path)
+    plt.close()
     
     # Density groups
     plt.figure(figsize=(10,5))
@@ -67,5 +68,6 @@ def group_fairness(df, pred_col='Prediction', true_col='ClaimNb', storage_dir='s
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     density_plot_path = os.path.join(storage_dir, f'group_fairness_plot_density_{timestamp}.png')
     plt.savefig(density_plot_path)
+    plt.close()
     
     return table_age, table_density

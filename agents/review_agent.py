@@ -4,7 +4,7 @@ from datetime import datetime
 import numpy as np
 import re
 #from langchain_community.memory import ConversationBufferMemory
-from utils.general_utils import save_json_safe, generate_review_report_txt
+from utils.general_utils import save_json_safe, extract_analysis, generate_review_report_txt
 from utils.message_types import Message
 from utils.prompt_library import PROMPTS
 from agents.base_agent import BaseAgent
@@ -51,8 +51,6 @@ class ReviewingAgent(BaseAgent):
 
         layer1_prompt = PROMPTS["review_layer1"].format(phase=phase)
         layer1_out = self.llm(layer1_prompt)
-      #  self.memory.chat_memory.add_user_message(layer1_prompt)
-      #  self.memory.chat_memory.add_ai_message(layer1_out)
 
         # --------------------
         # Get context from memory
@@ -113,10 +111,7 @@ class ReviewingAgent(BaseAgent):
             print(f"[{self.name}] WARNING: Unknown phase '{phase}' for review agent.")
 
         analysis = self.llm(layer2_prompt)
-        match = re.search(r"ANALYSIS:(.*?)(?:\n[A-Z]+:|\Z)", analysis, flags=re.DOTALL)
-        analysis_text = match.group(1).strip() if match else analysis
-
-      #  print (analysis)
+        analysis_text = extract_analysis(analysis)
 
         # --------------------
         # Perform consistency checks
@@ -135,8 +130,6 @@ class ReviewingAgent(BaseAgent):
         else:
             consistency_summary = "No dataframe available for consistency review."
         
-     #   print(consistency_summary)
-
         # --------------------
         # Layer 3: consistency checks (LLM)
         # --------------------
@@ -147,10 +140,7 @@ class ReviewingAgent(BaseAgent):
             consistency_summary=consistency_summary)
         
         consistency_check = self.llm(layer3_prompt)
-        match = re.search(r"ANALYSIS:(.*?)(?:\n[A-Z]+:|\Z)", consistency_check, flags=re.DOTALL)
-        consistency_text = match.group(1).strip() if match else consistency_check
-
-      #  print(consistency_check)
+        consistency_text = extract_analysis(consistency_check)
 
         # --------------------
         # Layer 4: impact analysis (LLM)
@@ -159,15 +149,14 @@ class ReviewingAgent(BaseAgent):
         if phase == "dataprep":
             print(f"[{self.name}] No impact analysis - skip layer 4...")
             impact_analysis_output = "No impact analysis for dataprep"
+            impact_text = "No impact analysis for dataprep"
         elif phase == "modelling":
             print(f"[{self.name}] Invoke layer 4...impact analysis")
             impact_analysis_input = metadata.get("impact_analysis", "unknown")
             layer4_prompt = PROMPTS["review_layer4"].format(
             impact_analysis_input=impact_analysis_input)
             impact_analysis_output = self.llm(layer4_prompt)
-        
-        match = re.search(r"ANALYSIS:(.*?)(?:\n[A-Z]+:|\Z)", impact_analysis_output, flags=re.DOTALL)
-        impact_text = match.group(1).strip() if match else impact_analysis_output
+            impact_text = extract_analysis(impact_analysis_output)
 
         # --------------------
         # Layer 5: review decision (LLM)
@@ -182,8 +171,6 @@ class ReviewingAgent(BaseAgent):
         print(layer5_prompt)
 
         review_output = self.llm(layer5_prompt)
-      #  self.memory.chat_memory.add_user_message(layer5_prompt)
-      #  self.memory.chat_memory.add_ai_message(review_output)
 
         print(review_output)
 

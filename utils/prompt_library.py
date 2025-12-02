@@ -344,5 +344,27 @@ PROMPTS = {
     - Do not speculate beyond the provided summary.
     - Maintain high precision and avoid hallucination.
     - Use maximum 500 words.
+    """,
+
+    "fairness_prompt": """
+    You are an expert in actuarial modelling, assisting in explaining an agent workflow for claim frequency prediction.
+    Your goal is to assess the fairness of the model predictions.
+
+    You are given two tables that show Mean difference (actual vs predicted) for various groups, over premium bins. 
+    Values far from zero indicate miscalibration. Systematic patterns across bins indicate structural bias.
+
+    Age fairness table: {table_age}
+    Population density fairness table: {table_density}
+
+    Your tasks:
+
+    1. Analyse the tables, think step-by-step.
+
+    2. Write a short report with your critical analysis. 
+    
+    - Be concise and neutral.
+    - Do not speculate beyond the provided summary.
+    - Maintain high precision and avoid hallucination.
+    - Use maximum 500 words.
     """
 }

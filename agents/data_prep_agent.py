@@ -130,8 +130,6 @@ class DataPrepAgent(BaseAgent):
         else:
             plan_prompt = PROMPTS["dataprep_layer1"].format(info_dict=json.dumps(info_dict, indent=2))
         summary1 = self.llm(plan_prompt)
-       # self.memory.chat_memory.add_user_message(plan_prompt)
-      #  self.memory.chat_memory.add_ai_message(summary1)
         
         print(f"[{self.name}] Invoke layer 2...develop data preparation")
 
@@ -140,9 +138,6 @@ class DataPrepAgent(BaseAgent):
         # --------------------
         suggestion_prompt = PROMPTS["dataprep_layer2"].format(summary1=summary1,info_dict=json.dumps(info_dict, indent=2),pipeline_code=open("utils/data_pipeline.py").read())
         suggestion = self.llm(suggestion_prompt)
-
-       # self.memory.chat_memory.add_user_message(suggestion_prompt)
-       # self.memory.chat_memory.add_ai_message(suggestion)
 
         confidence = self._extract_confidence(suggestion)
         print(f"[{self.name}] Layer 2 confidence: {confidence:.2f}")
@@ -170,9 +165,6 @@ class DataPrepAgent(BaseAgent):
         # --------------------
         verify_prompt = PROMPTS["dataprep_layer3"].format(comparison=json.dumps(comparison_summary, indent=2),confidence=confidence)
         verification = self.llm(verify_prompt)
-
-      #  self.memory.chat_memory.add_user_message(verify_prompt)
-       # self.memory.chat_memory.add_ai_message(verification)
 
          # Decide based on verification judgment
         decision = self._extract_dataprep_choice(verification)
