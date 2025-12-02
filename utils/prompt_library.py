@@ -161,6 +161,8 @@ PROMPTS = {
     2. Highlight whether the model seems overfitted or underfitted.
     3. Mention which variables appear most influential and why.
     4. Summarize the comparison of actual vs predicted values over features.
+
+    Output a section called: ANALYSIS: <your reasoning here>, be concise and use 300 words maximum in bullet points.
     """,
 
     "modelling_layer4": """
@@ -171,7 +173,7 @@ PROMPTS = {
     For the trained model, compare the predictions to the predictions of the previous model. 
     Use the table provided in: {impact_analysis_tables}
 
-    Be concise, use 250 words maximum.
+    Output a section called: ANALYSIS: <your reasoning here>, be concise and use 300 words maximum in bullet points.
     """,
 
     # --------------------

@@ -250,8 +250,8 @@ class ModellingAgent(BaseAgent):
             metrics=json.dumps(make_json_compatible(model_metrics), indent=2))
 
         evaluation = self.llm(layer3_prompt)
-     #   self.memory.chat_memory.add_user_message(layer3_prompt)
-      #  self.memory.chat_memory.add_ai_message(evaluation)
+        match = re.search(r"ANALYSIS:(.*?)(?:\n[A-Z]+:|\Z)", evaluation, flags=re.DOTALL)
+        evaluation_text = match.group(1).strip() if match else evaluation
 
       #  print(evaluation)
 
@@ -264,6 +264,8 @@ class ModellingAgent(BaseAgent):
             impact_analysis_tables=impact_analysis_tables)
 
         impact_analysis = self.llm(layer4_prompt)
+        match = re.search(r"ANALYSIS:(.*?)(?:\n[A-Z]+:|\Z)", impact_analysis, flags=re.DOTALL)
+        impact_analysis_text = match.group(1).strip() if match else impact_analysis
 
       #  print(impact_analysis)
 
@@ -303,9 +305,6 @@ class ModellingAgent(BaseAgent):
         full_path = os.path.join(storage_dir, f"df_predictions_{timestamp}.csv")
         df_predictions.to_csv(full_path, index=False)
 
-        from utils.fairness import group_fairness
-        group_fairness(df_predictions, 'Prediction', 'ClaimNb', storage_dir)
-
         # Store snapshot
         snapshot = model_metrics
 
@@ -320,8 +319,8 @@ class ModellingAgent(BaseAgent):
          #   "model_object": llm_model_obj,
             "model_metrics": model_metrics,
             "act_vs_exp": act_vs_exp,
-            "evaluation": evaluation,
-            "impact_analysis": impact_analysis,
+            "evaluation": evaluation_text,
+            "impact_analysis": impact_analysis_text,
             "consistency_snapshot": snapshot,
             "model_predictions_path": storage_dir,
         }

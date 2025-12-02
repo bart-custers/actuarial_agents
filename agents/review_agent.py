@@ -174,10 +174,6 @@ class ReviewingAgent(BaseAgent):
         # --------------------
         print(f"[{self.name}] Invoke layer 5...review decision")
 
-        print(analysis_text)
-        print(consistency_text)
-        print(impact_text)
-
         layer5_prompt = PROMPTS["review_layer5"].format(
             analysis=analysis_text,
             consistency_check=consistency_text,
@@ -242,10 +238,10 @@ class ReviewingAgent(BaseAgent):
             "timestamp": timestamp,
             "phase_reviewed": phase,
             "layer1_out": layer1_out,
-            "analysis": analysis,
+            "analysis": analysis_text,
             "consistency_summary": consistency_summary,
-            "consistency_check": consistency_check,
-            "impact_analysis_output": impact_analysis_output,
+            "consistency_check": consistency_text,
+            "impact_analysis_output": impact_text,
             "judgement": review_output,
             "decision": decision,
             "revision_prompt": revision_prompt,

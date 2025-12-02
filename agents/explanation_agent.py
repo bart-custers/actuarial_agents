@@ -1,6 +1,9 @@
 import os
+import glob
+import pandas as pd
 from datetime import datetime
 from utils.general_utils import save_json_safe
+from utils.fairness import group_fairness
 from utils.message_types import Message
 from utils.prompt_library import PROMPTS
 from agents.base_agent import BaseAgent
@@ -12,6 +15,26 @@ class ExplanationAgent(BaseAgent):
         self.llm = shared_llm
         self.system_prompt = system_prompt
         self.hub = hub
+    
+    @staticmethod
+    def load_latest_prediction_df(folder="data/final"):
+        # Find all prediction files
+        df_files = glob.glob(os.path.join(folder, "df_predictions_*.csv"))
+
+        # Check that files exist
+        if not df_files:
+            raise FileNotFoundError(f"No prediction df found in folder: {folder}")
+
+        # Sort files by date descending (latest first)
+        df_files.sort(reverse=True)
+
+        # Take the latest file
+        latest_df_file = df_files[0]
+
+        latest_df_preds = pd.read_csv(latest_df_file)
+
+        return latest_df_preds 
+
     
     # ---------------------------
     # Main handler
@@ -25,13 +48,6 @@ class ExplanationAgent(BaseAgent):
         # Layer 1: summarize and assess beliefs
         # --------------------        
         print(f"[{self.name}] Invoke layer 1...belief revision")
-        dataprep_verification = metadata.get("verification", {})
-        dataprep_explanation = metadata.get("explanation", {})
-        modelling_evaluation = metadata.get("evaluation", {})
-        modelling_analysis = metadata.get("impact_analysis", {})
-        reviewing_analysis = metadata.get("analysis", {})
-        reviewing_consistency = metadata.get("consistency_check", {})
-        reviewing_decision = metadata.get("judgement", {})
 
         PHASES = {
         "dataprep": ["verification", "explanation"],
@@ -73,7 +89,13 @@ class ExplanationAgent(BaseAgent):
         # --------------------
         # Layer 3: fairness assessment
         # --------------------  
-        # 
+        print(f"[{self.name}] Invoke layer 3...fairness assessment")
+
+        df_predictions = self.load_latest_prediction_df()
+        table_age, table_density = group_fairness(df_predictions, 'Prediction', 'ClaimNb', 'data/final')
+
+        #call prompt
+
         # 
         # 
         # 
