@@ -173,10 +173,17 @@ class ReviewingAgent(BaseAgent):
         # --------------------
         print(f"[{self.name}] Invoke layer 5...review decision")
 
+        print(analysis)
+        print(consistency_check)
+        print(impact_analysis_output)
+
         layer5_prompt = PROMPTS["review_layer5"].format(
             analysis=analysis,
             consistency_check=consistency_check,
             impact_analysis_output=impact_analysis_output)
+        
+        print(layer5_prompt)
+
         review_output = self.llm(layer5_prompt)
       #  self.memory.chat_memory.add_user_message(layer5_prompt)
       #  self.memory.chat_memory.add_ai_message(review_output)
