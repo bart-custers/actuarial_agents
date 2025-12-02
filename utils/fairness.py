@@ -12,9 +12,16 @@ def group_fairness(df, pred_col='Prediction', true_col='ClaimNb', storage_dir='s
     df['pred_bin'] = pd.qcut(df[pred_col], q=5, labels=False) + 1
     
     # Create age groups
-    bins = [0, 25, 100]
-    labels = ['young', 'other']
-    df['age_group'] = pd.cut(df['DrivAge'], bins=bins, labels=labels, right=False)
+    p5 = df['DrivAge'].quantile(0.05)
+    p95 = df['DrivAge'].quantile(0.95)
+    
+    age_bins = [-np.inf, p5, p95, np.inf]
+    age_labels = ['young', 'middle', 'old']
+    
+    df['age_group'] = pd.cut(df['DrivAge'], bins=age_bins, labels=age_labels)
+    
+    # Ensure categorical type (for full pivot structure)
+    df['age_group'] = df['age_group'].astype('category')
     
     # Create population density groups
     median_density = df['Density'].median()
@@ -31,11 +38,6 @@ def group_fairness(df, pred_col='Prediction', true_col='ClaimNb', storage_dir='s
     table_age = agg_age.pivot(index='pred_bin', columns='age_group', values='diff')
     table_density = agg_density.pivot(index='pred_bin', columns='density_group', values='diff')
     
-    print("Mean difference by predicted bin and age group:")
-    print(table_age)
-    print("\nMean difference by predicted bin and density group:")
-    print(table_density)
-    
     # Plot
     plt.figure(figsize=(10,5))
     
@@ -51,7 +53,6 @@ def group_fairness(df, pred_col='Prediction', true_col='ClaimNb', storage_dir='s
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     age_plot_path = os.path.join(storage_dir, f'group_fairness_plot_age_{timestamp}.png')
     plt.savefig(age_plot_path)
-    plt.show()
     
     # Density groups
     plt.figure(figsize=(10,5))
@@ -66,7 +67,5 @@ def group_fairness(df, pred_col='Prediction', true_col='ClaimNb', storage_dir='s
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     density_plot_path = os.path.join(storage_dir, f'group_fairness_plot_density_{timestamp}.png')
     plt.savefig(density_plot_path)
-
-    plt.show()
     
     return table_age, table_density
