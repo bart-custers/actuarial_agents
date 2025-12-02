@@ -219,7 +219,6 @@ PROMPTS = {
     Think step-by-step, using the following context: 
     - Summary of your earlier thinking: {layer1_out}
     - The model type used: {model_type_used}
-    - The performance metrics of the trained model: {model_metrics}
     - The model evaluation from the modelling agent: {evaluation}
 
     If previous memory of dataprep, modelling and reviews exist, ensure consistency with them.

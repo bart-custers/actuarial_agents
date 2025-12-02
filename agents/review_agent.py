@@ -104,7 +104,7 @@ class ReviewingAgent(BaseAgent):
                 layer1_out=layer1_out,
                 model_type_used=model_type_used,
               #  model_code=model_code,
-                model_metrics=model_metrics,
+              #  model_metrics=model_metrics,
                 evaluation=evaluation,
                 review_memory=review_memory,
             )
