@@ -113,8 +113,8 @@ class ReviewingAgent(BaseAgent):
             print(f"[{self.name}] WARNING: Unknown phase '{phase}' for review agent.")
 
         analysis = self.llm(layer2_prompt)
-      #  self.memory.chat_memory.add_user_message(layer2_prompt)
-       # self.memory.chat_memory.add_ai_message(analysis)
+        match = re.search(r"ANALYSIS:(.*?)(?:\n[A-Z]+:|\Z)", analysis, flags=re.DOTALL)
+        analysis_text = match.group(1).strip() if match else analysis
 
       #  print (analysis)
 
@@ -147,8 +147,8 @@ class ReviewingAgent(BaseAgent):
             consistency_summary=consistency_summary)
         
         consistency_check = self.llm(layer3_prompt)
-     #   self.memory.chat_memory.add_user_message(layer3_prompt)
-      #  self.memory.chat_memory.add_ai_message(consistency_check)
+        match = re.search(r"ANALYSIS:(.*?)(?:\n[A-Z]+:|\Z)", consistency_check, flags=re.DOTALL)
+        consistency_text = match.group(1).strip() if match else consistency_check
 
       #  print(consistency_check)
 
@@ -166,21 +166,22 @@ class ReviewingAgent(BaseAgent):
             impact_analysis_input=impact_analysis_input)
             impact_analysis_output = self.llm(layer4_prompt)
         
-      #  print(impact_analysis_output)
+        match = re.search(r"ANALYSIS:(.*?)(?:\n[A-Z]+:|\Z)", impact_analysis_output, flags=re.DOTALL)
+        impact_text = match.group(1).strip() if match else impact_analysis_output
 
         # --------------------
         # Layer 5: review decision (LLM)
         # --------------------
         print(f"[{self.name}] Invoke layer 5...review decision")
 
-        print(analysis)
-        print(consistency_check)
-        print(impact_analysis_output)
+        print(analysis_text)
+        print(consistency_text)
+        print(impact_text)
 
         layer5_prompt = PROMPTS["review_layer5"].format(
-            analysis=analysis,
-            consistency_check=consistency_check,
-            impact_analysis_output=impact_analysis_output)
+            analysis=analysis_text,
+            consistency_check=consistency_text,
+            impact_analysis_output=impact_text)
         
         print(layer5_prompt)
 
