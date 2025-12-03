@@ -343,7 +343,9 @@ PROMPTS = {
     - Be concise and neutral.
     - Do not speculate beyond the provided summary.
     - Maintain high precision and avoid hallucination.
-    - Use maximum 500 words.
+    - Use maximum 400 words.
+
+    At the end of your analysis, classify whether there are belief contradictions. The final line of your answer should contain: Decision: NONE or MINOR or SEVERE.
     """,
 
     "fairness_prompt": """
@@ -365,6 +367,8 @@ PROMPTS = {
     - Be concise and neutral.
     - Do not speculate beyond the provided summary.
     - Maintain high precision and avoid hallucination.
-    - Use maximum 500 words.
+    - Use maximum 400 words.
+
+    At the end of your analysis, classify whether there are fairness biases. The final line of your answer should contain: Decision: NONE or MINOR or SEVERE.
     """
 }

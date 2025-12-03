@@ -1,5 +1,6 @@
 import os
 import glob
+import re
 import pandas as pd
 from datetime import datetime
 from utils.general_utils import save_json_safe
@@ -35,7 +36,32 @@ class ExplanationAgent(BaseAgent):
 
         return latest_df_preds 
 
-    
+    def _extract_score(self, llm_text: str) -> str:
+        text = llm_text
+
+        # 1) Prefer explicit "Decision:" on its own line
+        m = re.search(
+            r'^\s*Decision\s*:\s*(NONE|MINOR|MAJOR)\s*$',
+            text,
+            flags=re.IGNORECASE | re.MULTILINE
+        )
+        if m:
+            decision = m.group(1).upper()
+            return {"NONE": "none", "MINOR": "minor", "MAJOR": "major"}[decision]
+
+        # 2) Tolerant match anywhere
+        m2 = re.search(
+            r'Decision\s*:\s*(NONE|MINOR|MAJOR)',
+            text,
+            flags=re.IGNORECASE
+        )
+        if m2:
+            decision = m2.group(1).upper()
+            return {"NONE": "none", "MINOR": "minor", "MAJOR": "major"}[decision]
+
+        # Fallback
+        return "none"
+        
     # ---------------------------
     # Main handler
     # ---------------------------
@@ -79,6 +105,7 @@ class ExplanationAgent(BaseAgent):
         # Now assess the belief
         belief_revision_prompt = PROMPTS["belief_revision_prompt"].format(belief_summary = belief_state)
         belief_assessment = self.llm(belief_revision_prompt)
+        belief_score = self._extract_score(belief_assessment)
 
         print(belief_revision_prompt)
         print(belief_assessment)
@@ -102,14 +129,57 @@ class ExplanationAgent(BaseAgent):
             table_density=table_density
         )
         fairness_assessment = self.llm(fairness_prompt)
+        fairness_score = self._extract_score(fairness_assessment)
 
         print(fairness_assessment)
 
         # --------------------
-        # Layer 4: end report
+        # Layer 4: decision
         # --------------------  
+        print(f"[{self.name}] Invoke layer 4...final assessment")
 
+        final_prompt = PROMPTS["vvv"].format(
+            belief_score=belief_score,
+            tcav_score=tcav_score,
+            fairness_score=fairness_score
+        )
+        final_evaluation = self.llm(final_prompt)
 
+        decision = self._extract_decision(final_evaluation)
+
+        # Routing
+        routing = {
+            "approve": "finalize",
+            "minor_issues": "consult actuary",
+            "request_reclean": "reclean_data",
+            "request_retrain": "retrain_model",
+            "abort": "abort_workflow"
+        }
+        next_action = routing.get(decision, "abort_workflow")
+
+        print(f"[{self.name}] Decision → {decision}, Routing → {next_action}")
+
+        # --------------------
+        # Layer 5: finalize
+        # --------------------  
+        if decision in ["approve", "minor_issues", "abort"]:
+            print(f"[{self.name}] Invoke layer 5...create final explanation report")
+            recommendations = None
+            report_prompt = PROMPTS["vvv"]
+            final_report = self.llm(report_prompt)
+        else:
+            print(f"[{self.name}] Invoke layer 5...create revision recommendations")
+            recommendation_prompt = PROMPTS["vvv"].format(
+                belief_assessment=belief_assessment,
+                tcav_assessment=tcav_assessment,
+                fairness_assessment=fairness_assessment)
+            final_report = None
+            recommendations = self.llm(recommendation_prompt)
+
+        # --------------------
+        # Save metadata
+        # --------------------
+        print(f"[{self.name}] Saving metadata...")
 
         # --- Return message and log output ---
         # Store metadata

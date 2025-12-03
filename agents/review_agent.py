@@ -20,19 +20,55 @@ class ReviewingAgent(BaseAgent):
         self.hub = hub
       #  self.memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True, k=1) # Short-term conversation memory for layered prompting
 
-    def _extract_decision(self, llm_text: str) -> str:
-        text = llm_text.lower()
+    # def _extract_decision(self, llm_text: str) -> str:
+    #     text = llm_text.lower()
 
-        if "approve" in text:
-            return "approve"
-        elif "request_reclean" in text:
-            return "request_reclean"
-        elif "request_retrain" in text:
-            return "request_retrain"    
-        elif "abort" in text:
-            return "abort"
-        else:
-            return "abort"  # Default to abort if unclear
+    #     if "approve" in text:
+    #         return "approve"
+    #     elif "request_reclean" in text:
+    #         return "request_reclean"
+    #     elif "request_retrain" in text:
+    #         return "request_retrain"    
+    #     elif "abort" in text:
+    #         return "abort"
+    #     else:
+    #         return "abort"
+    
+    def _extract_decision(self, llm_text: str) -> str:
+        text = llm_text
+
+        # 1) Prefer explicit "Decision:" on its own line
+        m = re.search(
+            r'^\s*Decision\s*:\s*(APPROVE|REQUEST_RECLEAN|REQUEST_RETRAIN|ABORT)\s*$',
+            text,
+            flags=re.IGNORECASE | re.MULTILINE
+        )
+        if m:
+            decision = m.group(1).upper()
+            return {
+                "APPROVE": "approve",
+                "REQUEST_RECLEAN": "request_reclean",
+                "REQUEST_RETRAIN": "request_retrain",
+                "ABORT": "abort",
+            }[decision]
+
+        # 2) Tolerant match anywhere
+        m2 = re.search(
+            r'Decision\s*:\s*(APPROVE|REQUEST_RECLEAN|REQUEST_RETRAIN|ABORT)',
+            text,
+            flags=re.IGNORECASE
+        )
+        if m2:
+            decision = m2.group(1).upper()
+            return {
+                "APPROVE": "approve",
+                "REQUEST_RECLEAN": "request_reclean",
+                "REQUEST_RETRAIN": "request_retrain",
+                "ABORT": "abort",
+            }[decision]
+
+        # 3) Fallback
+        return "abort"
     
     # ---------------------------
     # Main handler
