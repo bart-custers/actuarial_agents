@@ -61,7 +61,45 @@ class ExplanationAgent(BaseAgent):
 
         # Fallback
         return "none"
-        
+    
+    def _extract_decision(self, llm_text: str) -> str:
+        text = llm_text
+
+        # 1) Prefer explicit "Decision:" on its own line
+        m = re.search(
+            r'^\s*Decision\s*:\s*(APPROVE|MINOR_ISSUES|REQUEST_RECLEAN|REQUEST_RETRAIN|ABORT)\s*$',
+            text,
+            flags=re.IGNORECASE | re.MULTILINE
+        )
+        if m:
+            decision = m.group(1).upper()
+            return {
+                "APPROVE": "approve",
+                "MINOR_ISSUES": "minor_issues",
+                "REQUEST_RECLEAN": "request_reclean",
+                "REQUEST_RETRAIN": "request_retrain",
+                "ABORT": "abort",
+            }[decision]
+
+        # 2) Tolerant match anywhere
+        m2 = re.search(
+            r'Decision\s*:\s*(APPROVE|MINOR_ISSUES|REQUEST_RECLEAN|REQUEST_RETRAIN|ABORT)',
+            text,
+            flags=re.IGNORECASE
+        )
+        if m2:
+            decision = m2.group(1).upper()
+            return {
+                "APPROVE": "approve",
+                "MINOR_ISSUES": "minor_issues",
+                "REQUEST_RECLEAN": "request_reclean",
+                "REQUEST_RETRAIN": "request_retrain",
+                "ABORT": "abort",
+            }[decision]
+
+        # 3) Fallback
+        return "abort"
+
     # ---------------------------
     # Main handler
     # ---------------------------
@@ -69,6 +107,7 @@ class ExplanationAgent(BaseAgent):
         print(f"[{self.name}] Explaining results...")
 
         metadata = message.metadata or {}
+        iteration = metadata.get("explanation_iteration", 0)
 
         # --------------------
         # Layer 1: summarize and assess beliefs
@@ -114,7 +153,8 @@ class ExplanationAgent(BaseAgent):
         # Layer 2: TCAV
         # --------------------   
 
-
+        tcav_assessment = "None so far"
+        tcav_score = "none"
         
         # --------------------
         # Layer 3: fairness assessment
@@ -138,7 +178,10 @@ class ExplanationAgent(BaseAgent):
         # --------------------  
         print(f"[{self.name}] Invoke layer 4...final assessment")
 
-        final_prompt = PROMPTS["vvv"].format(
+        final_prompt = PROMPTS["decision_prompt"].format(
+            belief_assessment=belief_assessment,
+            tcav_assessment=tcav_assessment,
+            fairness_assessment=fairness_assessment,
             belief_score=belief_score,
             tcav_score=tcav_score,
             fairness_score=fairness_score
@@ -164,50 +207,58 @@ class ExplanationAgent(BaseAgent):
         # --------------------  
         if decision in ["approve", "minor_issues", "abort"]:
             print(f"[{self.name}] Invoke layer 5...create final explanation report")
+            report_prompt = PROMPTS["report_prompt"].format(
+                final_evaluation=final_evaluation,
+                decision=decision)
             recommendations = None
-            report_prompt = PROMPTS["vvv"]
             final_report = self.llm(report_prompt)
         else:
             print(f"[{self.name}] Invoke layer 5...create revision recommendations")
-            recommendation_prompt = PROMPTS["vvv"].format(
-                belief_assessment=belief_assessment,
-                tcav_assessment=tcav_assessment,
-                fairness_assessment=fairness_assessment)
-            final_report = None
+            recommendation_prompt = PROMPTS["recommendation_prompt"].format(
+                final_evaluation=final_evaluation,
+                decision=decision)
             recommendations = self.llm(recommendation_prompt)
+            final_report = None
+
+        print(recommendations)
 
         # --------------------
         # Save metadata
         # --------------------
         print(f"[{self.name}] Saving metadata...")
 
-        # --- Return message and log output ---
-        # Store metadata
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+        # Store review report
+        GENERATE THE REPORT HERE!!!
+        THINK ABOUT WHETHER WE WANT A FIRST PROMPT THAT RECALLS AND PLANS!!!
+
+        # Store metadata
         metadata = {
             "timestamp": timestamp,
-            "status": "explained",
-
+            "belief_assessment": belief_assessment,
+            "belief_score": belief_score,
+            "tcav_assessment": tcav_assessment,
+            "tcav_score": tcav_score,
+            "fairness_assessment": fairness_assessment,
+            "fairness_score": fairness_score,
+            "final_evaluation": final_evaluation,
+            "decision": decision,
+            "action": next_action,
+            "recommendations": recommendations,
+            "final_report": final_report,
+            "explanation_iteration": iteration + 1
         }
 
         results_dir = "data/results"
         os.makedirs(results_dir, exist_ok=True)
-        meta_path = os.path.join(results_dir, f"{self.name}_metadata.json")
+        meta_path = os.path.join(results_dir, f"{self.name}_metadata_{timestamp}.json")
         save_json_safe(metadata, meta_path)
         metadata["metadata_file"] = meta_path
 
-        # Store explanation report
-        explanation_file = os.path.join(results_dir, f"explanation_report_{timestamp}.txt")
-        with open(explanation_file, "w") as f:
-            f.write("--- CONSISTENCY ANALYSIS ---\n")
-            f.write("--- BELIEF REVISION ---\n")
-
-        print(f"\n--- Explanation Outputs ---")
-        print(f"Report saved to: {explanation_file}")
-
         # Log to central memory
         if self.hub and self.hub.memory:
-            self.hub.memory.log_event(self.name, "model_explanation", metadata)
+            self.hub.memory.log_event(self.name, "workflow_explanation", metadata)
             past_explanations = self.hub.memory.get("explanation_history", [])
             past_explanations.append(metadata)
             self.hub.memory.update("explanation_history", past_explanations)
@@ -217,7 +268,7 @@ class ExplanationAgent(BaseAgent):
             sender=self.name,
             recipient="hub",
             type="response",
-            content="Generated explanations.",
+            content="Generated explanations. Decision: {decision}.",
             metadata=metadata,
         )
 

@@ -348,6 +348,15 @@ PROMPTS = {
     At the end of your analysis, classify whether there are belief contradictions. The final line of your answer should contain: Decision: NONE or MINOR or SEVERE.
     """,
 
+    "tcav_prompt": """
+    You are an expert in actuarial modelling, assisting in explaining an agent workflow for claim frequency prediction.
+    Your goal is to assess the fairness of the model predictions.
+
+    <PLACEHOLDER>
+
+    At the end of your analysis, classify whether there are fairness biases. The final line of your answer should contain: Decision: NONE or MINOR or SEVERE.
+    """,
+
     "fairness_prompt": """
     You are an expert in actuarial modelling, assisting in explaining an agent workflow for claim frequency prediction.
     Your goal is to assess the fairness of the model predictions.
@@ -370,5 +379,42 @@ PROMPTS = {
     - Use maximum 400 words.
 
     At the end of your analysis, classify whether there are fairness biases. The final line of your answer should contain: Decision: NONE or MINOR or SEVERE.
+    """,
+
+    "decision_prompt": """
+    You are an expert in actuarial modelling, assisting in explaining an agent workflow for claim frequency prediction.
+    
+    Your tasks: Think step-by-step. Based on the analysis: {belief_assessment} and {tcav_assessment} and {fairness_assessment}, choose the correct next action. Think step-by-step.
+
+    Valid actions:
+    - APPROVE → the workflow can be finalized
+    - MINOR_ISSUES → minor issues detected, the workflow can be finalized but an actuary should be consulted
+    - REQUEST_RECLEAN → redo data cleaning
+    - REQUEST_RETRAIN → redo model training
+    - ABORT → stop workflow entirely
+
+    Requested output:
+    - Output a section called: ANALYSIS: <your reasoning here>, be concise and use 400 words maximum in bullet points. Think step-by-step.
+    - The final line of your answer should contain: Decision: APPROVE or MINOR_ISSUES or REQUEST_RECLEAN or REQUEST_RETRAIN or ABORT.
+    """,
+
+    "recommendation_prompt": """
+    You are an expert in actuarial modelling, assisting in explaining an agent workflow for claim frequency prediction.
+    
+    Your tasks: 
+    Based on the final evaluation: {final_evaluation}, you proposed the decision to: {decision}. Provide recommendations to the agents for the next iteration. 
+
+    Requested output:
+    - Output a section called: ANALYIS: <your recommendation here>, be concise and use 400 words maximum in bullet points. Think step-by-step.
+    """,
+
+    "report_prompt": """
+    You are an expert in actuarial modelling, assisting in explaining an agent workflow for claim frequency prediction.
+    
+    Your tasks: 
+    Think step-by-step. Based on the final evaluation: {final_evaluation}, you proposed the decision to: {decision}, create a final explanation report.
+
+    Requested output:
+    - Output a section called: ANALYIS: <your report summary here>, be concise and use 500 words maximum in bullet points. 
     """
 }

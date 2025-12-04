@@ -257,7 +257,7 @@ class ReviewingAgent(BaseAgent):
                                review_output, final_report)
 
         # Store metadata
-        metadata_out = {
+        metadata = {
             "timestamp": timestamp,
             "phase_reviewed": phase,
             "layer1_out": layer1_out,
@@ -276,14 +276,14 @@ class ReviewingAgent(BaseAgent):
         results_dir = "data/results"
         os.makedirs(results_dir, exist_ok=True)
         meta_path = os.path.join(results_dir, f"{self.name}_metadata_{phase}_{timestamp}.json")
-        save_json_safe(metadata_out, meta_path)
-        metadata_out["metadata_file"] = meta_path
+        save_json_safe(metadata, meta_path)
+        metadata["metadata_file"] = meta_path
 
         # Log to central memory
         if self.hub and self.hub.memory:
-            self.hub.memory.log_event(self.name, "review_decision", metadata_out)
+            self.hub.memory.log_event(self.name, "review_decision", metadata)
             history = self.hub.memory.get("review_history", [])
-            history.append(metadata_out)
+            history.append(metadata)
             self.hub.memory.update("review_history", history)
         
         if decision == "approve" and phase == "dataprep":
@@ -300,5 +300,5 @@ class ReviewingAgent(BaseAgent):
             recipient="hub",
             type="response",
             content=f"Review completed. Decision: {decision}.",
-            metadata=metadata_out,
+            metadata=metadata,
         )
