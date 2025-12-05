@@ -255,7 +255,7 @@ class ModellingAgent(BaseAgent):
         print(f"[{self.name}] Invoke layer 4...analyse impact analysis")
 
         layer4_prompt = PROMPTS["modelling_layer4"].format(
-            impact_analysis_tables=json.dumps(make_json_compatible(impact_analysis_tables), indent=2))
+            impact_analysis_tables=(impact_analysis_tables))
 
         impact_analysis = self.llm(layer4_prompt)
         impact_analysis_text = extract_analysis(impact_analysis)
