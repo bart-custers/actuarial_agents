@@ -50,20 +50,20 @@ def generate_review_report_txt(report_path,
             if k == "Feature_Importance":
                 continue  # skip large frames in text
             lines.append(f"- {k}: {v}")
-    lines.append(analysis)
+    lines.append(analysis if analysis is not None else "")
 
     lines.append("\n=== CONSISTENCY CHECK ===")
-    lines.append(consistency_summary)
-    lines.append(consistency_check)
+    lines.append(consistency_summary if consistency_summary is not None else "")
+    lines.append(consistency_check if consistency_check is not None else "")
 
     lines.append("\n=== IMPACT ANALYSIS ===")
-    lines.append(impact_analysis_output)
+    lines.append(impact_analysis_output if impact_analysis_output is not None else "")
 
     lines.append("\n=== REVIEW FEEDBACK ===")
-    lines.append(review_output)
+    lines.append(review_output if review_output is not None else "")
 
     lines.append("\n=== FINAL SUMMARY ===")
-    lines.append(final_report)
+    lines.append(final_report if final_report is not None else "")
 
     # Write to disk
     with open(report_path, "w") as f:
