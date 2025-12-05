@@ -193,12 +193,12 @@ class ExplanationAgent(BaseAgent):
         # Routing
         routing = {
             "approve": "finalize",
-            "minor_issues": "consult actuary",
+            "minor_issues": "consult_actuary",
             "request_reclean": "reclean_data",
             "request_retrain": "retrain_model",
             "abort": "abort_workflow"
         }
-        next_action = routing.get(decision, "abort_workflow")
+        next_action = routing.get(decision, "consult_actuary")
 
         print(f"[{self.name}] Decision → {decision}, Routing → {next_action}")
 
@@ -230,8 +230,8 @@ class ExplanationAgent(BaseAgent):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
         # Store review report
-        GENERATE THE REPORT HERE!!!
-        THINK ABOUT WHETHER WE WANT A FIRST PROMPT THAT RECALLS AND PLANS!!!
+        #GENERATE THE REPORT HERE!!!
+        #THINK ABOUT WHETHER WE WANT A FIRST PROMPT THAT RECALLS AND PLANS!!!
 
         # Store metadata
         metadata = {

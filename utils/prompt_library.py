@@ -4,8 +4,10 @@ PROMPTS = {
     # --------------------
     "dataprep_layer1": """
     You are an expert data preparation agent for actuarial datasets on insurance claims.
-    Dataset summary:
-    {info_dict}
+
+    Context:
+    Dataset summary: {info_dict}
+    Recommendations from previous explanation agent iteration: {recommendations}
 
     Think step-by-step and list:
     1) Briefly restate the assignment in one sentence.
@@ -76,9 +78,8 @@ PROMPTS = {
     You are an expert in actuarial modelling, assisting in claim frequency prediction for insurance claims.
 
     A dataset has been preprocessed and is now ready for model training.
-    Here is the dataset description:
-
-    {dataset_desc}
+    Here is the dataset description: {dataset_desc}
+    Recommendations from previous explanation agent iteration: {recommendations}
 
     Your tasks, thinking step-by-step:
 

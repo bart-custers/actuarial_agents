@@ -165,11 +165,14 @@ class ModellingAgent(BaseAgent):
         # --------------------
         # Layer 1: recall & plan (LLM)
         # --------------------
+        # Optional: get recommendations from the ExplanationAgent
+        recommendations = metadata.get("recommendations", "No recommendations provided.")
+
         if metadata.get("revised_prompt"):
             layer1_prompt = metadata["revised_prompt"]
         else:
             layer1_prompt = PROMPTS["modelling_layer1"].format(
-                dataset_desc=json.dumps(dataset_desc, indent=2)
+                dataset_desc=json.dumps(dataset_desc, indent=2), recommendations=recommendations
             )
         plan = self.llm(layer1_prompt)
 
@@ -252,7 +255,7 @@ class ModellingAgent(BaseAgent):
         print(f"[{self.name}] Invoke layer 4...analyse impact analysis")
 
         layer4_prompt = PROMPTS["modelling_layer4"].format(
-            impact_analysis_tables=impact_analysis_tables)
+            impact_analysis_tables=json.dumps(impact_analysis_tables, indent=2))
 
         impact_analysis = self.llm(layer4_prompt)
         impact_analysis_text = extract_analysis(impact_analysis)
