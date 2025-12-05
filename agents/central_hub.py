@@ -236,7 +236,7 @@ class CentralHub:
                 explanation_action = current_metadata.get("action", "finalize")
                 print(f"[Hub] Explanation decision → {explanation_action.upper()}")
 
-                audit.record_event("explanation", iteration, explanation_action, "explanation",
+                audit.record_event("explanation", iteration, explanation_action,
                                    current_metadata, sent=msg, received=r4)
 
                 # ========= ROUTE BASED ON DECISION =========
