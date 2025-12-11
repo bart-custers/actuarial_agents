@@ -240,7 +240,7 @@ class DataPrepAgent(BaseAgent):
         metadata = {
             "timestamp": timestamp,
             "status": "success",
-            "used_pipeline": chosen_pipeline_name,
+            "used_pipeline": decision,
             "confidence": confidence,
             "plan": summary1,
             "adaptive_suggestion": suggestion,

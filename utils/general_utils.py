@@ -71,14 +71,29 @@ def generate_review_report_txt(report_path,
 
     return report_path
 
+# def extract_analysis(text: str) -> str:
+#     """
+#     Extract the ANALYSIS: section from a larger string.
+#     Returns the extracted text, or the original text if no match is found.
+#     """
+#     match = re.search(
+#         r"ANALYSIS:(.*?)(?:\n[A-Z]+:|\Z)",
+#         text,
+#         flags=re.DOTALL
+#     )
+#     return match.group(1).strip() if match else text
+
 def extract_analysis(text: str) -> str:
     """
     Extract the ANALYSIS: section from a larger string.
     Returns the extracted text, or the original text if no match is found.
     """
+    if '[/INST]' in text:
+        text = text.split('[/INST]', 1)[1]
+
     match = re.search(
         r"ANALYSIS:(.*?)(?:\n[A-Z]+:|\Z)",
         text,
         flags=re.DOTALL
     )
-    return match.group(1).strip() if match else text
+    return match.group(1).strip() if match else text.strip()

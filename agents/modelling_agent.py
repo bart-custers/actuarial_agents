@@ -205,15 +205,20 @@ class ModellingAgent(BaseAgent):
         except Exception as e:
             llm_model_preds_train, llm_model_preds_test, llm_model_obj = None, None, None
             llm_model_success = False
+            pipeline_error = str(e)
             print(f"[{self.name}] LLM model training failed: {e}")
 
         # Fallback pipeline
         if llm_model_success == True:
+            model_used = "llm_adaptive"
+            model_reason = "llm pipeline succeeded"
             model_train_predictions = llm_model_preds_train
             model_test_predictions = llm_model_preds_test
             trainer = llm_model_obj
         else:
             print(f"[{self.name}] Fallback to deterministic model training")
+            model_used = "deterministic_fallback"
+            model_reason = pipeline_error
             trainer = ModelTrainer(model_type=model_choice)
             trainer.train(X_train, y_train, exposure_train)
             model_train_predictions = trainer.predict(X_train)
@@ -244,7 +249,7 @@ class ModellingAgent(BaseAgent):
         layer3_prompt = PROMPTS["modelling_layer3"].format(
             model_type=model_choice,
             act_vs_exp=act_vs_exp,
-            metrics=json.dumps(make_json_compatible(model_metrics), indent=2))
+            metrics=json.dumps(make_json_compatible(dict(list(model_metrics.items())[:5])), indent=2))
 
         evaluation = self.llm(layer3_prompt)
         evaluation_text = extract_analysis(evaluation)
@@ -306,6 +311,8 @@ class ModellingAgent(BaseAgent):
             "plan": plan,
             "model_type_used": model_choice,
             "model_code": model_code,
+            "model_used": model_used,
+            "model_reason": model_reason,
          #   "code_confidence": confidence,
          #   "model_object": llm_model_obj,
             "model_metrics": model_metrics,

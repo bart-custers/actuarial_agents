@@ -87,7 +87,7 @@ PROMPTS = {
     2. Confirm that this modelling task is about regression, with claim_count/exposure as target variable.
     3. Propose the most appropriate modelling approach for this problem:
     - Choose **exactly one**: GLM or GBM.
-    4. Justify your choice in 3–5 bullet points (actuarial + ML reasoning).
+    4. Justify your choice in maximum 5 bullet points (actuarial + ML reasoning).
     5. State any risks or pitfalls you anticipate for this model type.
 
     Respond concisely. The final line of your answer should contain: Decision: USE_GLM or USE_GBM.
@@ -158,7 +158,7 @@ PROMPTS = {
     - Comparison of actual and predicted values: {act_vs_exp}
 
     Think step-by-step and provide a concise summary that includes:
-    1. Summarize the model’s goodness-of-fit and calibration quality. 
+    1. Summarize the model goodness-of-fit and calibration quality. 
     2. Highlight whether the model seems overfitted or underfitted.
     3. Mention which variables appear most influential and why.
     4. Summarize the comparison of actual vs predicted values over features.
@@ -257,10 +257,10 @@ PROMPTS = {
     Based on the analysis: {analysis} and {consistency_check} and {impact_analysis_output}, choose the correct next action. Think step-by-step.
 
     Valid actions:
-    - APPROVE → proceed to next agent
-    - REQUEST_RECLEAN → redo data cleaning
-    - REQUEST_RETRAIN → redo model training
-    - ABORT → stop workflow entirely
+    - APPROVE: proceed to next agent
+    - REQUEST_RECLEAN: redo data cleaning
+    - REQUEST_RETRAIN: redo model training
+    - ABORT: stop workflow entirely
 
     Do not provide explanations. The final line of your answer should contain: Decision: APPROVE or REQUEST_RECLEAN or REQUEST_RETRAIN or ABORT.
     """,
@@ -388,11 +388,11 @@ PROMPTS = {
     Your tasks: Think step-by-step. Based on the analysis: {belief_assessment} and {tcav_assessment} and {fairness_assessment}, choose the correct next action. Think step-by-step.
 
     Valid actions:
-    - APPROVE → the workflow can be finalized
-    - MINOR_ISSUES → minor issues detected, the workflow can be finalized but an actuary should be consulted
-    - REQUEST_RECLEAN → redo data cleaning
-    - REQUEST_RETRAIN → redo model training
-    - ABORT → stop workflow entirely
+    - APPROVE: the workflow can be finalized
+    - MINOR_ISSUES: minor issues detected, the workflow can be finalized but an actuary should be consulted
+    - REQUEST_RECLEAN: redo data cleaning
+    - REQUEST_RETRAIN: redo model training
+    - ABORT: stop workflow entirely
 
     Requested output:
     - Output a section called: ANALYSIS: <your reasoning here>, be concise and use 400 words maximum in bullet points. Think step-by-step.

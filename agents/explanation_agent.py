@@ -115,9 +115,9 @@ class ExplanationAgent(BaseAgent):
         print(f"[{self.name}] Invoke layer 1...belief revision")
 
         PHASES = {
-        "dataprep": ["verification", "explanation"],
-        "modelling": ["evaluation", "impact_analysis"],
-        "reviewing": ["analysis", "consistency_check", "judgement"]
+        "dataprep": "explanation",
+        "modelling": "evaluation",
+        "reviewing": "judgement"
         }
 
         belief_state = {}
