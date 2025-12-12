@@ -150,7 +150,7 @@ class ExplanationAgent(BaseAgent):
         concept_texts = read_lines(os.path.join(concept_dir, "tcav_concepts.txt"))
 
         # Pick best layer
-        best_layer = pick_best_layer(extractor, concept_texts, [16,20,24])
+        best_layer = pick_best_layer(extractor, concept_texts, [16,20,24], batch_size=8)
 
         # Train cav
         ce = extractor.get_hidden_embeddings(concept_texts, best_layer)

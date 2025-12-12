@@ -184,7 +184,6 @@ class TCAVEvaluator:
 
 def pick_best_layer(extractor: LLMLayerExtractor,
                     concept_texts: List[str],
-                    random_texts: List[str],
                     candidate_layers: List[int],
                     batch_size=8) -> int:
     """
@@ -195,8 +194,7 @@ def pick_best_layer(extractor: LLMLayerExtractor,
 
     for layer in candidate_layers:
         ce = extractor.get_hidden_embeddings(concept_texts, layer, batch_size)
-        re = extractor.get_hidden_embeddings(random_texts, layer, batch_size)
-        cav, meta = train_cav(ce, re)
+        cav, meta = train_cav(ce)
         dots = directional_derivatives(ce, cav)
         score = tcav_score(dots)
         if score > best_score:
