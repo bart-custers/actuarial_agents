@@ -21,13 +21,6 @@ try:
 except:
     raise ImportError("scikit-learn required for LinearSVC (pip install scikit-learn)")
 
-try:
-    from transformers import AutoTokenizer, AutoModel
-except:
-    AutoTokenizer = None
-    AutoModel = None
-
-
 # ============================================================
 # 1) LLM HIDDEN-STATE EXTRACTOR
 # ============================================================
@@ -42,17 +35,6 @@ class LLMLayerExtractor:
     def __init__(self, llm_wrapper=None, model_name=None, device=None):
         self.llm_wrapper = llm_wrapper
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
-
-        # Fallback: use HF model if no wrapper is provided
-        self.use_transformers = False
-        if llm_wrapper is None and model_name is not None:
-            if AutoTokenizer is None:
-                raise RuntimeError("transformers is not installed for fallback mode.")
-            self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-            self.model = AutoModel.from_pretrained(model_name, output_hidden_states=True)
-            self.model.to(self.device)
-            self.model.eval()
-            self.use_transformers = True
 
     def _batch(self, items: List[str], batch_size: int):
         for i in range(0, len(items), batch_size):

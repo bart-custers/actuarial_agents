@@ -101,34 +101,34 @@ class ExplanationAgent(BaseAgent):
         "reviewing": "judgement"
         }
 
-        belief_state = {}
+        # belief_state = {}
 
-        for phase, keys in PHASES.items():
-            # Extract metadata items for the phase
-            items = [metadata.get(key, {}) for key in keys]
+        # for phase, keys in PHASES.items():
+        #     # Extract metadata items for the phase
+        #     items = [metadata.get(key, {}) for key in keys]
 
-            # Build the phase prompt using the standard template
-            summary_prompt = PROMPTS["summary_prompt"].format(
-                item1=items[0] if len(items) > 0 else None,
-                item2=items[1] if len(items) > 1 else None,
-                item3=items[2] if len(items) > 2 else None,
-            )
+        #     # Build the phase prompt using the standard template
+        #     summary_prompt = PROMPTS["summary_prompt"].format(
+        #         item1=items[0] if len(items) > 0 else None,
+        #         item2=items[1] if len(items) > 1 else None,
+        #         item3=items[2] if len(items) > 2 else None,
+        #     )
 
-            # Query the LLM
-            belief_state[phase] = self.llm(summary_prompt)
+        #     # Query the LLM
+        #     belief_state[phase] = self.llm(summary_prompt)
         
-        belief_dir = "data/memory"
-        os.makedirs(belief_dir, exist_ok=True)
-        meta_path = os.path.join(belief_dir, f"{self.name}_belief_state.json")
-        save_json_safe(belief_state, meta_path)
+        # belief_dir = "data/memory"
+        # os.makedirs(belief_dir, exist_ok=True)
+        # meta_path = os.path.join(belief_dir, f"{self.name}_belief_state.json")
+        # save_json_safe(belief_state, meta_path)
 
-        # Now assess the belief
-        belief_revision_prompt = PROMPTS["belief_revision_prompt"].format(belief_summary = belief_state)
-        belief_assessment = self.llm(belief_revision_prompt)
-        belief_score = self._extract_score(belief_assessment)
+        # # Now assess the belief
+        # belief_revision_prompt = PROMPTS["belief_revision_prompt"].format(belief_summary = belief_state)
+        # belief_assessment = self.llm(belief_revision_prompt)
+        # belief_score = self._extract_score(belief_assessment)
 
-        print(belief_revision_prompt)
-        print(belief_assessment)
+        # print(belief_revision_prompt)
+        # print(belief_assessment)
 
         # --------------------
         # Layer 2: TCAV
