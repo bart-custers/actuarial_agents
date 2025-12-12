@@ -127,6 +127,9 @@ class ExplanationAgent(BaseAgent):
         # belief_assessment = self.llm(belief_revision_prompt)
         # belief_score = self._extract_score(belief_assessment)
 
+        belief_assessment = "None"
+        belief_score = "none"
+
         # print(belief_revision_prompt)
         # print(belief_assessment)
 
