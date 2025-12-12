@@ -3,7 +3,7 @@ import glob
 import re
 import pandas as pd
 from datetime import datetime
-from utils.general_utils import save_json_safe
+from utils.general_utils import save_json_safe, extract_analysis
 from utils.fairness import group_fairness
 from utils.message_types import Message
 from utils.prompt_library import PROMPTS
@@ -187,6 +187,7 @@ class ExplanationAgent(BaseAgent):
             fairness_score=fairness_score
         )
         final_evaluation = self.llm(final_prompt)
+        final_evaluation_text = extract_analysis(final_evaluation)
 
         decision = self._extract_decision(final_evaluation)
 
@@ -208,7 +209,7 @@ class ExplanationAgent(BaseAgent):
         if decision in ["approve", "minor_issues", "abort"]:
             print(f"[{self.name}] Invoke layer 5...create final explanation report")
             report_prompt = PROMPTS["report_prompt"].format(
-                final_evaluation=final_evaluation,
+                final_evaluation=final_evaluation_text,
                 decision=decision)
             recommendations = None
             final_report = self.llm(report_prompt)

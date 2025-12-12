@@ -18,21 +18,6 @@ class ReviewingAgent(BaseAgent):
         self.llm = shared_llm
         self.system_prompt = system_prompt
         self.hub = hub
-      #  self.memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True, k=1) # Short-term conversation memory for layered prompting
-
-    # def _extract_decision(self, llm_text: str) -> str:
-    #     text = llm_text.lower()
-
-    #     if "approve" in text:
-    #         return "approve"
-    #     elif "request_reclean" in text:
-    #         return "request_reclean"
-    #     elif "request_retrain" in text:
-    #         return "request_retrain"    
-    #     elif "abort" in text:
-    #         return "abort"
-    #     else:
-    #         return "abort"
     
     def _extract_decision(self, llm_text: str) -> str:
         text = llm_text
@@ -204,11 +189,11 @@ class ReviewingAgent(BaseAgent):
             consistency_check=consistency_text,
             impact_analysis_output=impact_text)
         
-        print(layer5_prompt)
+        #print(layer5_prompt)
 
         review_output = self.llm(layer5_prompt)
 
-        print(review_output)
+        #print(review_output)
 
         # Extract decision from LLM output
         decision = self._extract_decision(review_output)
