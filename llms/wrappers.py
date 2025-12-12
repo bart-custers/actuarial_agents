@@ -6,7 +6,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 from langchain_community.llms import HuggingFacePipeline
 import torch
 import numpy as np
-    
+
 drive.mount("/content/drive", force_remount=False)
 model_cache_dir = "/content/drive/MyDrive/Thesis/model_cache"
 os.makedirs(model_cache_dir, exist_ok=True)
@@ -139,6 +139,11 @@ class LLMWrapper:
             cache_dir=model_path,
             use_fast=True,
         )
+
+        # NEW
+        if tokenizer.pad_token is None:
+            tokenizer.add_special_tokens({'pad_token': tokenizer.eos_token})
+
         model = AutoModelForCausalLM.from_pretrained(
             model_name,
             device_map="auto",
@@ -147,6 +152,9 @@ class LLMWrapper:
             token=self.hf_token,
             cache_dir=model_path,
         )
+
+        # NEW
+        model.resize_token_embeddings(len(tokenizer))
 
         self.tokenizer = tokenizer
         self.model = model
