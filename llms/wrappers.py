@@ -4,7 +4,9 @@ from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 from langchain_community.llms import HuggingFacePipeline
-
+import torch
+import numpy as np
+    
 drive.mount("/content/drive", force_remount=False)
 model_cache_dir = "/content/drive/MyDrive/Thesis/model_cache"
 os.makedirs(model_cache_dir, exist_ok=True)
@@ -146,6 +148,10 @@ class LLMWrapper:
             cache_dir=model_path,
         )
 
+        self.tokenizer = tokenizer
+        self.model = model
+        self.model.eval()
+
         text_gen = pipeline(
             "text-generation",
             model=model,
@@ -171,3 +177,38 @@ class LLMWrapper:
                 return str(out)
 
         return llama_chat
+    
+    # ------------------------------------------------------------
+    # Hidden state extraction for TCAV
+    # ------------------------------------------------------------
+    def get_hidden_states_for_texts(self, texts, layer=20):
+        """
+        Returns: numpy array (N, hidden_dim)
+        Uses model output_hidden_states=True to retrieve internal activations.
+        """
+        if not hasattr(self, "model") or not hasattr(self, "tokenizer"):
+            raise RuntimeError("LLMWrapper has no model/tokenizer loaded (did you choose backend=llama7b?)")
+
+        hidden_vectors = []
+        device = next(self.model.parameters()).device
+
+        with torch.no_grad():
+            for text in texts:
+                toks = self.tokenizer(
+                    text,
+                    return_tensors="pt",
+                    truncation=True,
+                    padding=True
+                ).to(device)
+
+                out = self.model(
+                    **toks,
+                    output_hidden_states=True
+                )
+                # hidden_states: tuple of length num_layers+1
+                # each element: (1, seq_len, hidden_dim)
+                hs = out.hidden_states[layer]      # layer
+                sent_emb = hs.mean(dim=1).squeeze(0)   # mean-pool tokens
+                hidden_vectors.append(sent_emb.cpu().numpy())
+
+        return np.array(hidden_vectors)

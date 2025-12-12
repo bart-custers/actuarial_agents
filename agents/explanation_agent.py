@@ -4,7 +4,7 @@ import re
 import pandas as pd
 from datetime import datetime
 from utils.general_utils import save_json_safe, extract_analysis
-from utils.fairness import group_fairness
+from utils.fairness_module import group_fairness
 from utils.message_types import Message
 from utils.prompt_library import PROMPTS
 from agents.base_agent import BaseAgent
@@ -80,44 +80,6 @@ class ExplanationAgent(BaseAgent):
             }[decision]
 
         return "abort"
-    
-    # def _extract_decision(self, llm_text: str) -> str:
-    #     text = llm_text
-
-    #     # 1) Prefer explicit "Decision:" on its own line
-    #     m = re.search(
-    #         r'^\s*Decision\s*:\s*(APPROVE|MINOR_ISSUES|REQUEST_RECLEAN|REQUEST_RETRAIN|ABORT)\s*$',
-    #         text,
-    #         flags=re.IGNORECASE | re.MULTILINE
-    #     )
-    #     if m:
-    #         decision = m.group(1).upper()
-    #         return {
-    #             "APPROVE": "approve",
-    #             "MINOR_ISSUES": "minor_issues",
-    #             "REQUEST_RECLEAN": "request_reclean",
-    #             "REQUEST_RETRAIN": "request_retrain",
-    #             "ABORT": "abort",
-    #         }[decision]
-
-    #     # 2) Tolerant match anywhere
-    #     m2 = re.search(
-    #         r'Decision\s*:\s*(APPROVE|MINOR_ISSUES|REQUEST_RECLEAN|REQUEST_RETRAIN|ABORT)',
-    #         text,
-    #         flags=re.IGNORECASE
-    #     )
-    #     if m2:
-    #         decision = m2.group(1).upper()
-    #         return {
-    #             "APPROVE": "approve",
-    #             "MINOR_ISSUES": "minor_issues",
-    #             "REQUEST_RECLEAN": "request_reclean",
-    #             "REQUEST_RETRAIN": "request_retrain",
-    #             "ABORT": "abort",
-    #         }[decision]
-
-    #     # 3) Fallback
-    #     return "abort"
 
     # ---------------------------
     # Main handler
@@ -171,6 +133,37 @@ class ExplanationAgent(BaseAgent):
         # --------------------
         # Layer 2: TCAV
         # --------------------   
+
+        # ========== TEST TEST TEST ==========
+        from utils.tcav_module import (
+            LLMLayerExtractor, 
+            train_cav, pick_best_layer, TCAVEvaluator, read_lines
+        )
+
+        extractor = LLMLayerExtractor(llm_wrapper=self.hub.shared_llm)
+
+        # Load concepts
+        concept_texts = read_lines("utils.tcav_concepts.txt")
+
+        # Pick best layer
+        best_layer = pick_best_layer(extractor, concept_texts, [16,20,24])
+
+        # Train cav
+        ce = extractor.get_hidden_embeddings(concept_texts, best_layer)
+        cav, meta = train_cav(ce)
+
+        # Gather agent outputs
+        agent_texts = {
+            "modelling": [metadata.get("evaluation","")],
+            "reviewing": [metadata.get("analysis","")],
+            "dataprep": [metadata.get("verification","")]
+        }
+
+        # TCAV evaluation
+        evaluator = TCAVEvaluator(extractor)
+        tcav_results = evaluator.score_agents(agent_texts, cav, best_layer)
+
+        # ========== TEST TEST TEST ==========
 
         tcav_assessment = "None so far"
         tcav_score = "none"
