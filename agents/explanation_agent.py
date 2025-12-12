@@ -41,23 +41,23 @@ class ExplanationAgent(BaseAgent):
 
         # 1) Prefer explicit "Decision:" on its own line
         m = re.search(
-            r'^\s*Decision\s*:\s*(NONE|MINOR|MAJOR)\s*$',
+            r'^\s*Decision\s*:\s*(NO_ISSUES|MINOR_ISSUES|SEVERE_ISSUES)\s*$',
             text,
             flags=re.IGNORECASE | re.MULTILINE
         )
         if m:
             decision = m.group(1).upper()
-            return {"NONE": "none", "MINOR": "minor", "MAJOR": "major"}[decision]
+            return {"NO_ISSUES": "no issues", "MINOR_ISSUES": "minor issues", "SEVERE_ISSUES": "severe issues"}[decision]
 
         # 2) Tolerant match anywhere
         m2 = re.search(
-            r'Decision\s*:\s*(NONE|MINOR|MAJOR)',
+            r'Decision\s*:\s*(NO_ISSUES|MINOR_ISSUES|SEVERE_ISSUES)',
             text,
             flags=re.IGNORECASE
         )
         if m2:
             decision = m2.group(1).upper()
-            return {"NONE": "none", "MINOR": "minor", "MAJOR": "major"}[decision]
+            return {"NO_ISSUES": "no issues", "MINOR_ISSUES": "minor issues", "SEVERE_ISSUES": "severe issues"}[decision]
 
         # Fallback
         return "none"
