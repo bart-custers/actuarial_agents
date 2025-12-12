@@ -228,9 +228,6 @@ PROMPTS = {
     Historical memory summary:
     {review_memory}
 
-    Your task:
-    - Evaluate plausibility.
-    - Identify model training issues.
     - Output a section called: ANALYSIS: <your reasoning here>, be concise and use 200 words maximum in bullet points.
     """,
 
@@ -346,7 +343,7 @@ PROMPTS = {
     - Maintain high precision and avoid hallucination.
     - Use maximum 400 words.
 
-    At the end of your analysis, classify whether there are belief contradictions. The final line of your answer should contain: Decision: NONE or MINOR or SEVERE.
+    At the end of your analysis, classify whether there are belief contradictions. The final line of your answer should contain: Decision: NO_ISSUES or MINOR_ISSUES or SEVERE_ISSUES.
     """,
 
     "tcav_prompt": """
@@ -355,7 +352,7 @@ PROMPTS = {
 
     <PLACEHOLDER>
 
-    At the end of your analysis, classify whether there are fairness biases. The final line of your answer should contain: Decision: NONE or MINOR or SEVERE.
+    At the end of your analysis, classify whether there are fairness biases. The final line of your answer should contain: Decision: NO_ISSUES or MINOR_ISSUES or SEVERE_ISSUES.
     """,
 
     "fairness_prompt": """
@@ -379,17 +376,17 @@ PROMPTS = {
     - Maintain high precision and avoid hallucination.
     - Use maximum 400 words.
 
-    At the end of your analysis, classify whether there are fairness biases. The final line of your answer should contain: Decision: NONE or MINOR or SEVERE.
+    At the end of your analysis, classify whether there are fairness biases. The final line of your answer should contain: Decision: NO_ISSUES or MINOR_ISSUES or SEVERE_ISSUES.
     """,
 
     "decision_prompt": """
     You are an expert in actuarial modelling, assisting in explaining an agent workflow for claim frequency prediction.
     
-    Your tasks: Think step-by-step. Based on the analysis: {belief_assessment} and {tcav_assessment} and {fairness_assessment}, choose the correct next action. Think step-by-step.
+    Your tasks: Think step-by-step. Based on the analysis: {belief_assessment} and {tcav_assessment} and {fairness_assessment}, choose the correct next action.
 
     Valid actions:
     - APPROVE: the workflow can be finalized
-    - MINOR_ISSUES: minor issues detected, the workflow can be finalized but an actuary should be consulted
+    - MINOR_ISSUES: some issues detected, the workflow can be finalized but an actuary should be consulted
     - REQUEST_RECLEAN: redo data cleaning
     - REQUEST_RETRAIN: redo model training
     - ABORT: stop workflow entirely

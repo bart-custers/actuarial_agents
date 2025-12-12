@@ -63,32 +63,14 @@ class ExplanationAgent(BaseAgent):
         return "none"
     
     def _extract_decision(self, llm_text: str) -> str:
-        text = llm_text
-
-        # 1) Prefer explicit "Decision:" on its own line
-        m = re.search(
-            r'^\s*Decision\s*:\s*(APPROVE|MINOR_ISSUES|REQUEST_RECLEAN|REQUEST_RETRAIN|ABORT)\s*$',
-            text,
-            flags=re.IGNORECASE | re.MULTILINE
-        )
-        if m:
-            decision = m.group(1).upper()
-            return {
-                "APPROVE": "approve",
-                "MINOR_ISSUES": "minor_issues",
-                "REQUEST_RECLEAN": "request_reclean",
-                "REQUEST_RETRAIN": "request_retrain",
-                "ABORT": "abort",
-            }[decision]
-
-        # 2) Tolerant match anywhere
-        m2 = re.search(
+        decisions = re.findall(
             r'Decision\s*:\s*(APPROVE|MINOR_ISSUES|REQUEST_RECLEAN|REQUEST_RETRAIN|ABORT)',
-            text,
+            llm_text,
             flags=re.IGNORECASE
         )
-        if m2:
-            decision = m2.group(1).upper()
+
+        if decisions:
+            decision = decisions[-1].upper()  # <--- use last one
             return {
                 "APPROVE": "approve",
                 "MINOR_ISSUES": "minor_issues",
@@ -97,8 +79,45 @@ class ExplanationAgent(BaseAgent):
                 "ABORT": "abort",
             }[decision]
 
-        # 3) Fallback
         return "abort"
+    
+    # def _extract_decision(self, llm_text: str) -> str:
+    #     text = llm_text
+
+    #     # 1) Prefer explicit "Decision:" on its own line
+    #     m = re.search(
+    #         r'^\s*Decision\s*:\s*(APPROVE|MINOR_ISSUES|REQUEST_RECLEAN|REQUEST_RETRAIN|ABORT)\s*$',
+    #         text,
+    #         flags=re.IGNORECASE | re.MULTILINE
+    #     )
+    #     if m:
+    #         decision = m.group(1).upper()
+    #         return {
+    #             "APPROVE": "approve",
+    #             "MINOR_ISSUES": "minor_issues",
+    #             "REQUEST_RECLEAN": "request_reclean",
+    #             "REQUEST_RETRAIN": "request_retrain",
+    #             "ABORT": "abort",
+    #         }[decision]
+
+    #     # 2) Tolerant match anywhere
+    #     m2 = re.search(
+    #         r'Decision\s*:\s*(APPROVE|MINOR_ISSUES|REQUEST_RECLEAN|REQUEST_RETRAIN|ABORT)',
+    #         text,
+    #         flags=re.IGNORECASE
+    #     )
+    #     if m2:
+    #         decision = m2.group(1).upper()
+    #         return {
+    #             "APPROVE": "approve",
+    #             "MINOR_ISSUES": "minor_issues",
+    #             "REQUEST_RECLEAN": "request_reclean",
+    #             "REQUEST_RETRAIN": "request_retrain",
+    #             "ABORT": "abort",
+    #         }[decision]
+
+    #     # 3) Fallback
+    #     return "abort"
 
     # ---------------------------
     # Main handler
