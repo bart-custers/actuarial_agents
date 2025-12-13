@@ -169,6 +169,31 @@ class ExplanationAgent(BaseAgent):
         evaluator = TCAVEvaluator(extractor)
         tcav_results = evaluator.score_agents(agent_texts, cav, best_layer)
 
+        from utils.tcav_module import (
+            plot_tcav_bars,
+            plot_tcav_heatmap,
+            plot_tcav_distribution
+        )
+
+        plot_dir = "data/evaluation/tcav_plots"
+
+        tcav_plot_paths = []
+
+        # Bar plots per concept
+        for concept in tcav_results:
+            path = plot_tcav_bars(tcav_results, plot_dir, concept)
+            tcav_plot_paths.append(path)
+
+        # Heatmap across all concepts & agents
+        heatmap_path = plot_tcav_heatmap(tcav_results, plot_dir)
+        tcav_plot_paths.append(heatmap_path)
+
+        # Optional: deep-dive distributions
+        for concept in tcav_results:
+            for agent in tcav_results[concept]["results"]:
+                path = plot_tcav_distribution(tcav_results, concept, agent, plot_dir)
+                tcav_plot_paths.append(path)
+
         # ========== TEST TEST TEST ==========
 
         tcav_assessment = "None so far"

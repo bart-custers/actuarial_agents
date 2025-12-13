@@ -15,6 +15,8 @@ import json
 from typing import List, Dict, Tuple
 import numpy as np
 import torch
+import matplotlib.pyplot as plt
+import pandas as pd
 
 try:
     from sklearn.svm import LinearSVC
@@ -83,7 +85,7 @@ class LLMLayerExtractor:
 # ============================================================
 
 def train_cav(concept_embs: np.ndarray, random_embs: np.ndarray,
-              C=0.01, max_iter=20000) -> Tuple[np.ndarray, dict]:
+              C=0.1, max_iter=20000) -> Tuple[np.ndarray, dict]:
     """
     Train linear SVM to separate concept vs random embeddings.
     Returns CAV vector and metadata.
@@ -220,3 +222,96 @@ def save_json(path: str, obj):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w") as f:
         json.dump(obj, f, indent=2)
+
+# ============================================================
+# 7) TCAV VISUALIZATION
+# ============================================================
+
+def plot_tcav_bars(tcav_results: Dict,
+                   save_dir: str,
+                   concept_name: str):
+    """
+    Bar plot: TCAV score per agent for a single concept.
+    """
+    os.makedirs(save_dir, exist_ok=True)
+
+    agents = list(tcav_results[concept_name]["results"].keys())
+    scores = [
+        tcav_results[concept_name]["results"][agent]["score"]
+        for agent in agents
+    ]
+
+    plt.figure(figsize=(6, 4))
+    plt.bar(agents, scores)
+    plt.ylim(0, 1)
+    plt.ylabel("TCAV score")
+    plt.title(f"TCAV – Concept: {concept_name}")
+    plt.tight_layout()
+
+    path = os.path.join(save_dir, f"tcav_bar_{concept_name}.png")
+    plt.savefig(path)
+    plt.close()
+
+    return path
+
+def plot_tcav_heatmap(tcav_results: Dict, save_dir: str):
+    """
+    Heatmap: concepts × agents TCAV scores.
+    """
+    os.makedirs(save_dir, exist_ok=True)
+
+    rows = []
+    for concept, data in tcav_results.items():
+        for agent, res in data["results"].items():
+            rows.append({
+                "concept": concept,
+                "agent": agent,
+                "score": res["score"]
+            })
+
+    df = pd.DataFrame(rows)
+    pivot = df.pivot(index="concept", columns="agent", values="score")
+
+    plt.figure(figsize=(8, max(3, len(pivot) * 0.6)))
+    plt.imshow(pivot.values, vmin=0, vmax=1)
+    plt.colorbar(label="TCAV score")
+    plt.xticks(range(len(pivot.columns)), pivot.columns, rotation=30)
+    plt.yticks(range(len(pivot.index)), pivot.index)
+    plt.title("TCAV Concept Influence Across Agents")
+
+    for i in range(pivot.shape[0]):
+        for j in range(pivot.shape[1]):
+            plt.text(j, i, f"{pivot.iloc[i, j]:.2f}",
+                     ha="center", va="center", color="white")
+
+    plt.tight_layout()
+    path = os.path.join(save_dir, "tcav_heatmap.png")
+    plt.savefig(path)
+    plt.close()
+
+    return path
+
+def plot_tcav_distribution(tcav_results: Dict,
+                           concept: str,
+                           agent: str,
+                           save_dir: str):
+    """
+    Histogram of directional derivatives for one concept-agent pair.
+    """
+    os.makedirs(save_dir, exist_ok=True)
+
+    dots = tcav_results[concept]["results"][agent]["dots"]
+
+    plt.figure(figsize=(6, 4))
+    plt.hist(dots, bins=30)
+    plt.axvline(0, color="red", linestyle="--")
+    plt.xlabel("Directional derivative")
+    plt.ylabel("Frequency")
+    plt.title(f"TCAV distribution – {concept} / {agent}")
+    plt.tight_layout()
+
+    path = os.path.join(save_dir, f"tcav_dist_{concept}_{agent}.png")
+    plt.savefig(path)
+    plt.close()
+
+    return path
