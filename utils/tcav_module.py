@@ -43,38 +43,87 @@ class LLMLayerExtractor:
         for i in range(0, len(items), batch_size):
             yield items[i:i+batch_size]
 
+    # def get_hidden_embeddings(self, texts: List[str], layer: int, batch_size: int = 8) -> np.ndarray:
+    #     """
+    #     Returns (N, hidden_dim) array of sentence-level embeddings from a chosen layer.
+    #     """
+    #     # Case 1: preferred method – user’s LLMWrapper
+    #     if self.llm_wrapper is not None:
+
+    #         # If the wrapper exposes hidden state extraction:
+    #         if hasattr(self.llm_wrapper, "get_hidden_states_for_texts"):
+    #             out = []
+    #             for batch in self._batch(texts, batch_size):
+    #                 arr = self.llm_wrapper.get_hidden_states_for_texts(batch, layer)
+    #                 out.append(arr)
+    #             return np.vstack(out)
+
+    #         # If it exposes per-layer embeddings
+    #         if hasattr(self.llm_wrapper, "embed_texts_by_layer"):
+    #             out = []
+    #             for batch in self._batch(texts, batch_size):
+    #                 arr = self.llm_wrapper.embed_texts_by_layer(batch, layer)
+    #                 out.append(np.asarray(arr))
+    #             return np.vstack(out)
+
+    #     # Case 2: fallback — raw transformer model
+    #     if self.use_transformers:
+    #         vecs = []
+    #         with torch.no_grad():
+    #             for batch in self._batch(texts, batch_size):
+    #                 toks = self.tokenizer(batch, return_tensors="pt", padding=True, truncation=True).to(self.device)
+    #                 out = self.model(**toks)
+    #                 hidden = out.hidden_states[layer]  # (batch, seq_len, dim)
+    #                 sent = hidden.mean(dim=1).cpu().numpy()
+    #                 vecs.append(sent)
+    #         return np.vstack(vecs)
+
+    #     raise RuntimeError("No hidden state extraction available.")
+
     def get_hidden_embeddings(self, texts: List[str], layer: int, batch_size: int = 8) -> np.ndarray:
         """
-        Returns (N, hidden_dim) array of sentence-level embeddings from a chosen layer.
+        Returns (N, hidden_dim) array of embeddings, one per text.
+        Works for wrappers that collapse batches into a single vector.
         """
-        # Case 1: preferred method – user’s LLMWrapper
+        out = []
+
+        # Use wrapper if available
         if self.llm_wrapper is not None:
 
-            # If the wrapper exposes hidden state extraction:
+            # Preferred: wrapper supports batch extraction per text
             if hasattr(self.llm_wrapper, "get_hidden_states_for_texts"):
-                out = []
                 for batch in self._batch(texts, batch_size):
-                    arr = self.llm_wrapper.get_hidden_states_for_texts(batch, layer)
+                    emb_batch = self.llm_wrapper.get_hidden_states_for_texts(batch, layer)
+
+                    # If wrapper collapses batch into single vector
+                    if emb_batch.shape[0] == 1 and len(batch) > 1:
+                        print("[Warning] Wrapper returned single embedding for batch. Expanding per text...")
+                        emb_batch = np.repeat(emb_batch, len(batch), axis=0)
+
+                    out.append(emb_batch)
+                return np.vstack(out)
+
+            # Alternative wrapper method
+            if hasattr(self.llm_wrapper, "embed_texts_by_layer"):
+                for batch in self._batch(texts, batch_size):
+                    arr = np.asarray(self.llm_wrapper.embed_texts_by_layer(batch, layer))
+
+                    if arr.shape[0] == 1 and len(batch) > 1:
+                        print("[Warning] Wrapper returned single embedding for batch. Expanding per text...")
+                        arr = np.repeat(arr, len(batch), axis=0)
+
                     out.append(arr)
                 return np.vstack(out)
 
-            # If it exposes per-layer embeddings
-            if hasattr(self.llm_wrapper, "embed_texts_by_layer"):
-                out = []
-                for batch in self._batch(texts, batch_size):
-                    arr = self.llm_wrapper.embed_texts_by_layer(batch, layer)
-                    out.append(np.asarray(arr))
-                return np.vstack(out)
-
-        # Case 2: fallback — raw transformer model
-        if self.use_transformers:
+        # Fallback: HuggingFace transformer (already batch-safe)
+        if hasattr(self, "use_transformers") and self.use_transformers:
             vecs = []
             with torch.no_grad():
                 for batch in self._batch(texts, batch_size):
                     toks = self.tokenizer(batch, return_tensors="pt", padding=True, truncation=True).to(self.device)
-                    out = self.model(**toks)
-                    hidden = out.hidden_states[layer]  # (batch, seq_len, dim)
-                    sent = hidden.mean(dim=1).cpu().numpy()
+                    out_model = self.model(**toks)
+                    hidden = out_model.hidden_states[layer]  # (batch, seq_len, dim)
+                    sent = hidden.mean(dim=1).cpu().numpy()  # sentence-level
                     vecs.append(sent)
             return np.vstack(vecs)
 
