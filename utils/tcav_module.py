@@ -162,6 +162,8 @@ def debug_tcav(dots, label):
         print(f"  mean={np.mean(dots):.4f}")
         print(f"  max={np.max(dots):.4f}")
         print(f"  % positive={(dots > 0).mean():.3f}")
+        print(dots.shape)
+        print(dots)
 
 class TCAVEvaluator:
     """
@@ -173,6 +175,9 @@ class TCAVEvaluator:
 
     def score_texts(self, texts: List[str], cav: np.ndarray, layer: int, batch_size=8):
         embs = self.extractor.get_hidden_embeddings(texts, layer, batch_size)
+        print("Embeddings shape:", embs.shape)
+        print("Embedding variance per dim:", np.var(embs, axis=0))
+        print("Mean embedding per dim:", np.mean(embs, axis=0))
         dots = directional_derivatives(embs, cav)
         debug_tcav(dots, f"layer={layer}")
         return {
