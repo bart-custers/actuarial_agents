@@ -250,7 +250,7 @@ def plot_tcav_bars(tcav_results: Dict,
 
     path = os.path.join(save_dir, f"tcav_bar_{concept_name}.png")
     plt.savefig(path)
-    plt.close()
+    plt.show()
 
     return path
 
@@ -287,7 +287,7 @@ def plot_tcav_heatmap(tcav_results: Dict, save_dir: str):
     plt.tight_layout()
     path = os.path.join(save_dir, "tcav_heatmap.png")
     plt.savefig(path)
-    plt.close()
+    plt.show()
 
     return path
 
@@ -312,6 +312,6 @@ def plot_tcav_distribution(tcav_results: Dict,
 
     path = os.path.join(save_dir, f"tcav_dist_{concept}_{agent}.png")
     plt.savefig(path)
-    plt.close()
+    plt.show()
 
     return path
