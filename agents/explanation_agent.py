@@ -167,7 +167,18 @@ class ExplanationAgent(BaseAgent):
 
         # TCAV evaluation
         evaluator = TCAVEvaluator(extractor)
-        tcav_results = evaluator.score_agents(agent_texts, cav, best_layer)
+        raw_tcav_scores = evaluator.score_agents(
+            agent_texts,
+            cav,
+            best_layer
+        )
+
+        tcav_results = {
+            "actuarial_reasoning": {
+                "layer": best_layer,
+                "results": raw_tcav_scores
+            }
+        }
 
         from utils.tcav_module import (
             plot_tcav_bars,
