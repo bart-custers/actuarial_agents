@@ -85,7 +85,7 @@ class LLMLayerExtractor:
 # ============================================================
 
 def train_cav(concept_embs: np.ndarray, random_embs: np.ndarray,
-              C=0.1, max_iter=20000) -> Tuple[np.ndarray, dict]:
+              C=0.1, max_iter=50000) -> Tuple[np.ndarray, dict]:
     """
     Train linear SVM to separate concept vs random embeddings.
     Returns CAV vector and metadata.
@@ -230,16 +230,18 @@ def save_json(path: str, obj):
 def plot_tcav_bars(tcav_results: Dict,
                    save_dir: str,
                    concept_name: str):
-    """
-    Bar plot: TCAV score per agent for a single concept.
-    """
     os.makedirs(save_dir, exist_ok=True)
 
-    agents = list(tcav_results[concept_name]["results"].keys())
-    scores = [
-        tcav_results[concept_name]["results"][agent]["score"]
-        for agent in agents
-    ]
+    concept_block = tcav_results[concept_name]
+
+    # Support both schemas defensively
+    if "results" in concept_block:
+        scores_block = concept_block["results"]
+    else:
+        scores_block = concept_block.get("scores", concept_block)
+
+    agents = list(scores_block.keys())
+    scores = [scores_block[a]["score"] for a in agents]
 
     plt.figure(figsize=(6, 4))
     plt.bar(agents, scores)
@@ -250,19 +252,17 @@ def plot_tcav_bars(tcav_results: Dict,
 
     path = os.path.join(save_dir, f"tcav_bar_{concept_name}.png")
     plt.savefig(path)
-    plt.show()
+    plt.close()
 
     return path
 
 def plot_tcav_heatmap(tcav_results: Dict, save_dir: str):
-    """
-    Heatmap: concepts × agents TCAV scores.
-    """
     os.makedirs(save_dir, exist_ok=True)
 
     rows = []
-    for concept, data in tcav_results.items():
-        for agent, res in data["results"].items():
+    for concept, block in tcav_results.items():
+        scores_block = block.get("scores", block.get("results", block))
+        for agent, res in scores_block.items():
             rows.append({
                 "concept": concept,
                 "agent": agent,
@@ -287,7 +287,7 @@ def plot_tcav_heatmap(tcav_results: Dict, save_dir: str):
     plt.tight_layout()
     path = os.path.join(save_dir, "tcav_heatmap.png")
     plt.savefig(path)
-    plt.show()
+    plt.close()
 
     return path
 
@@ -295,12 +295,13 @@ def plot_tcav_distribution(tcav_results: Dict,
                            concept: str,
                            agent: str,
                            save_dir: str):
-    """
-    Histogram of directional derivatives for one concept-agent pair.
-    """
+
     os.makedirs(save_dir, exist_ok=True)
 
-    dots = tcav_results[concept]["results"][agent]["dots"]
+    block = tcav_results[concept]
+    scores_block = block.get("scores", block.get("results", block))
+
+    dots = scores_block[agent]["dots"]
 
     plt.figure(figsize=(6, 4))
     plt.hist(dots, bins=30)
@@ -312,6 +313,6 @@ def plot_tcav_distribution(tcav_results: Dict,
 
     path = os.path.join(save_dir, f"tcav_dist_{concept}_{agent}.png")
     plt.savefig(path)
-    plt.show()
+    plt.close()
 
     return path
