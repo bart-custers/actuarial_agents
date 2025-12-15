@@ -143,7 +143,6 @@ class ExplanationAgent(BaseAgent):
             LLMLayerExtractor,
             train_cav,
             TCAVEvaluator,
-            flatten_agent_outputs,
             plot_tcav_distribution_layers,
             plot_tcav_scores_layers
         )
@@ -195,9 +194,6 @@ class ExplanationAgent(BaseAgent):
             tcav_results["all_agents"], plot_dir, "actuarial_reasoning"
         )
         tcav_plot_paths.append(score_path)
-        
-
-        
 
         # ========== TEST TEST TEST ==========
 
