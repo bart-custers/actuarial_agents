@@ -139,8 +139,13 @@ class ExplanationAgent(BaseAgent):
 
         # ========== TEST TEST TEST ==========
         from utils.tcav_module import (
-            LLMLayerExtractor, 
-            train_cav, pick_best_layer, TCAVEvaluator, read_lines
+            read_lines,
+            LLMLayerExtractor,
+            train_cav,
+            TCAVEvaluator,
+            flatten_agent_outputs,
+            plot_tcav_distribution_layers,
+            plot_tcav_scores_layers
         )
 
         extractor = LLMLayerExtractor(llm_wrapper=self.hub.shared_llm)
@@ -152,34 +157,13 @@ class ExplanationAgent(BaseAgent):
         concept_texts = read_lines(os.path.join(concept_dir, "tcav_concepts.txt"))
         random_texts  = read_lines(os.path.join(concept_dir, "random_concepts.txt"))
 
-        # concept_texts = ["Risk is a function of exposure and frequency.",
-        # "Use GLM to estimate the claim frequency.",
-        # "Check calibration and predictive deviance.",
-        # "We evaluate model fit with AIC and residuals.",
-        # "Use Poisson or negative binomial for counts.",
-        # "Include exposure offset for policy period.",
-        # "Feature interactions should be interpretable.",
-        # "Check stability across policy years.",
-        # "Holdout and cross-validation for validation.",
-        # "Provide confidence intervals for predicted rates."]
-
-        # random_texts = ["The weather was clear on the date of the accident.",
-        # "Customer has used support chat last week.",
-        # "The car color is red.",
-        # "Purchased travel insurance last year.",
-        # "A local festival occurred in July.",
-        # "Policyholder bought a new helmet.",
-        # "Customer contacted claims department yesterday.",
-        # "Random unrelated text about driving conditions.",
-        # "This sentence is not related to risk factors.",
-        # "A sentence about breakfast and coffee."]
-
-        # Pick best layer
-        best_layer = pick_best_layer(extractor, concept_texts, random_texts, [16,20,24])
+        # Define layers
+        layers_to_test = [16, 20, 24]
+        cav_layer = 20
 
         # Train cav
-        ce = extractor.get_hidden_embeddings(concept_texts, best_layer)
-        re = extractor.get_hidden_embeddings(random_texts, best_layer)
+        ce = extractor.get_hidden_embeddings(concept_texts, cav_layer)
+        re = extractor.get_hidden_embeddings(random_texts, cav_layer)
         cav, meta = train_cav(ce, re)
 
         # Gather agent outputs
@@ -191,45 +175,29 @@ class ExplanationAgent(BaseAgent):
 
         # TCAV evaluation
         evaluator = TCAVEvaluator(extractor)
-        tcav_results = {
-            "actuarial_reasoning": {
-                "scores": evaluator.score_pooled_agents(
-                            agent_outputs=agent_texts,
-                            cav=cav,
-                            layer=best_layer
-                        )}}
-
-        from utils.tcav_module import (
-            plot_tcav_bars,
-            plot_tcav_heatmap,
-            plot_tcav_distribution
+        tcav_results = evaluator.tcav_across_layers(
+            agent_outputs=agent_texts,
+            cav=cav,
+            layers=layers_to_test
         )
 
         plot_dir = "data/evaluation/tcav_plots"
-
         tcav_plot_paths = []
 
-        # Bar plots per concept
-        for concept in tcav_results:
-            path = plot_tcav_bars(tcav_results, plot_dir, concept)
-            tcav_plot_paths.append(path)
+        # Distribution plots per layer
+        dist_paths = plot_tcav_distribution_layers(
+            tcav_results["all_agents"], plot_dir, "actuarial_reasoning"
+        )
+        tcav_plot_paths.extend(dist_paths)
 
-        # Heatmap across all concepts & agents
-        heatmap_path = plot_tcav_heatmap(tcav_results, plot_dir)
-        tcav_plot_paths.append(heatmap_path)
+        # Score bar plot across layers
+        score_path = plot_tcav_scores_layers(
+            tcav_results["all_agents"], plot_dir, "actuarial_reasoning"
+        )
+        tcav_plot_paths.append(score_path)
+        
 
-        # Optional: deep-dive distributions
-        for concept, block in tcav_results.items():
-            scores_block = block.get("scores", block.get("results", {}))
-
-            for agent in scores_block:
-                path = plot_tcav_distribution(
-                    tcav_results,
-                    concept,
-                    agent,
-                    plot_dir
-                )
-                tcav_plot_paths.append(path)
+        
 
         # ========== TEST TEST TEST ==========
 

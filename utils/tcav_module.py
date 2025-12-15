@@ -1,15 +1,3 @@
-# tcav_module.py
-"""
-Complete TCAV implementation for LLM-based agent systems.
-Includes:
-- Hidden-state extractor for LLMWrapper or HF model
-- Concept Activation Vector (CAV) training
-- Saving & loading CAVs
-- TCAV score evaluation
-- Multi-agent evaluation
-- Automatic layer selection
-"""
-
 import os
 import json
 from typing import List, Dict, Tuple
@@ -22,7 +10,6 @@ try:
     from sklearn.svm import LinearSVC
 except:
     raise ImportError("scikit-learn required for LinearSVC (pip install scikit-learn)")
-
 
 # ============================================================
 # 1) LLM HIDDEN-STATE EXTRACTOR
@@ -43,43 +30,6 @@ class LLMLayerExtractor:
         for i in range(0, len(items), batch_size):
             yield items[i:i+batch_size]
 
-    # def get_hidden_embeddings(self, texts: List[str], layer: int, batch_size: int = 8) -> np.ndarray:
-    #     """
-    #     Returns (N, hidden_dim) array of sentence-level embeddings from a chosen layer.
-    #     """
-    #     # Case 1: preferred method – user’s LLMWrapper
-    #     if self.llm_wrapper is not None:
-
-    #         # If the wrapper exposes hidden state extraction:
-    #         if hasattr(self.llm_wrapper, "get_hidden_states_for_texts"):
-    #             out = []
-    #             for batch in self._batch(texts, batch_size):
-    #                 arr = self.llm_wrapper.get_hidden_states_for_texts(batch, layer)
-    #                 out.append(arr)
-    #             return np.vstack(out)
-
-    #         # If it exposes per-layer embeddings
-    #         if hasattr(self.llm_wrapper, "embed_texts_by_layer"):
-    #             out = []
-    #             for batch in self._batch(texts, batch_size):
-    #                 arr = self.llm_wrapper.embed_texts_by_layer(batch, layer)
-    #                 out.append(np.asarray(arr))
-    #             return np.vstack(out)
-
-    #     # Case 2: fallback — raw transformer model
-    #     if self.use_transformers:
-    #         vecs = []
-    #         with torch.no_grad():
-    #             for batch in self._batch(texts, batch_size):
-    #                 toks = self.tokenizer(batch, return_tensors="pt", padding=True, truncation=True).to(self.device)
-    #                 out = self.model(**toks)
-    #                 hidden = out.hidden_states[layer]  # (batch, seq_len, dim)
-    #                 sent = hidden.mean(dim=1).cpu().numpy()
-    #                 vecs.append(sent)
-    #         return np.vstack(vecs)
-
-    #     raise RuntimeError("No hidden state extraction available.")
-
     def get_hidden_embeddings(self, texts: List[str], layer: int, batch_size: int = 8) -> np.ndarray:
         """
         Returns (N, hidden_dim) array of embeddings, one per text.
@@ -87,43 +37,32 @@ class LLMLayerExtractor:
         """
         out = []
 
-        # Use wrapper if available
         if self.llm_wrapper is not None:
 
-            # Preferred: wrapper supports batch extraction per text
             if hasattr(self.llm_wrapper, "get_hidden_states_for_texts"):
                 for batch in self._batch(texts, batch_size):
                     emb_batch = self.llm_wrapper.get_hidden_states_for_texts(batch, layer)
-
-                    # If wrapper collapses batch into single vector
                     if emb_batch.shape[0] == 1 and len(batch) > 1:
-                        print("[Warning] Wrapper returned single embedding for batch. Expanding per text...")
                         emb_batch = np.repeat(emb_batch, len(batch), axis=0)
-
                     out.append(emb_batch)
                 return np.vstack(out)
 
-            # Alternative wrapper method
             if hasattr(self.llm_wrapper, "embed_texts_by_layer"):
                 for batch in self._batch(texts, batch_size):
                     arr = np.asarray(self.llm_wrapper.embed_texts_by_layer(batch, layer))
-
                     if arr.shape[0] == 1 and len(batch) > 1:
-                        print("[Warning] Wrapper returned single embedding for batch. Expanding per text...")
                         arr = np.repeat(arr, len(batch), axis=0)
-
                     out.append(arr)
                 return np.vstack(out)
 
-        # Fallback: HuggingFace transformer (already batch-safe)
         if hasattr(self, "use_transformers") and self.use_transformers:
             vecs = []
             with torch.no_grad():
                 for batch in self._batch(texts, batch_size):
                     toks = self.tokenizer(batch, return_tensors="pt", padding=True, truncation=True).to(self.device)
                     out_model = self.model(**toks)
-                    hidden = out_model.hidden_states[layer]  # (batch, seq_len, dim)
-                    sent = hidden.mean(dim=1).cpu().numpy()  # sentence-level
+                    hidden = out_model.hidden_states[layer]
+                    sent = hidden.mean(dim=1).cpu().numpy()
                     vecs.append(sent)
             return np.vstack(vecs)
 
@@ -135,32 +74,19 @@ class LLMLayerExtractor:
 
 def train_cav(concept_embs: np.ndarray, random_embs: np.ndarray,
               C=0.1, max_iter=50000) -> Tuple[np.ndarray, dict]:
-    """
-    Train linear SVM to separate concept vs random embeddings.
-    Returns CAV vector and metadata.
-    """
     X = np.vstack([concept_embs, random_embs])
     y = np.hstack([np.ones(len(concept_embs)), np.zeros(len(random_embs))])
-
     clf = LinearSVC(C=C, max_iter=max_iter)
     clf.fit(X, y)
-
     cav = clf.coef_.reshape(-1)
     norm = np.linalg.norm(cav)
     if norm > 0:
         cav = cav / norm
-
-    meta = {
-        "C": C,
-        "max_iter": max_iter,
-        "n_samples": len(X)
-    }
-
+    meta = {"C": C, "max_iter": max_iter, "n_samples": len(X)}
     return cav, {"clf": clf, "meta": meta}
 
-
 # ============================================================
-# 3) SAVE & LOAD CAV VECTORS
+# 3) SAVE & LOAD CAV
 # ============================================================
 
 def save_cav(path: str, cav: np.ndarray, meta: dict, clf=None):
@@ -171,7 +97,6 @@ def save_cav(path: str, cav: np.ndarray, meta: dict, clf=None):
     if clf is not None:
         import joblib
         joblib.dump(clf, path + ".joblib")
-
 
 def load_cav(path: str) -> Tuple[np.ndarray, dict]:
     cav = np.load(path + ".npy")
@@ -187,148 +112,68 @@ def load_cav(path: str) -> Tuple[np.ndarray, dict]:
         clf = joblib.load(clf_path)
     return cav, {"meta": meta, "clf": clf}
 
-
 # ============================================================
 # 4) TCAV EVALUATION
 # ============================================================
 
 def directional_derivatives(embs: np.ndarray, cav: np.ndarray) -> np.ndarray:
-    """
-    Dot product of embeddings with CAV direction.
-    """
     return embs.dot(cav)
 
-
 def tcav_score(dots: np.ndarray) -> float:
-    """
-    Fraction of positive directional derivatives.
-    """
     return float((dots > 0).mean())
 
 def debug_tcav(dots, label):
-        print(f"\n[TCAV DEBUG] {label}")
-        print(f"  min={np.min(dots):.4f}")
-        print(f"  mean={np.mean(dots):.4f}")
-        print(f"  max={np.max(dots):.4f}")
-        print(f"  % positive={(dots > 0).mean():.3f}")
-        print(dots.shape)
-        print(dots)
+    print(f"\n[TCAV DEBUG] {label}")
+    print(f"  min={np.min(dots):.4f}")
+    print(f"  mean={np.mean(dots):.4f}")
+    print(f"  max={np.max(dots):.4f}")
+    print(f"  % positive={(dots > 0).mean():.3f}")
+    print(dots.shape)
+    print(dots)
 
 class TCAVEvaluator:
-    """
-    Core evaluator for TCAV scoring.
-    """
-
     def __init__(self, extractor: LLMLayerExtractor):
         self.extractor = extractor
 
     def score_texts(self, texts: List[str], cav: np.ndarray, layer: int, batch_size=8):
         if len(texts) < 2:
-            raise ValueError(
-                "TCAV requires at least 2 texts for evaluation. "
-                f"Got {len(texts)}."
-            )
-
+            raise ValueError(f"TCAV requires at least 2 texts, got {len(texts)}.")
         embs = self.extractor.get_hidden_embeddings(texts, layer, batch_size)
-
         dots = directional_derivatives(embs, cav)
         debug_tcav(dots, f"layer={layer}")
+        return {"score": tcav_score(dots), "dots": dots.tolist(), "n_samples": len(dots)}
 
-        return {
-            "score": tcav_score(dots),
-            "dots": dots.tolist(),
-            "n_samples": len(dots)
-        }
-
-    def score_pooled_agents(
-        self,
-        agent_outputs: Dict[str, List[str]],
-        cav: np.ndarray,
-        layer: int,
-        batch_size=8,
-        name: str = "all_agents"
-    ) -> Dict[str, dict]:
-        """
-        TCAV over all agent outputs pooled together.
-        """
+    def score_pooled_agents(self, agent_outputs: Dict[str, List[str]], cav: np.ndarray,
+                            layer: int, batch_size=8, name: str = "all_agents") -> Dict[str, dict]:
         texts = flatten_agent_outputs(agent_outputs)
+        result = self.score_texts(texts=texts, cav=cav, layer=layer, batch_size=batch_size)
+        return {name: result}
 
-        result = self.score_texts(
-            texts=texts,
-            cav=cav,
-            layer=layer,
-            batch_size=batch_size
-        )
-
-        return {
-            name: result
-        }
-
-# class TCAVEvaluator:
-#     """
-#     Core evaluator for multi-agent TCAV scoring.
-#     """
-
-#     def __init__(self, extractor: LLMLayerExtractor):
-#         self.extractor = extractor
-
-#     def score_texts(self, texts: List[str], cav: np.ndarray, layer: int, batch_size=8):
-#         embs = self.extractor.get_hidden_embeddings(texts, layer, batch_size)
-#         print("Embeddings shape:", embs.shape)
-#         print("Embedding variance per dim:", np.var(embs, axis=0))
-#         print("Mean embedding per dim:", np.mean(embs, axis=0))
-#         dots = directional_derivatives(embs, cav)
-#         debug_tcav(dots, f"layer={layer}")
-#         return {
-#             "score": tcav_score(dots),
-#             "dots": dots.tolist()
-#         }
-
-#     def score_agents(self, agent_outputs: Dict[str, List[str]],
-#                      cav: np.ndarray, layer: int, batch_size=8) -> Dict[str, dict]:
-#         out = {}
-#         for agent, texts in agent_outputs.items():
-#             out[agent] = self.score_texts(texts, cav, layer, batch_size)
-#         return out
-
+    def tcav_across_layers(self, agent_outputs: Dict[str, List[str]], cav: np.ndarray,
+                           layers: List[int], batch_size: int = 8, name: str = "all_agents") -> Dict[int, dict]:
+        texts = flatten_agent_outputs(agent_outputs)
+        if len(texts) < 2:
+            raise ValueError(f"TCAV requires at least 2 texts, got {len(texts)}.")
+        results = {}
+        for layer in layers:
+            embs = self.extractor.get_hidden_embeddings(texts, layer, batch_size)
+            dots = directional_derivatives(embs, cav)
+            debug_tcav(dots, f"layer={layer}")
+            results[layer] = {
+                "score": tcav_score(dots),
+                "dots": dots.tolist(),
+                "mean_dot": float(np.mean(dots)),
+                "min_dot": float(np.min(dots)),
+                "max_dot": float(np.max(dots)),
+                "n_samples": len(dots),
+            }
+        return {name: results}
 
 # ============================================================
-# 5) BEST LAYER SELECTION
-# ============================================================
-
-def pick_best_layer(extractor: LLMLayerExtractor,
-                    concept_texts: List[str],
-                    random_texts: List[str],
-                    candidate_layers: List[int],
-                    batch_size=8) -> int:
-    """
-    Choose layer with strongest concept activation.
-    """
-    best_layer = candidate_layers[0]
-    best_score = -1.0
-
-    for layer in candidate_layers:
-        ce = extractor.get_hidden_embeddings(concept_texts, layer, batch_size)
-        re = extractor.get_hidden_embeddings(random_texts, layer, batch_size)
-        cav, meta = train_cav(ce, re)
-        dots = directional_derivatives(ce, cav)
-        score = tcav_score(dots)
-        if score > best_score:
-            best_score = score
-            best_layer = layer
-
-    return best_layer
-
-
-# ============================================================
-# 6) UTILS
+# 5) UTILS
 # ============================================================
 
 def flatten_agent_outputs(agent_outputs: Dict[str, List[str]]) -> List[str]:
-    """
-    Flatten all agent outputs into a single list of texts.
-    Each agent output is treated as one TCAV sample.
-    """
     texts = []
     for _, outputs in agent_outputs.items():
         for t in outputs:
@@ -340,102 +185,424 @@ def read_lines(path: str) -> List[str]:
     with open(path, "r") as f:
         return [l.strip() for l in f if l.strip()]
 
-
 def save_json(path: str, obj):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w") as f:
         json.dump(obj, f, indent=2)
 
 # ============================================================
-# 7) TCAV VISUALIZATION
+# 6) TCAV VISUALIZATION
 # ============================================================
 
-def plot_tcav_bars(tcav_results: Dict,
-                   save_dir: str,
-                   concept_name: str):
+def plot_tcav_distribution_layers(tcav_results, save_dir, concept_name):
     os.makedirs(save_dir, exist_ok=True)
+    paths = []
+    for layer, res in tcav_results.items():
+        dots = np.array(res["dots"])
+        plt.figure(figsize=(6,4))
+        plt.hist(dots, bins=30)
+        plt.axvline(0, color="red", linestyle="--")
+        plt.xlabel("Directional derivative")
+        plt.ylabel("Frequency")
+        plt.title(f"TCAV distribution – {concept_name} / layer {layer}")
+        plt.tight_layout()
+        path = os.path.join(save_dir, f"tcav_dist_{concept_name}_layer{layer}.png")
+        plt.savefig(path)
+        plt.close()
+        paths.append(path)
+    return paths
 
-    concept_block = tcav_results[concept_name]
-
-    # Support both schemas defensively
-    if "results" in concept_block:
-        scores_block = concept_block["results"]
-    else:
-        scores_block = concept_block.get("scores", concept_block)
-
-    agents = list(scores_block.keys())
-    scores = [scores_block[a]["score"] for a in agents]
-
-    plt.figure(figsize=(6, 4))
-    plt.bar(agents, scores)
+def plot_tcav_scores_layers(tcav_results, save_dir, concept_name):
+    os.makedirs(save_dir, exist_ok=True)
+    layers = list(tcav_results.keys())
+    scores = [tcav_results[l]["score"] for l in layers]
+    plt.figure(figsize=(6,4))
+    plt.bar([str(l) for l in layers], scores)
     plt.ylim(0, 1)
-    plt.ylabel("TCAV score")
-    plt.title(f"TCAV – Concept: {concept_name}")
+    plt.xlabel("Layer")
+    plt.ylabel("TCAV Score")
+    plt.title(f"TCAV Scores Across Layers – {concept_name}")
     plt.tight_layout()
-
-    path = os.path.join(save_dir, f"tcav_bar_{concept_name}.png")
+    path = os.path.join(save_dir, f"tcav_scores_{concept_name}.png")
     plt.savefig(path)
     plt.close()
-
     return path
 
-def plot_tcav_heatmap(tcav_results: Dict, save_dir: str):
-    os.makedirs(save_dir, exist_ok=True)
 
-    rows = []
-    for concept, block in tcav_results.items():
-        scores_block = block.get("scores", block.get("results", block))
-        for agent, res in scores_block.items():
-            rows.append({
-                "concept": concept,
-                "agent": agent,
-                "score": res["score"]
-            })
+# import os
+# import json
+# from typing import List, Dict, Tuple
+# import numpy as np
+# import torch
+# import matplotlib.pyplot as plt
+# import pandas as pd
 
-    df = pd.DataFrame(rows)
-    pivot = df.pivot(index="concept", columns="agent", values="score")
+# try:
+#     from sklearn.svm import LinearSVC
+# except:
+#     raise ImportError("scikit-learn required for LinearSVC (pip install scikit-learn)")
 
-    plt.figure(figsize=(8, max(3, len(pivot) * 0.6)))
-    plt.imshow(pivot.values, vmin=0, vmax=1)
-    plt.colorbar(label="TCAV score")
-    plt.xticks(range(len(pivot.columns)), pivot.columns, rotation=30)
-    plt.yticks(range(len(pivot.index)), pivot.index)
-    plt.title("TCAV Concept Influence Across Agents")
 
-    for i in range(pivot.shape[0]):
-        for j in range(pivot.shape[1]):
-            plt.text(j, i, f"{pivot.iloc[i, j]:.2f}",
-                     ha="center", va="center", color="white")
+# # ============================================================
+# # 1) LLM HIDDEN-STATE EXTRACTOR
+# # ============================================================
 
-    plt.tight_layout()
-    path = os.path.join(save_dir, "tcav_heatmap.png")
-    plt.savefig(path)
-    plt.close()
+# class LLMLayerExtractor:
+#     """
+#     Adapter to extract hidden states from:
+#     - The user's LLMWrapper (preferred)
+#     - Or a raw HuggingFace transformers model (fallback)
+#     """
 
-    return path
+#     def __init__(self, llm_wrapper=None, model_name=None, device=None):
+#         self.llm_wrapper = llm_wrapper
+#         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
 
-def plot_tcav_distribution(tcav_results: Dict,
-                           concept: str,
-                           agent: str,
-                           save_dir: str):
+#     def _batch(self, items: List[str], batch_size: int):
+#         for i in range(0, len(items), batch_size):
+#             yield items[i:i+batch_size]
 
-    os.makedirs(save_dir, exist_ok=True)
+#     def get_hidden_embeddings(self, texts: List[str], layer: int, batch_size: int = 8) -> np.ndarray:
+#         """
+#         Returns (N, hidden_dim) array of embeddings, one per text.
+#         Works for wrappers that collapse batches into a single vector.
+#         """
+#         out = []
 
-    block = tcav_results[concept]
-    scores_block = block.get("scores", block.get("results", block))
+#         # Use wrapper if available
+#         if self.llm_wrapper is not None:
 
-    dots = scores_block[agent]["dots"]
+#             # Preferred: wrapper supports batch extraction per text
+#             if hasattr(self.llm_wrapper, "get_hidden_states_for_texts"):
+#                 for batch in self._batch(texts, batch_size):
+#                     emb_batch = self.llm_wrapper.get_hidden_states_for_texts(batch, layer)
 
-    plt.figure(figsize=(6, 4))
-    plt.hist(dots, bins=30)
-    plt.axvline(0, color="red", linestyle="--")
-    plt.xlabel("Directional derivative")
-    plt.ylabel("Frequency")
-    plt.title(f"TCAV distribution – {concept} / {agent}")
-    plt.tight_layout()
+#                     # If wrapper collapses batch into single vector
+#                     if emb_batch.shape[0] == 1 and len(batch) > 1:
+#                         print("[Warning] Wrapper returned single embedding for batch. Expanding per text...")
+#                         emb_batch = np.repeat(emb_batch, len(batch), axis=0)
 
-    path = os.path.join(save_dir, f"tcav_dist_{concept}_{agent}.png")
-    plt.savefig(path)
-    plt.close()
+#                     out.append(emb_batch)
+#                 return np.vstack(out)
 
-    return path
+#             # Alternative wrapper method
+#             if hasattr(self.llm_wrapper, "embed_texts_by_layer"):
+#                 for batch in self._batch(texts, batch_size):
+#                     arr = np.asarray(self.llm_wrapper.embed_texts_by_layer(batch, layer))
+
+#                     if arr.shape[0] == 1 and len(batch) > 1:
+#                         print("[Warning] Wrapper returned single embedding for batch. Expanding per text...")
+#                         arr = np.repeat(arr, len(batch), axis=0)
+
+#                     out.append(arr)
+#                 return np.vstack(out)
+
+#         # Fallback: HuggingFace transformer (already batch-safe)
+#         if hasattr(self, "use_transformers") and self.use_transformers:
+#             vecs = []
+#             with torch.no_grad():
+#                 for batch in self._batch(texts, batch_size):
+#                     toks = self.tokenizer(batch, return_tensors="pt", padding=True, truncation=True).to(self.device)
+#                     out_model = self.model(**toks)
+#                     hidden = out_model.hidden_states[layer]  # (batch, seq_len, dim)
+#                     sent = hidden.mean(dim=1).cpu().numpy()  # sentence-level
+#                     vecs.append(sent)
+#             return np.vstack(vecs)
+
+#         raise RuntimeError("No hidden state extraction available.")
+
+# # ============================================================
+# # 2) TRAINING CONCEPT ACTIVATION VECTORS (CAVs)
+# # ============================================================
+
+# def train_cav(concept_embs: np.ndarray, random_embs: np.ndarray,
+#               C=0.1, max_iter=50000) -> Tuple[np.ndarray, dict]:
+#     """
+#     Train linear SVM to separate concept vs random embeddings.
+#     Returns CAV vector and metadata.
+#     """
+#     X = np.vstack([concept_embs, random_embs])
+#     y = np.hstack([np.ones(len(concept_embs)), np.zeros(len(random_embs))])
+
+#     clf = LinearSVC(C=C, max_iter=max_iter)
+#     clf.fit(X, y)
+
+#     cav = clf.coef_.reshape(-1)
+#     norm = np.linalg.norm(cav)
+#     if norm > 0:
+#         cav = cav / norm
+
+#     meta = {
+#         "C": C,
+#         "max_iter": max_iter,
+#         "n_samples": len(X)
+#     }
+
+#     return cav, {"clf": clf, "meta": meta}
+
+
+# # ============================================================
+# # 3) SAVE & LOAD CAV VECTORS
+# # ============================================================
+
+# def save_cav(path: str, cav: np.ndarray, meta: dict, clf=None):
+#     os.makedirs(os.path.dirname(path), exist_ok=True)
+#     np.save(path + ".npy", cav)
+#     with open(path + ".meta.json", "w") as f:
+#         json.dump(meta, f, indent=2)
+#     if clf is not None:
+#         import joblib
+#         joblib.dump(clf, path + ".joblib")
+
+
+# def load_cav(path: str) -> Tuple[np.ndarray, dict]:
+#     cav = np.load(path + ".npy")
+#     meta = {}
+#     meta_path = path + ".meta.json"
+#     if os.path.exists(meta_path):
+#         with open(meta_path, "r") as f:
+#             meta = json.load(f)
+#     clf = None
+#     clf_path = path + ".joblib"
+#     if os.path.exists(clf_path):
+#         import joblib
+#         clf = joblib.load(clf_path)
+#     return cav, {"meta": meta, "clf": clf}
+
+
+# # ============================================================
+# # 4) TCAV EVALUATION
+# # ============================================================
+
+# def directional_derivatives(embs: np.ndarray, cav: np.ndarray) -> np.ndarray:
+#     """
+#     Dot product of embeddings with CAV direction.
+#     """
+#     return embs.dot(cav)
+
+
+# def tcav_score(dots: np.ndarray) -> float:
+#     """
+#     Fraction of positive directional derivatives.
+#     """
+#     return float((dots > 0).mean())
+
+# def debug_tcav(dots, label):
+#         print(f"\n[TCAV DEBUG] {label}")
+#         print(f"  min={np.min(dots):.4f}")
+#         print(f"  mean={np.mean(dots):.4f}")
+#         print(f"  max={np.max(dots):.4f}")
+#         print(f"  % positive={(dots > 0).mean():.3f}")
+#         print(dots.shape)
+#         print(dots)
+
+# class TCAVEvaluator:
+#     """
+#     Core evaluator for TCAV scoring.
+#     """
+
+#     def __init__(self, extractor: LLMLayerExtractor):
+#         self.extractor = extractor
+
+#     def score_texts(self, texts: List[str], cav: np.ndarray, layer: int, batch_size=8):
+#         if len(texts) < 2:
+#             raise ValueError(
+#                 "TCAV requires at least 2 texts for evaluation. "
+#                 f"Got {len(texts)}."
+#             )
+
+#         embs = self.extractor.get_hidden_embeddings(texts, layer, batch_size)
+
+#         dots = directional_derivatives(embs, cav)
+#         debug_tcav(dots, f"layer={layer}")
+
+#         return {
+#             "score": tcav_score(dots),
+#             "dots": dots.tolist(),
+#             "n_samples": len(dots)
+#         }
+
+#     def score_pooled_agents(
+#         self,
+#         agent_outputs: Dict[str, List[str]],
+#         cav: np.ndarray,
+#         layer: int,
+#         batch_size=8,
+#         name: str = "all_agents"
+#     ) -> Dict[str, dict]:
+#         """
+#         TCAV over all agent outputs pooled together.
+#         """
+#         texts = flatten_agent_outputs(agent_outputs)
+
+#         result = self.score_texts(
+#             texts=texts,
+#             cav=cav,
+#             layer=layer,
+#             batch_size=batch_size
+#         )
+
+#         return {
+#             name: result
+#         }
+    
+#     def tcav_across_layers(
+#         extractor: LLMLayerExtractor,
+#         agent_outputs: Dict[str, List[str]],
+#         cav: np.ndarray,
+#         layers: List[int],
+#         batch_size: int = 8,
+#         name: str = "all_agents"
+#     ) -> Dict[int, dict]:
+#         """
+#         Compute TCAV scores and directional derivatives across multiple layers
+#         using pooled agent texts.
+#         """
+#         texts = flatten_agent_outputs(agent_outputs)
+
+#         if len(texts) < 2:
+#             raise ValueError(
+#                 f"TCAV requires at least 2 texts, got {len(texts)}."
+#             )
+
+#         results = {}
+
+#         for layer in layers:
+#             embs = extractor.get_hidden_embeddings(texts, layer, batch_size)
+#             dots = directional_derivatives(embs, cav)
+
+#             debug_tcav(dots, f"layer={layer}")
+
+#             results[layer] = {
+#                 "score": tcav_score(dots),
+#                 "dots": dots.tolist(),
+#                 "mean_dot": float(np.mean(dots)),
+#                 "min_dot": float(np.min(dots)),
+#                 "max_dot": float(np.max(dots)),
+#                 "n_samples": len(dots),
+#             }
+
+#         return {
+#             name: results
+#         }
+
+
+# # ============================================================
+# # 5) UTILS
+# # ============================================================
+
+# def flatten_agent_outputs(agent_outputs: Dict[str, List[str]]) -> List[str]:
+#     """
+#     Flatten all agent outputs into a single list of texts.
+#     Each agent output is treated as one TCAV sample.
+#     """
+#     texts = []
+#     for _, outputs in agent_outputs.items():
+#         for t in outputs:
+#             if isinstance(t, str) and t.strip():
+#                 texts.append(t.strip())
+#     return texts
+
+# def read_lines(path: str) -> List[str]:
+#     with open(path, "r") as f:
+#         return [l.strip() for l in f if l.strip()]
+
+
+# def save_json(path: str, obj):
+#     os.makedirs(os.path.dirname(path), exist_ok=True)
+#     with open(path, "w") as f:
+#         json.dump(obj, f, indent=2)
+
+# # ============================================================
+# # 7) TCAV VISUALIZATION
+# # ============================================================
+
+# def plot_tcav_bars(tcav_results: Dict,
+#                    save_dir: str,
+#                    concept_name: str):
+#     os.makedirs(save_dir, exist_ok=True)
+
+#     concept_block = tcav_results[concept_name]
+
+#     # Support both schemas defensively
+#     if "results" in concept_block:
+#         scores_block = concept_block["results"]
+#     else:
+#         scores_block = concept_block.get("scores", concept_block)
+
+#     agents = list(scores_block.keys())
+#     scores = [scores_block[a]["score"] for a in agents]
+
+#     plt.figure(figsize=(6, 4))
+#     plt.bar(agents, scores)
+#     plt.ylim(0, 1)
+#     plt.ylabel("TCAV score")
+#     plt.title(f"TCAV – Concept: {concept_name}")
+#     plt.tight_layout()
+
+#     path = os.path.join(save_dir, f"tcav_bar_{concept_name}.png")
+#     plt.savefig(path)
+#     plt.close()
+
+#     return path
+
+# def plot_tcav_heatmap(tcav_results: Dict, save_dir: str):
+#     os.makedirs(save_dir, exist_ok=True)
+
+#     rows = []
+#     for concept, block in tcav_results.items():
+#         scores_block = block.get("scores", block.get("results", block))
+#         for agent, res in scores_block.items():
+#             rows.append({
+#                 "concept": concept,
+#                 "agent": agent,
+#                 "score": res["score"]
+#             })
+
+#     df = pd.DataFrame(rows)
+#     pivot = df.pivot(index="concept", columns="agent", values="score")
+
+#     plt.figure(figsize=(8, max(3, len(pivot) * 0.6)))
+#     plt.imshow(pivot.values, vmin=0, vmax=1)
+#     plt.colorbar(label="TCAV score")
+#     plt.xticks(range(len(pivot.columns)), pivot.columns, rotation=30)
+#     plt.yticks(range(len(pivot.index)), pivot.index)
+#     plt.title("TCAV Concept Influence Across Agents")
+
+#     for i in range(pivot.shape[0]):
+#         for j in range(pivot.shape[1]):
+#             plt.text(j, i, f"{pivot.iloc[i, j]:.2f}",
+#                      ha="center", va="center", color="white")
+
+#     plt.tight_layout()
+#     path = os.path.join(save_dir, "tcav_heatmap.png")
+#     plt.savefig(path)
+#     plt.close()
+
+#     return path
+
+# def plot_tcav_distribution(tcav_results: Dict,
+#                            concept: str,
+#                            agent: str,
+#                            save_dir: str):
+
+#     os.makedirs(save_dir, exist_ok=True)
+
+#     block = tcav_results[concept]
+#     scores_block = block.get("scores", block.get("results", block))
+
+#     dots = scores_block[agent]["dots"]
+
+#     plt.figure(figsize=(6, 4))
+#     plt.hist(dots, bins=30)
+#     plt.axvline(0, color="red", linestyle="--")
+#     plt.xlabel("Directional derivative")
+#     plt.ylabel("Frequency")
+#     plt.title(f"TCAV distribution – {concept} / {agent}")
+#     plt.tight_layout()
+
+#     path = os.path.join(save_dir, f"tcav_dist_{concept}_{agent}.png")
+#     plt.savefig(path)
+#     plt.close()
+
+#     return path
