@@ -147,32 +147,32 @@ class ExplanationAgent(BaseAgent):
 
         # Load concepts
             
-        # concept_dir = "utils"
+        concept_dir = "utils"
 
-        # concept_texts = read_lines(os.path.join(concept_dir, "tcav_concepts.txt"))
-        # random_texts  = read_lines(os.path.join(concept_dir, "random_concepts.txt"))
+        concept_texts = read_lines(os.path.join(concept_dir, "tcav_concepts.txt"))
+        random_texts  = read_lines(os.path.join(concept_dir, "random_concepts.txt"))
 
-        concept_texts = ["Risk is a function of exposure and frequency.",
-        "Use GLM to estimate the claim frequency.",
-        "Check calibration and predictive deviance.",
-        "We evaluate model fit with AIC and residuals.",
-        "Use Poisson or negative binomial for counts.",
-        "Include exposure offset for policy period.",
-        "Feature interactions should be interpretable.",
-        "Check stability across policy years.",
-        "Holdout and cross-validation for validation.",
-        "Provide confidence intervals for predicted rates."]
+        # concept_texts = ["Risk is a function of exposure and frequency.",
+        # "Use GLM to estimate the claim frequency.",
+        # "Check calibration and predictive deviance.",
+        # "We evaluate model fit with AIC and residuals.",
+        # "Use Poisson or negative binomial for counts.",
+        # "Include exposure offset for policy period.",
+        # "Feature interactions should be interpretable.",
+        # "Check stability across policy years.",
+        # "Holdout and cross-validation for validation.",
+        # "Provide confidence intervals for predicted rates."]
 
-        random_texts = ["The weather was clear on the date of the accident.",
-        "Customer has used support chat last week.",
-        "The car color is red.",
-        "Purchased travel insurance last year.",
-        "A local festival occurred in July.",
-        "Policyholder bought a new helmet.",
-        "Customer contacted claims department yesterday.",
-        "Random unrelated text about driving conditions.",
-        "This sentence is not related to risk factors.",
-        "A sentence about breakfast and coffee."]
+        # random_texts = ["The weather was clear on the date of the accident.",
+        # "Customer has used support chat last week.",
+        # "The car color is red.",
+        # "Purchased travel insurance last year.",
+        # "A local festival occurred in July.",
+        # "Policyholder bought a new helmet.",
+        # "Customer contacted claims department yesterday.",
+        # "Random unrelated text about driving conditions.",
+        # "This sentence is not related to risk factors.",
+        # "A sentence about breakfast and coffee."]
 
         # Pick best layer
         best_layer = pick_best_layer(extractor, concept_texts, random_texts, [16,20,24])
@@ -219,9 +219,16 @@ class ExplanationAgent(BaseAgent):
         tcav_plot_paths.append(heatmap_path)
 
         # Optional: deep-dive distributions
-        for concept in tcav_results:
-            for agent in tcav_results[concept]["results"]:
-                path = plot_tcav_distribution(tcav_results, concept, agent, plot_dir)
+        for concept, block in tcav_results.items():
+            scores_block = block.get("scores", block.get("results", {}))
+
+            for agent in scores_block:
+                path = plot_tcav_distribution(
+                    tcav_results,
+                    concept,
+                    agent,
+                    plot_dir
+                )
                 tcav_plot_paths.append(path)
 
         # ========== TEST TEST TEST ==========
