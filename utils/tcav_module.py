@@ -216,30 +216,80 @@ def debug_tcav(dots, label):
 
 class TCAVEvaluator:
     """
-    Core evaluator for multi-agent TCAV scoring.
+    Core evaluator for TCAV scoring.
     """
 
     def __init__(self, extractor: LLMLayerExtractor):
         self.extractor = extractor
 
     def score_texts(self, texts: List[str], cav: np.ndarray, layer: int, batch_size=8):
+        if len(texts) < 2:
+            raise ValueError(
+                "TCAV requires at least 2 texts for evaluation. "
+                f"Got {len(texts)}."
+            )
+
         embs = self.extractor.get_hidden_embeddings(texts, layer, batch_size)
-        print("Embeddings shape:", embs.shape)
-        print("Embedding variance per dim:", np.var(embs, axis=0))
-        print("Mean embedding per dim:", np.mean(embs, axis=0))
+
         dots = directional_derivatives(embs, cav)
         debug_tcav(dots, f"layer={layer}")
+
         return {
             "score": tcav_score(dots),
-            "dots": dots.tolist()
+            "dots": dots.tolist(),
+            "n_samples": len(dots)
         }
 
-    def score_agents(self, agent_outputs: Dict[str, List[str]],
-                     cav: np.ndarray, layer: int, batch_size=8) -> Dict[str, dict]:
-        out = {}
-        for agent, texts in agent_outputs.items():
-            out[agent] = self.score_texts(texts, cav, layer, batch_size)
-        return out
+    def score_pooled_agents(
+        self,
+        agent_outputs: Dict[str, List[str]],
+        cav: np.ndarray,
+        layer: int,
+        batch_size=8,
+        name: str = "all_agents"
+    ) -> Dict[str, dict]:
+        """
+        TCAV over all agent outputs pooled together.
+        """
+        texts = flatten_agent_outputs(agent_outputs)
+
+        result = self.score_texts(
+            texts=texts,
+            cav=cav,
+            layer=layer,
+            batch_size=batch_size
+        )
+
+        return {
+            name: result
+        }
+
+# class TCAVEvaluator:
+#     """
+#     Core evaluator for multi-agent TCAV scoring.
+#     """
+
+#     def __init__(self, extractor: LLMLayerExtractor):
+#         self.extractor = extractor
+
+#     def score_texts(self, texts: List[str], cav: np.ndarray, layer: int, batch_size=8):
+#         embs = self.extractor.get_hidden_embeddings(texts, layer, batch_size)
+#         print("Embeddings shape:", embs.shape)
+#         print("Embedding variance per dim:", np.var(embs, axis=0))
+#         print("Mean embedding per dim:", np.mean(embs, axis=0))
+#         dots = directional_derivatives(embs, cav)
+#         debug_tcav(dots, f"layer={layer}")
+#         return {
+#             "score": tcav_score(dots),
+#             "dots": dots.tolist()
+#         }
+
+#     def score_agents(self, agent_outputs: Dict[str, List[str]],
+#                      cav: np.ndarray, layer: int, batch_size=8) -> Dict[str, dict]:
+#         out = {}
+#         for agent, texts in agent_outputs.items():
+#             out[agent] = self.score_texts(texts, cav, layer, batch_size)
+#         return out
 
 
 # ============================================================
@@ -273,6 +323,18 @@ def pick_best_layer(extractor: LLMLayerExtractor,
 # ============================================================
 # 6) UTILS
 # ============================================================
+
+def flatten_agent_outputs(agent_outputs: Dict[str, List[str]]) -> List[str]:
+    """
+    Flatten all agent outputs into a single list of texts.
+    Each agent output is treated as one TCAV sample.
+    """
+    texts = []
+    for _, outputs in agent_outputs.items():
+        for t in outputs:
+            if isinstance(t, str) and t.strip():
+                texts.append(t.strip())
+    return texts
 
 def read_lines(path: str) -> List[str]:
     with open(path, "r") as f:
