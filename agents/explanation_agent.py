@@ -8,6 +8,7 @@ from utils.fairness_module import group_fairness
 from utils.message_types import Message
 from utils.prompt_library import PROMPTS
 from agents.base_agent import BaseAgent
+from utils.tcav_module import run_tcav_analysis
 
 
 class ExplanationAgent(BaseAgent):
@@ -138,178 +139,28 @@ class ExplanationAgent(BaseAgent):
         # --------------------   
 
         # ========== TEST TEST TEST ==========
-        from utils.tcav_module import (
-            read_lines,
-            LLMLayerExtractor,
-            train_cav,
-            TCAVEvaluator,
-            plot_tcav_across_layers,
-            plot_directional_derivatives,
-            tcav_results_to_dataframe,
-        )
-
-        # -----------------------------------
-        # 1. Initialize extractor
-        # -----------------------------------
-
-        extractor = LLMLayerExtractor(
-            llm_wrapper=self.hub.shared_llm
-        )
-
-        # -----------------------------------
-        # 2. Load concept & random examples
-        # -----------------------------------
-
-        concept_dir = "utils"
-
-        concept_texts = read_lines(
-            os.path.join(concept_dir, "tcav_concepts.txt")
-        )
-        random_texts = read_lines(
-            os.path.join(concept_dir, "random_concepts.txt")
-        )
-
-        # -----------------------------------
-        # 3. Define layers
-        # -----------------------------------
-
-        layers_to_test = [16, 20, 24]
-        cav_layer = 20
-
-        # -----------------------------------
-        # 4. Train CAV
-        # -----------------------------------
-
-        concept_embs = extractor.get_hidden_embeddings(
-            concept_texts,
-            layer=cav_layer
-        )
-        random_embs = extractor.get_hidden_embeddings(
-            random_texts,
-            layer=cav_layer
-        )
-
-        cav, cav_meta = train_cav(
-            concept_embs,
-            random_embs
-        )
-
-        # -----------------------------------
-        # 5. Collect agent outputs
-        # -----------------------------------
-
+        
         agent_texts = {
-            "modelling":  [metadata.get("evaluation", "")],
-            "reviewing":  [metadata.get("analysis", "")],
-            "dataprep":   [metadata.get("verification", "")]
+            "dataprep1": [metadata.get("plan_dataprep", "")],
+            "dataprep2": [metadata.get("verification", "")],
+            "dataprep3": [metadata.get("explanation", "")],
+            "modelling1": [metadata.get("plan_modelling", "")],
+            "modelling2": [metadata.get("evaluation", "")],
+            "modelling3": [metadata.get("impact_analysis", "")],
+            "reviewing": [metadata.get("layer1_out", "")],
+            "reviewing": [metadata.get("analysis", "")],
+            "reviewing": [metadata.get("consistency_check", "")],
+            "reviewing": [metadata.get("judgement", "")]
         }
 
-        # Flatten all agents for pooled TCAV
-        all_texts = []
-        for outputs in agent_texts.values():
-            all_texts.extend([t for t in outputs if isinstance(t, str) and t.strip()])
-
-        # -----------------------------------
-        # 6. Run TCAV across layers
-        # -----------------------------------
-
-        evaluator = TCAVEvaluator(extractor)
-
-        tcav_results = evaluator.tcav_across_layers(
-            texts=all_texts,
-            cav=cav,
-            layers=layers_to_test,
-            n_random=20,       # random CAV baseline
-            batch_size=8,
+        run_tcav_analysis(
+            llm_wrapper=self.hub.shared_llm,
+            texts=agent_texts,
+            concept_file="utils/tcav_concepts.txt",
+            random_file="utils/random_concepts.txt",
+            layers_to_test=[16, 20, 24],
+            plot_dir="data/evaluation/tcav_plots",
         )
-
-        # -----------------------------------
-        # 7. Visualizations
-        # -----------------------------------
-
-        plot_dir = "data/evaluation/tcav_plots"
-        os.makedirs(plot_dir, exist_ok=True)
-
-        # (a) TCAV score vs layer
-        plot_tcav_across_layers(
-            tcav_results,
-            title="TCAV across layers – actuarial reasoning"
-        )
-
-        # (b) Directional derivative distributions (per layer)
-        for layer, res in tcav_results.items():
-            plot_directional_derivatives(
-                dots=res["dots"],
-                title=f"Directional derivatives – layer {layer}"
-            )
-
-        # -----------------------------------
-        # 8. Tabular summary (paper-ready)
-        # -----------------------------------
-
-        df = tcav_results_to_dataframe(
-            {f"layer_{k}": v for k, v in tcav_results.items()}
-        )
-
-        df_path = os.path.join(plot_dir, "tcav_summary.csv")
-        df.to_csv(df_path, index=False)
-
-        # from utils.tcav_module import (
-        #     read_lines,
-        #     LLMLayerExtractor,
-        #     train_cav,
-        #     TCAVEvaluator,
-        #     plot_tcav_distribution_layers,
-        #     plot_tcav_scores_layers
-        # )
-
-        # extractor = LLMLayerExtractor(llm_wrapper=self.hub.shared_llm)
-
-        # # Load concepts
-            
-        # concept_dir = "utils"
-
-        # concept_texts = read_lines(os.path.join(concept_dir, "tcav_concepts.txt"))
-        # random_texts  = read_lines(os.path.join(concept_dir, "random_concepts.txt"))
-
-        # # Define layers
-        # layers_to_test = [16, 20, 24]
-        # cav_layer = 20
-
-        # # Train cav
-        # ce = extractor.get_hidden_embeddings(concept_texts, cav_layer)
-        # re = extractor.get_hidden_embeddings(random_texts, cav_layer)
-        # cav, meta = train_cav(ce, re)
-
-        # # Gather agent outputs
-        # agent_texts = {
-        #     "modelling": [metadata.get("evaluation","")],
-        #     "reviewing": [metadata.get("analysis","")],
-        #     "dataprep": [metadata.get("verification","")]
-        # }
-
-        # # TCAV evaluation
-        # evaluator = TCAVEvaluator(extractor)
-        # tcav_results = evaluator.tcav_across_layers(
-        #     agent_outputs=agent_texts,
-        #     cav=cav,
-        #     layers=layers_to_test
-        # )
-
-        # plot_dir = "data/evaluation/tcav_plots"
-        # tcav_plot_paths = []
-
-        # # Distribution plots per layer
-        # dist_paths = plot_tcav_distribution_layers(
-        #     tcav_results["all_agents"], plot_dir, "actuarial_reasoning"
-        # )
-        # tcav_plot_paths.extend(dist_paths)
-
-        # # Score bar plot across layers
-        # score_path = plot_tcav_scores_layers(
-        #     tcav_results["all_agents"], plot_dir, "actuarial_reasoning"
-        # )
-        # tcav_plot_paths.append(score_path)
 
         # ========== TEST TEST TEST ==========
 

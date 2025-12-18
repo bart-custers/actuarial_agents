@@ -308,7 +308,7 @@ class ModellingAgent(BaseAgent):
         metadata = {
             "timestamp": timestamp,
             "status": "success",
-            "plan": plan,
+            "plan_modelling": plan,
             "model_type_used": model_choice,
             "model_code": model_code,
             "model_used": model_used,

@@ -242,7 +242,7 @@ class DataPrepAgent(BaseAgent):
             "status": "success",
             "used_pipeline": decision,
             "confidence": confidence,
-            "plan": summary1,
+            "plan_dataprep": summary1,
             "adaptive_suggestion": suggestion,
             "comparison": comparison_summary,
             "verification": verification,

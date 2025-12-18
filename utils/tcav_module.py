@@ -13,12 +13,6 @@ except:
 
 # Layer extractor
 class LLMLayerExtractor:
-    """
-    Adapter to extract hidden states from:
-    - The user's LLMWrapper (preferred)
-    - Or a raw HuggingFace transformers model (fallback)
-    """
-
     def __init__(self, llm_wrapper=None, model_name=None, device=None):
         self.llm_wrapper = llm_wrapper
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
@@ -28,10 +22,6 @@ class LLMLayerExtractor:
             yield items[i:i+batch_size]
 
     def get_hidden_embeddings(self, texts: List[str], layer: int, batch_size: int = 8) -> np.ndarray:
-        """
-        Returns (N, hidden_dim) array of embeddings, one per text.
-        Works for wrappers that collapse batches into a single vector.
-        """
         out = []
 
         if self.llm_wrapper is not None:
@@ -127,7 +117,6 @@ def random_cavs_like(
     r = rng.normal(size=(n, cav.shape[0]))
     return r / np.linalg.norm(r, axis=1, keepdims=True)
 
-
 def tcav_with_random_baseline(
     embs: np.ndarray,
     cav: np.ndarray,
@@ -150,18 +139,7 @@ def tcav_with_random_baseline(
         "random_std": float(np.std(rand_scores)),
     }
 
-# def tcav_score(dots: np.ndarray) -> float:
-#     return float((dots > 0).mean())
-
-# def debug_tcav(dots, label):
-#     print(f"\n[TCAV DEBUG] {label}")
-#     print(f"  min={np.min(dots):.4f}")
-#     print(f"  mean={np.mean(dots):.4f}")
-#     print(f"  max={np.max(dots):.4f}")
-#     print(f"  % positive={(dots > 0).mean():.3f}")
-#     print(dots.shape)
-#     print(dots)
-
+# TCAV Evaluator
 class TCAVEvaluator:
     def __init__(self, extractor: LLMLayerExtractor):
         self.extractor = extractor
@@ -209,44 +187,6 @@ class TCAVEvaluator:
             )
         return results
     
-# class TCAVEvaluator:
-#     def __init__(self, extractor: LLMLayerExtractor):
-#         self.extractor = extractor
-
-#     def score_texts(self, texts: List[str], cav: np.ndarray, layer: int, batch_size=8):
-#         if len(texts) < 2:
-#             raise ValueError(f"TCAV requires at least 2 texts, got {len(texts)}.")
-#         embs = self.extractor.get_hidden_embeddings(texts, layer, batch_size)
-#         dots = directional_derivatives(embs, cav)
-#         debug_tcav(dots, f"layer={layer}")
-#         return {"score": tcav_score(dots), "dots": dots.tolist(), "n_samples": len(dots)}
-
-#     def score_pooled_agents(self, agent_outputs: Dict[str, List[str]], cav: np.ndarray,
-#                             layer: int, batch_size=8, name: str = "all_agents") -> Dict[str, dict]:
-#         texts = flatten_agent_outputs(agent_outputs)
-#         result = self.score_texts(texts=texts, cav=cav, layer=layer, batch_size=batch_size)
-#         return {name: result}
-
-#     def tcav_across_layers(self, agent_outputs: Dict[str, List[str]], cav: np.ndarray,
-#                            layers: List[int], batch_size: int = 8, name: str = "all_agents") -> Dict[int, dict]:
-#         texts = flatten_agent_outputs(agent_outputs)
-#         if len(texts) < 2:
-#             raise ValueError(f"TCAV requires at least 2 texts, got {len(texts)}.")
-#         results = {}
-#         for layer in layers:
-#             embs = self.extractor.get_hidden_embeddings(texts, layer, batch_size)
-#             dots = directional_derivatives(embs, cav)
-#             debug_tcav(dots, f"layer={layer}")
-#             results[layer] = {
-#                 "score": tcav_score(dots),
-#                 "dots": dots.tolist(),
-#                 "mean_dot": float(np.mean(dots)),
-#                 "min_dot": float(np.min(dots)),
-#                 "max_dot": float(np.max(dots)),
-#                 "n_samples": len(dots),
-#             }
-#         return {name: results}
-
 # Utils
 def flatten_agent_outputs(agent_outputs: Dict[str, List[str]]) -> List[str]:
     texts = []
@@ -277,7 +217,9 @@ def plot_tcav_across_layers(results: Dict[int, Dict[str, Any]], title: str = "")
     plt.ylabel("TCAV score")
     plt.title(title or "TCAV across layers")
     plt.tight_layout()
-    plt.show()
+    store_path = os.path.join("data/evaluation/tcav_plots", "tcav_scores_across_layers.png")
+    plt.savefig(store_path)
+    plt.close()
 
 def plot_directional_derivatives(dots: np.ndarray, title: str = ""):
     plt.figure()
@@ -287,41 +229,9 @@ def plot_directional_derivatives(dots: np.ndarray, title: str = ""):
     plt.ylabel("Count")
     plt.title(title or "Directional derivative distribution")
     plt.tight_layout()
-    plt.show()
-
-# def plot_tcav_distribution_layers(tcav_results, save_dir, concept_name):
-#     os.makedirs(save_dir, exist_ok=True)
-#     paths = []
-#     for layer, res in tcav_results.items():
-#         dots = np.array(res["dots"])
-#         plt.figure(figsize=(6,4))
-#         plt.hist(dots, bins=30)
-#         plt.axvline(0, color="red", linestyle="--")
-#         plt.xlabel("Directional derivative")
-#         plt.ylabel("Frequency")
-#         plt.title(f"TCAV distribution – {concept_name} / layer {layer}")
-#         plt.tight_layout()
-#         path = os.path.join(save_dir, f"tcav_dist_{concept_name}_layer{layer}.png")
-#         plt.savefig(path)
-#         plt.close()
-#         paths.append(path)
-#     return paths
-
-# def plot_tcav_scores_layers(tcav_results, save_dir, concept_name):
-#     os.makedirs(save_dir, exist_ok=True)
-#     layers = list(tcav_results.keys())
-#     scores = [tcav_results[l]["score"] for l in layers]
-#     plt.figure(figsize=(6,4))
-#     plt.bar([str(l) for l in layers], scores)
-#     plt.ylim(0, 1)
-#     plt.xlabel("Layer")
-#     plt.ylabel("TCAV Score")
-#     plt.title(f"TCAV Scores Across Layers – {concept_name}")
-#     plt.tight_layout()
-#     path = os.path.join(save_dir, f"tcav_scores_{concept_name}.png")
-#     plt.savefig(path)
-#     plt.close()
-#     return path
+    store_path = os.path.join("data/evaluation/tcav_plots", "directional_derivatives.png")
+    plt.savefig(store_path)
+    plt.close()
 
 def tcav_results_to_dataframe(results: Dict[str, Dict[str, Any]]) -> pd.DataFrame:
     rows = []
@@ -332,3 +242,52 @@ def tcav_results_to_dataframe(results: Dict[str, Dict[str, Any]]) -> pd.DataFram
         row["random_std"] = res["random_std"]
         rows.append(row)
     return pd.DataFrame(rows)
+
+# Run full TCAV analysis
+def run_tcav_analysis(
+        llm_wrapper,
+        texts: dict,
+        concept_file: str = "utils/tcav_concepts.txt",
+        random_file: str = "utils/random_concepts.txt",
+        layers_to_test: list = [16, 20, 24],
+        store_dir: str = "data/evaluation/tcav_plots",
+    ) -> str:
+
+    extractor = LLMLayerExtractor(llm_wrapper=llm_wrapper)
+
+    concept_texts = read_lines(concept_file)
+    random_texts = read_lines(random_file)
+
+    concept_embs = extractor.get_hidden_embeddings(concept_texts, layer=20)
+    random_embs = extractor.get_hidden_embeddings(random_texts, layer=20)
+
+    cav, cav_meta = train_cav(concept_embs, random_embs)
+
+    all_texts = [
+        t for outputs in texts.values()
+        for t in outputs if isinstance(t, str) and t.strip()
+    ]
+
+    evaluator = TCAVEvaluator(extractor)
+    tcav_results = evaluator.tcav_across_layers(
+        texts=all_texts,
+        cav=cav,
+        layers=layers_to_test,
+        n_random=20,
+        batch_size=8,
+    )
+
+    os.makedirs(store_dir, exist_ok=True)
+
+    plot_tcav_across_layers(tcav_results, title="TCAV across layers: actuarial reasoning")
+    for layer, res in tcav_results.items():
+        plot_directional_derivatives(
+            dots=res["dots"],
+            title=f"Directional derivatives: layer {layer}"
+        )
+
+    df = tcav_results_to_dataframe(
+        {f"layer_{k}": v for k, v in tcav_results.items()}
+    )
+    df_path = os.path.join(store_dir, "tcav_summary.csv")
+    df.to_csv(df_path, index=False)
