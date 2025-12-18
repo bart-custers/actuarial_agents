@@ -253,7 +253,6 @@ class ReviewingAgent(BaseAgent):
             "judgement": review_output,
             "decision": decision,
             "revision_prompt": revision_prompt,
-            "decision": decision,
             "action": next_action,
             "review_iteration": iteration + 1
         }

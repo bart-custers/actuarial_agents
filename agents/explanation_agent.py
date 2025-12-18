@@ -159,7 +159,7 @@ class ExplanationAgent(BaseAgent):
             concept_file="utils/tcav_concepts.txt",
             random_file="utils/random_concepts.txt",
             layers_to_test=[16, 20, 24],
-            plot_dir="data/evaluation/tcav_plots",
+            store_dir="data/evaluation/tcav_plots",
         )
 
         # ========== TEST TEST TEST ==========
