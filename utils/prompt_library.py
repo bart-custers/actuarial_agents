@@ -348,11 +348,24 @@ PROMPTS = {
 
     "tcav_prompt": """
     You are an expert in actuarial modelling, assisting in explaining an agent workflow for claim frequency prediction.
-    Your goal is to assess the fairness of the model predictions.
+    Your goal is to assess whether actuarial reasoning is systematically represented in the model’s internal representations, using TCAV (Testing with Concept Activation Vectors) results.
 
-    <PLACEHOLDER>
+    You are given a table showing TCAV statistics across multiple model layers. The table includes the TCAV score, directional derivative statistics (mean, median, min, max, std), and random baseline statistics for each layer.
 
-    At the end of your analysis, classify whether there are fairness biases. The final line of your answer should contain: Decision: NO_ISSUES or MINOR_ISSUES or SEVERE_ISSUES.
+    TCAV score table: {tcav_table}
+
+    Your tasks:
+
+    1. Analyse the tables, think step-by-step.
+
+    2. Write a short report with your critical analysis. 
+    
+    - Be concise and neutral.
+    - Do not speculate beyond the provided summary.
+    - Maintain high precision and avoid hallucination.
+    - Use maximum 400 words.
+
+    At the end of your analysis, classify whether there are issues with TCAV scores. The final line of your answer should contain: Decision: NO_ISSUES or MINOR_ISSUES or SEVERE_ISSUES.
     """,
 
     "fairness_prompt": """

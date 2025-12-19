@@ -37,6 +37,11 @@ def group_fairness(df, pred_col='Prediction', true_col='ClaimNb', storage_dir='s
     # Create a table
     table_age = agg_age.pivot(index='pred_bin', columns='age_group', values='diff')
     table_density = agg_density.pivot(index='pred_bin', columns='density_group', values='diff')
+
+    table_age_path = os.path.join(storage_dir, "table_age.csv")
+    table_age.to_csv(table_age_path, index=False)
+    table_density_path = os.path.join(storage_dir, "table_density.csv")
+    table_density.to_csv(table_density_path, index=False)
     
     # Plot
     plt.figure(figsize=(10,5))

@@ -286,8 +286,10 @@ def run_tcav_analysis(
             title=f"Directional derivatives: layer {layer}"
         )
 
-    df = tcav_results_to_dataframe(
+    tcav_table = tcav_results_to_dataframe(
         {f"layer_{k}": v for k, v in tcav_results.items()}
     )
     df_path = os.path.join(store_dir, "tcav_summary.csv")
-    df.to_csv(df_path, index=False)
+    tcav_table.to_csv(df_path, index=False)
+
+    return tcav_table

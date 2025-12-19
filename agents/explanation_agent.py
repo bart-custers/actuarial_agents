@@ -137,9 +137,9 @@ class ExplanationAgent(BaseAgent):
         # --------------------
         # Layer 2: TCAV
         # --------------------   
+        print(f"[{self.name}] Invoke layer 2...TCAV assessment")
 
-        # ========== TEST TEST TEST ==========
-        
+        # Get all agent outputs from metadata
         agent_texts = {
             "dataprep1": [metadata.get("plan_dataprep", "")],
             "dataprep2": [metadata.get("verification", "")],
@@ -153,7 +153,8 @@ class ExplanationAgent(BaseAgent):
             "reviewing": [metadata.get("judgement", "")]
         }
 
-        run_tcav_analysis(
+        # run TCAV analysis
+        tcav_table =run_tcav_analysis(
             llm_wrapper=self.hub.shared_llm,
             texts=agent_texts,
             concept_file="utils/tcav_concepts.txt",
@@ -162,10 +163,13 @@ class ExplanationAgent(BaseAgent):
             store_dir="data/evaluation/tcav_plots",
         )
 
-        # ========== TEST TEST TEST ==========
+        tcav_prompt = PROMPTS["tcav_prompt"].format(
+            tcav_table=tcav_table)
+        
+        tcav_assessment = self.llm(tcav_prompt)
+        tcav_score = self._extract_score(tcav_assessment)
 
-        tcav_assessment = "None so far"
-        tcav_score = "none"
+        print(tcav_assessment)
         
         # --------------------
         # Layer 3: fairness assessment
