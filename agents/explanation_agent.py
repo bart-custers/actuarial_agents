@@ -3,7 +3,7 @@ import glob
 import re
 import pandas as pd
 from datetime import datetime
-from utils.general_utils import save_json_safe, extract_analysis
+from utils.general_utils import save_json_safe, extract_analysis, generate_explanation_report_txt
 from utils.fairness_module import group_fairness
 from utils.message_types import Message
 from utils.prompt_library import PROMPTS
@@ -102,37 +102,33 @@ class ExplanationAgent(BaseAgent):
         "reviewing": "judgement"
         }
 
-        # belief_state = {}
+        reasoning_state = {}
 
-        # for phase, keys in PHASES.items():
-        #     # Extract metadata items for the phase
-        #     items = [metadata.get(key, {}) for key in keys]
+        for phase, keys in PHASES.items():
+            # Extract metadata items for the phase
+            items = [metadata.get(key, {}) for key in keys]
 
-        #     # Build the phase prompt using the standard template
-        #     summary_prompt = PROMPTS["summary_prompt"].format(
-        #         item1=items[0] if len(items) > 0 else None,
-        #         item2=items[1] if len(items) > 1 else None,
-        #         item3=items[2] if len(items) > 2 else None,
-        #     )
+            # Build the phase prompt using the standard template
+            summary_prompt = PROMPTS["summary_prompt"].format(
+                item1=items[0] if len(items) > 0 else None,
+                item2=items[1] if len(items) > 1 else None,
+                item3=items[2] if len(items) > 2 else None,
+            )
 
-        #     # Query the LLM
-        #     belief_state[phase] = self.llm(summary_prompt)
+            # Query the LLM
+            reasoning_state[phase] = self.llm(summary_prompt)
         
-        # belief_dir = "data/memory"
-        # os.makedirs(belief_dir, exist_ok=True)
-        # meta_path = os.path.join(belief_dir, f"{self.name}_belief_state.json")
-        # save_json_safe(belief_state, meta_path)
+        belief_dir = "data/memory"
+        os.makedirs(belief_dir, exist_ok=True)
+        meta_path = os.path.join(belief_dir, f"{self.name}_belief_state.json")
+        save_json_safe(reasoning_state, meta_path)
 
-        # # Now assess the belief
-        # belief_revision_prompt = PROMPTS["belief_revision_prompt"].format(belief_summary = belief_state)
-        # belief_assessment = self.llm(belief_revision_prompt)
-        # belief_score = self._extract_score(belief_assessment)
+        # Now assess the belief
+        belief_prompt = PROMPTS["belief_prompt"].format(reasoning_summary = reasoning_state)
+        belief_assessment = self.llm(belief_prompt)
+        belief_score = self._extract_score(belief_assessment)
 
-        belief_assessment = "None"
-        belief_score = "none"
-
-        # print(belief_revision_prompt)
-        # print(belief_assessment)
+        print(belief_assessment)
 
         # --------------------
         # Layer 2: TCAV
@@ -246,8 +242,8 @@ class ExplanationAgent(BaseAgent):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
         # Store review report
-        #GENERATE THE REPORT HERE!!!
-        #THINK ABOUT WHETHER WE WANT A FIRST PROMPT THAT RECALLS AND PLANS!!!
+        report_path = f"data/final/explanation_report_{timestamp}.txt"
+        generate_explanation_report_txt(report_path, final_report, belief_assessment, tcav_assessment, fairness_assessment, final_evaluation_text)
 
         # Store metadata
         metadata = {

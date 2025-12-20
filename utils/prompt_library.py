@@ -305,24 +305,24 @@ PROMPTS = {
 
     Your goal is to:
     1. Extract the main ideas from each item.
-    2. Summarize the belief of the agent.
+    2. Summarize the reasoning of the agent.
 
     Items:
     Item 1: {item1}
     Item 2: {item2}
     Item 3: {item3}
 
-    Summarize the belief of the agent in 200 words.
+    Summarize the reasoning of the agent in 200 words.
     """,
 
-    "belief_revision_prompt": """
+    "belief_prompt": """
     You are an expert in actuarial modelling, assisting in explaining an agent workflow for claim frequency prediction.
-    Your goal is to assess the clarity, validity, confidence level, and potential issues in the beliefs.
+    Your goal is to assess the clarity, validity, confidence level, and potential issues in the beliefs and reasoning.
 
-    You are given a belief summary for data preparation, modelling, and reviewing:
+    You are given a reasoning summary for data preparation, modelling, and reviewing:
 
-    [BELIEF SUMMARY]
-    {belief_summary}
+    [REASONING SUMMARY]
+    {reasoning_summary}
 
     Your tasks:
 

@@ -71,17 +71,38 @@ def generate_review_report_txt(report_path,
 
     return report_path
 
-# def extract_analysis(text: str) -> str:
-#     """
-#     Extract the ANALYSIS: section from a larger string.
-#     Returns the extracted text, or the original text if no match is found.
-#     """
-#     match = re.search(
-#         r"ANALYSIS:(.*?)(?:\n[A-Z]+:|\Z)",
-#         text,
-#         flags=re.DOTALL
-#     )
-#     return match.group(1).strip() if match else text
+def generate_explanation_report_txt(report_path, 
+                               final_report, 
+                               belief_assessment, 
+                               tcav_assessment, 
+                               fairness_assessment, 
+                               final_evaluation_text):
+    """
+    Creates a txt report combining all explanation agent outputs.
+    """
+
+    lines = []
+    lines.append("==== EXPLANATION REPORT ====")
+    lines.append("")
+    lines.append(final_report if final_report is not None else "")
+
+    lines.append("\n=== BELIEF ASSESSMENT ===")
+    lines.append(belief_assessment if belief_assessment is not None else "")
+
+    lines.append("\n=== TCAV ASSESSMENT ===")
+    lines.append(tcav_assessment if tcav_assessment is not None else "")
+
+    lines.append("\n=== FAIRNESS ASSESSMENT ===")
+    lines.append(fairness_assessment if fairness_assessment is not None else "")
+
+    lines.append("\n=== FINAL EVALUATION ===")
+    lines.append(final_evaluation_text if final_evaluation_text is not None else "")
+
+    # Write to disk
+    with open(report_path, "w") as f:
+        f.write("\n".join(lines))
+
+    return report_path
 
 def extract_analysis(text: str) -> str:
     """
