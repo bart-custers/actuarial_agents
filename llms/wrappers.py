@@ -89,68 +89,68 @@ class LLMWrapper:
     #     else:
     #         raise ValueError(f"Unsupported backend: {self.backend}")
 
-        def __call__(self, prompt, return_uncertainty=False):
-            """
-            Default: returns text only
-            Optional: returns (text, uncertainty_dict)
-            """
+    def __call__(self, prompt, return_uncertainty=False):
+        """
+        Default: returns text only
+        Optional: returns (text, uncertainty_dict)
+        """
 
-            # -------------------------
-            # OPENAI (no logprobs here)
-            # -------------------------
-            if self.backend == "openai":
-                msg = HumanMessage(content=prompt)
-                response = self.llm([msg])
-                text = response.content
+        # -------------------------
+        # OPENAI (no logprobs here)
+        # -------------------------
+        if self.backend == "openai":
+            msg = HumanMessage(content=prompt)
+            response = self.llm([msg])
+            text = response.content
 
-                if return_uncertainty:
-                    return text, {
-                        "method": "none",
-                        "note": "logprobs not enabled for OpenAI backend"
-                    }
+            if return_uncertainty:
+                return text, {
+                    "method": "none",
+                    "note": "logprobs not enabled for OpenAI backend"
+                }
 
-                return text
+            return text
 
-            # -------------------------
-            # LLAMA / PHI (HF backends)
-            # -------------------------
-            elif self.backend in ["llama7b", "phi3mini"]:
+        # -------------------------
+        # LLAMA / PHI (HF backends)
+        # -------------------------
+        elif self.backend in ["llama7b", "phi3mini"]:
 
-                if return_uncertainty and self.backend == "llama7b":
-                    out = self.generate_with_logprobs(prompt)
+            if return_uncertainty and self.backend == "llama7b":
+                out = self.generate_with_logprobs(prompt)
 
-                    uncertainty = {
-                        "method": "token_logprob",
-                        "joint_logprob": out["joint_logprob"],
-                        "mean_logprob": out["mean_logprob"],
-                        "n_tokens": len(out["tokens"])
-                    }
+                uncertainty = {
+                    "method": "token_logprob",
+                    "joint_logprob": out["joint_logprob"],
+                    "mean_logprob": out["mean_logprob"],
+                    "n_tokens": len(out["tokens"])
+                }
 
-                    return out["text"], uncertainty
+                return out["text"], uncertainty
 
-                # fallback: text only
-                raw = self.llm(prompt)
+            # fallback: text only
+            raw = self.llm(prompt)
 
-                if isinstance(raw, dict) and "generated_text" in raw:
-                    return raw["generated_text"]
-                elif isinstance(raw, list) and "generated_text" in raw[0]:
-                    return raw[0]["generated_text"]
-                elif hasattr(raw, "generations"):
-                    return raw.generations[0][0].text
-                else:
-                    return str(raw)
-
-            # -------------------------
-            # MOCK
-            # -------------------------
-            elif self.backend == "mock":
-                text = self.llm(prompt)
-                if return_uncertainty:
-                    return text, {"method": "mock"}
-                return text
-
+            if isinstance(raw, dict) and "generated_text" in raw:
+                return raw["generated_text"]
+            elif isinstance(raw, list) and "generated_text" in raw[0]:
+                return raw[0]["generated_text"]
+            elif hasattr(raw, "generations"):
+                return raw.generations[0][0].text
             else:
-                raise ValueError(f"Unsupported backend: {self.backend}")
+                return str(raw)
+
+        # -------------------------
+        # MOCK
+        # -------------------------
+        elif self.backend == "mock":
+            text = self.llm(prompt)
+            if return_uncertainty:
+                return text, {"method": "mock"}
+            return text
+
+        else:
+            raise ValueError(f"Unsupported backend: {self.backend}")
 
 
     # ------------------------------------------------------------
