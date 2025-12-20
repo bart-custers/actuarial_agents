@@ -6,6 +6,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 from langchain_community.llms import HuggingFacePipeline
 import torch
 import numpy as np
+from math import exp
 
 drive.mount("/content/drive", force_remount=False)
 model_cache_dir = "/content/drive/MyDrive/Thesis/model_cache"
@@ -190,8 +191,6 @@ class LLMWrapper:
     # ------------------------------------------------------------
     # Hugging Face: LLaMA 7B
     # ------------------------------------------------------------
-    from math import exp
-
     def generate_with_logprobs(
             self,
             prompt,
