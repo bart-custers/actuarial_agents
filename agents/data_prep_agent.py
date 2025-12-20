@@ -136,6 +136,7 @@ class DataPrepAgent(BaseAgent):
         summary1, unc = self.llm(plan_prompt, return_uncertainty=True)
 
         print(unc)
+        print(summary1)
         
         print(f"[{self.name}] Invoke layer 2...develop data preparation")
 
