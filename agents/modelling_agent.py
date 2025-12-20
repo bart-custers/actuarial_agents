@@ -190,9 +190,6 @@ class ModellingAgent(BaseAgent):
         
         model_code = self.llm(layer2_prompt)
 
-        #confidence = self._extract_confidence(layer2_prompt)
-        #print(f"[{self.name}] Layer 2 confidence: {confidence:.2f}")
-
         # --------------------
         # Model training
         # --------------------
@@ -313,8 +310,6 @@ class ModellingAgent(BaseAgent):
             "model_code": model_code,
             "model_used": model_used,
             "model_reason": model_reason,
-         #   "code_confidence": confidence,
-         #   "model_object": llm_model_obj,
             "model_metrics": model_metrics,
             "act_vs_exp": act_vs_exp,
             "evaluation": evaluation_text,

@@ -62,32 +62,96 @@ class LLMWrapper:
     # ------------------------------------------------------------
     # Unified callable interface
     # ------------------------------------------------------------
-    def __call__(self, prompt):
-        """Ensure all models return a plain string output."""
-        if self.backend == "openai":
-            msg = HumanMessage(content=prompt)
-            response = self.llm([msg])
-            return response.content
+    # def __call__(self, prompt):
+    #     """Ensure all models return a plain string output."""
+    #     if self.backend == "openai":
+    #         msg = HumanMessage(content=prompt)
+    #         response = self.llm([msg])
+    #         return response.content
 
-        elif self.backend in ["phi3mini", "llama7b"]:
-            raw = self.llm(prompt)
-            # ✅ Normalize Hugging Face / LangChain output formats
-            if isinstance(raw, dict) and "generated_text" in raw:
-                return raw["generated_text"]
-            elif isinstance(raw, list) and isinstance(raw[0], dict) and "generated_text" in raw[0]:
-                return raw[0]["generated_text"]
-            elif hasattr(raw, "generations"):  # LangChain LLMResult
-                return raw.generations[0][0].text
-            elif hasattr(raw, "content"):
-                return raw.content
+    #     elif self.backend in ["phi3mini", "llama7b"]:
+    #         raw = self.llm(prompt)
+    #         # ✅ Normalize Hugging Face / LangChain output formats
+    #         if isinstance(raw, dict) and "generated_text" in raw:
+    #             return raw["generated_text"]
+    #         elif isinstance(raw, list) and isinstance(raw[0], dict) and "generated_text" in raw[0]:
+    #             return raw[0]["generated_text"]
+    #         elif hasattr(raw, "generations"):  # LangChain LLMResult
+    #             return raw.generations[0][0].text
+    #         elif hasattr(raw, "content"):
+    #             return raw.content
+    #         else:
+    #             return str(raw)
+
+    #     elif self.backend == "mock":
+    #         return self.llm(prompt)
+
+    #     else:
+    #         raise ValueError(f"Unsupported backend: {self.backend}")
+
+        def __call__(self, prompt, return_uncertainty=False):
+            """
+            Default: returns text only
+            Optional: returns (text, uncertainty_dict)
+            """
+
+            # -------------------------
+            # OPENAI (no logprobs here)
+            # -------------------------
+            if self.backend == "openai":
+                msg = HumanMessage(content=prompt)
+                response = self.llm([msg])
+                text = response.content
+
+                if return_uncertainty:
+                    return text, {
+                        "method": "none",
+                        "note": "logprobs not enabled for OpenAI backend"
+                    }
+
+                return text
+
+            # -------------------------
+            # LLAMA / PHI (HF backends)
+            # -------------------------
+            elif self.backend in ["llama7b", "phi3mini"]:
+
+                if return_uncertainty and self.backend == "llama7b":
+                    out = self.generate_with_logprobs(prompt)
+
+                    uncertainty = {
+                        "method": "token_logprob",
+                        "joint_logprob": out["joint_logprob"],
+                        "mean_logprob": out["mean_logprob"],
+                        "n_tokens": len(out["tokens"])
+                    }
+
+                    return out["text"], uncertainty
+
+                # fallback: text only
+                raw = self.llm(prompt)
+
+                if isinstance(raw, dict) and "generated_text" in raw:
+                    return raw["generated_text"]
+                elif isinstance(raw, list) and "generated_text" in raw[0]:
+                    return raw[0]["generated_text"]
+                elif hasattr(raw, "generations"):
+                    return raw.generations[0][0].text
+                else:
+                    return str(raw)
+
+            # -------------------------
+            # MOCK
+            # -------------------------
+            elif self.backend == "mock":
+                text = self.llm(prompt)
+                if return_uncertainty:
+                    return text, {"method": "mock"}
+                return text
+
             else:
-                return str(raw)
+                raise ValueError(f"Unsupported backend: {self.backend}")
 
-        elif self.backend == "mock":
-            return self.llm(prompt)
-
-        else:
-            raise ValueError(f"Unsupported backend: {self.backend}")
 
     # ------------------------------------------------------------
     # Hugging Face: Phi-3 Mini (3.8B)
@@ -126,6 +190,88 @@ class LLMWrapper:
     # ------------------------------------------------------------
     # Hugging Face: LLaMA 7B
     # ------------------------------------------------------------
+    from math import exp
+
+    def generate_with_logprobs(
+            self,
+            prompt,
+            max_new_tokens=128,
+            temperature=0.7,
+            do_sample=True
+        ):
+            """
+            Returns:
+            {
+                "text": str,
+                "tokens": [
+                    {"token": str, "logprob": float, "prob": float}
+                ],
+                "joint_logprob": float,
+                "mean_logprob": float
+            }
+            """
+
+            if self.backend != "llama7b":
+                raise RuntimeError("generate_with_logprobs is only supported for backend='llama7b'")
+
+            device = next(self.model.parameters()).device
+
+            formatted_prompt = (
+                f"<s>[INST] <<SYS>>\n{self.system_prompt}\n<</SYS>>\n"
+                f"{prompt}\n[/INST]"
+            )
+
+            inputs = self.tokenizer(
+                formatted_prompt,
+                return_tensors="pt"
+            ).to(device)
+
+            with torch.no_grad():
+                gen_out = self.model.generate(
+                    **inputs,
+                    max_new_tokens=max_new_tokens,
+                    do_sample=do_sample,
+                    temperature=temperature if do_sample else None,
+                    return_dict_in_generate=True,
+                    output_scores=True
+                )
+
+            # Only newly generated tokens (exclude prompt)
+            gen_token_ids = gen_out.sequences[0][inputs["input_ids"].shape[1]:]
+
+            scores = gen_out.scores  # list: one [1, vocab] tensor per token
+
+            tokens = []
+            joint_logprob = 0.0
+
+            for token_id, score in zip(gen_token_ids, scores):
+                log_probs = torch.log_softmax(score[0], dim=-1)
+                token_logprob = log_probs[token_id].item()
+
+                token_str = self.tokenizer.decode(token_id)
+
+                tokens.append({
+                    "token": token_str,
+                    "logprob": token_logprob,
+                    "prob": exp(token_logprob)
+                })
+
+                joint_logprob += token_logprob
+
+            text = self.tokenizer.decode(
+                gen_token_ids,
+                skip_special_tokens=True
+            )
+
+            mean_logprob = joint_logprob / max(len(tokens), 1)
+
+            return {
+                "text": text,
+                "tokens": tokens,
+                "joint_logprob": joint_logprob,
+                "mean_logprob": mean_logprob
+            }
+    
     def _init_llama7b(self):
         model_name = "meta-llama/Llama-2-7b-chat-hf"
         model_path = os.path.join(model_cache_dir, model_name.replace("/", "_"))

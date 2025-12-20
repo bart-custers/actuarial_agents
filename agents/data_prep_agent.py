@@ -132,7 +132,10 @@ class DataPrepAgent(BaseAgent):
             plan_prompt = metadata["revised_prompt"]
         else:
             plan_prompt = PROMPTS["dataprep_layer1"].format(info_dict=json.dumps(info_dict, indent=2), recommendations=recommendations)
-        summary1 = self.llm(plan_prompt)
+        #summary1 = self.llm(plan_prompt)
+        summary1, unc = self.llm(plan_prompt, return_uncertainty=True)
+
+        print(unc)
         
         print(f"[{self.name}] Invoke layer 2...develop data preparation")
 

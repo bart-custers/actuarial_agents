@@ -126,6 +126,7 @@ class ExplanationAgent(BaseAgent):
         # Now assess the belief
         belief_prompt = PROMPTS["belief_prompt"].format(reasoning_summary = reasoning_state)
         belief_assessment = self.llm(belief_prompt)
+        belief_assessment_text = extract_analysis(belief_assessment)
         belief_score = self._extract_score(belief_assessment)
 
         print(belief_assessment)
@@ -159,10 +160,9 @@ class ExplanationAgent(BaseAgent):
             store_dir="data/evaluation/tcav_plots",
         )
 
-        tcav_prompt = PROMPTS["tcav_prompt"].format(
-            tcav_table=tcav_table)
-        
+        tcav_prompt = PROMPTS["tcav_prompt"].format(tcav_table=tcav_table)
         tcav_assessment = self.llm(tcav_prompt)
+        tcav_assessment_text = extract_analysis(tcav_assessment)
         tcav_score = self._extract_score(tcav_assessment)
 
         print(tcav_assessment)
@@ -175,11 +175,9 @@ class ExplanationAgent(BaseAgent):
         df_predictions = self.load_latest_prediction_df()
         table_age, table_density = group_fairness(df_predictions, 'Prediction', 'ClaimNb', 'data/final')
 
-        fairness_prompt = PROMPTS["fairness_prompt"].format(
-            table_age=table_age,
-            table_density=table_density
-        )
+        fairness_prompt = PROMPTS["fairness_prompt"].format(table_age=table_age, table_density=table_density)
         fairness_assessment = self.llm(fairness_prompt)
+        fairness_assessment_text = extract_analysis(fairness_assessment)
         fairness_score = self._extract_score(fairness_assessment)
 
         print(fairness_assessment)
@@ -190,9 +188,9 @@ class ExplanationAgent(BaseAgent):
         print(f"[{self.name}] Invoke layer 4...final assessment")
 
         final_prompt = PROMPTS["decision_prompt"].format(
-            belief_assessment=belief_assessment,
-            tcav_assessment=tcav_assessment,
-            fairness_assessment=fairness_assessment,
+            belief_assessment=belief_assessment_text,
+            tcav_assessment=tcav_assessment_text,
+            fairness_assessment=fairness_assessment_text,
             belief_score=belief_score,
             tcav_score=tcav_score,
             fairness_score=fairness_score
@@ -243,7 +241,7 @@ class ExplanationAgent(BaseAgent):
 
         # Store review report
         report_path = f"data/final/explanation_report_{timestamp}.txt"
-        generate_explanation_report_txt(report_path, final_report, belief_assessment, tcav_assessment, fairness_assessment, final_evaluation_text)
+        generate_explanation_report_txt(report_path, final_report, belief_assessment_text, tcav_assessment_text, fairness_assessment_text, final_evaluation_text)
 
         # Store metadata
         metadata = {
