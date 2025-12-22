@@ -129,9 +129,6 @@ class DataPrepAgent(BaseAgent):
             plan_prompt = PROMPTS["dataprep_layer1"].format(info_dict=json.dumps(info_dict, indent=2), recommendations=recommendations)
         #summary1 = self.llm(plan_prompt)
         summary1, unc_dataprep_layer1 = self.llm(plan_prompt, return_uncertainty=True)
-
-        print(unc_dataprep_layer1)
-        print(summary1)
         
         print(f"[{self.name}] Invoke layer 2...develop data preparation")
 
@@ -142,7 +139,6 @@ class DataPrepAgent(BaseAgent):
         suggestion, unc_dataprep_layer2 = self.llm(suggestion_prompt, return_uncertainty=True)
 
         confidence = unc_dataprep_layer2
-        print(f"[{self.name}] Layer 2 confidence: {confidence:.4f}")
 
         # === Apply deterministic pipeline
         det_pipe = DataCleaning()

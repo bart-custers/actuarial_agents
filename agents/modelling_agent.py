@@ -167,9 +167,9 @@ class ModellingAgent(BaseAgent):
             layer1_prompt = PROMPTS["modelling_layer1"].format(
                 dataset_desc=json.dumps(dataset_desc, indent=2), recommendations=recommendations
             )
-        plan = self.llm(layer1_prompt)
+        plan, unc_modelling_layer1 = self.llm(layer1_prompt, return_uncertainty=True)
 
-        model_choice, unc_modelling_layer1 = self._extract_model_choice(plan, return_uncertainty=True)
+        model_choice = self._extract_model_choice(plan)
         print(f"[modelling] LLM selected model type: {model_choice}")
 
         # --------------------
