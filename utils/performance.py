@@ -62,17 +62,41 @@ class UncertaintyGraphBN:
     # --------------------------------------------------
     # Default CPTs (neutral priors)
     # --------------------------------------------------
-    def _init_default_cpts(self):
-        for node in self.bn.nodes():
-            var = self.bn.variable(node)
-            name = var.name()
+    # def _init_default_cpts(self):
+    #     for node in self.bn.nodes():
+    #         var = self.bn.variable(node)
+    #         name = var.name()
 
-            if self.bn.parents(node):
-                # Temporary placeholder CPTs
-                self.bn.cpt(node).fillWith([0.1, 0.9])
-            else:
-                # Root priors default to high confidence
-                self.bn.cpt(node).fillWith([0.1, 0.9])
+    #         if self.bn.parents(node):
+    #             # Temporary placeholder CPTs
+    #             self.bn.cpt(node).fillWith([0.1, 0.9])
+    #         else:
+    #             # Root priors default to high confidence
+    #             self.bn.cpt(node).fillWith([0.1, 0.9])
+
+    def _init_default_cpts(self):
+        # Root node
+        self.bn.cpt("DataOK")[:] = [0.01, 0.99]
+
+        # ModelOK conditional on DataOK
+        cpt_m = self.bn.cpt("ModelOK")
+        cpt_m[{"DataOK": 1}] = [0.02, 0.98]
+        cpt_m[{"DataOK": 0}] = [0.30, 0.70]
+
+        # ReviewOK conditional on ModelOK
+        cpt_r = self.bn.cpt("ReviewOK")
+        cpt_r[{"ModelOK": 1}] = [0.05, 0.95]
+        cpt_r[{"ModelOK": 0}] = [0.90, 0.10]
+
+        # ExplainOK conditional on ReviewOK
+        cpt_e = self.bn.cpt("ExplainOK")
+        cpt_e[{"ReviewOK": 1}] = [0.05, 0.95]
+        cpt_e[{"ReviewOK": 0}] = [0.90, 0.10]
+
+        # WorkflowOK conditional on ExplainOK
+        cpt_wf = self.bn.cpt("WorkflowOK")
+        cpt_wf[{"ExplainOK": 1}] = [0.01, 0.99]
+        cpt_wf[{"ExplainOK": 0}] = [0.99, 0.01]
 
     # --------------------------------------------------
     # Aggregate layered uncertainty
