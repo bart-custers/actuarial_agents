@@ -120,12 +120,13 @@ class LLMWrapper:
             if return_uncertainty and self.backend == "llama7b":
                 out = self.generate_with_logprobs(prompt)
 
-                uncertainty = {
-                    "method": "token_logprob",
-                    "joint_logprob": out["joint_logprob"],
-                    "mean_logprob": out["mean_logprob"],
-                    "n_tokens": len(out["tokens"])
-                }
+                # uncertainty = {
+                #     "method": "token_logprob",
+                #     "joint_logprob": out["joint_logprob"],
+                #     "mean_logprob": out["mean_logprob"],
+                #     "n_tokens": len(out["tokens"])
+                # }
+                uncertainty = exp(out["mean_logprob"])
 
                 return out["text"], uncertainty
 

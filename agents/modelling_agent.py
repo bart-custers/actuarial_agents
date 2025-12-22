@@ -11,7 +11,6 @@ from utils.message_types import Message
 from utils.model_trainer import ModelTrainer
 from utils.model_evaluation import ModelEvaluation
 from utils.prompt_library import PROMPTS
-#from langchain_community.memory import ConversationBufferMemory
 from agents.base_agent import BaseAgent
 
 
@@ -21,7 +20,6 @@ class ModellingAgent(BaseAgent):
         self.llm = shared_llm
         self.system_prompt = system_prompt
         self.hub = hub
-       # self.memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True, k=1) # Short-term conversation memory for layered prompting
 
     # -------------------------------
     # Helper functions
@@ -94,10 +92,6 @@ class ModellingAgent(BaseAgent):
         m2 = re.search(r'Decision\s*:\s*(USE_GLM|USE_GBM)', text, flags=re.IGNORECASE)
         if m2:
             return "glm" if m2.group(1).upper() == "USE_GLM" else "gbm"
-    
-    def _extract_confidence(self, text):
-        match = re.search(r"confidence:\s*([\d\.]+)", text.lower())
-        return float(match.group(1)) if match else 0.5
 
     @staticmethod
     def load_latest_predictions(folder="data/final"):
@@ -121,7 +115,6 @@ class ModellingAgent(BaseAgent):
         latest_test_preds  = pd.read_csv(latest_test_file).iloc[:, 0].values.ravel()
 
         return latest_train_preds, latest_test_preds 
-
 
     # -------------------------------
     # Main handler
@@ -176,7 +169,7 @@ class ModellingAgent(BaseAgent):
             )
         plan = self.llm(layer1_prompt)
 
-        model_choice = self._extract_model_choice(plan)
+        model_choice, unc_modelling_layer1 = self._extract_model_choice(plan, return_uncertainty=True)
         print(f"[modelling] LLM selected model type: {model_choice}")
 
         # --------------------
@@ -188,7 +181,7 @@ class ModellingAgent(BaseAgent):
         model_choice=model_choice
         )
         
-        model_code = self.llm(layer2_prompt)
+        model_code, unc_modelling_layer2 = self.llm(layer2_prompt, return_uncertainty=True)
 
         # --------------------
         # Model training
@@ -248,7 +241,7 @@ class ModellingAgent(BaseAgent):
             act_vs_exp=act_vs_exp,
             metrics=json.dumps(make_json_compatible(dict(list(model_metrics.items())[:5])), indent=2))
 
-        evaluation = self.llm(layer3_prompt)
+        evaluation, unc_modelling_layer3 = self.llm(layer3_prompt, return_uncertainty=True)
         evaluation_text = extract_analysis(evaluation)
 
         # --------------------
@@ -259,7 +252,7 @@ class ModellingAgent(BaseAgent):
         layer4_prompt = PROMPTS["modelling_layer4"].format(
             impact_analysis_tables=(impact_analysis_tables))
 
-        impact_analysis = self.llm(layer4_prompt)
+        impact_analysis, unc_modelling_layer4 = self.llm(layer4_prompt, return_uncertainty=True)
         impact_analysis_text = extract_analysis(impact_analysis)
 
         # --------------------
@@ -316,6 +309,10 @@ class ModellingAgent(BaseAgent):
             "impact_analysis": impact_analysis_text,
             "consistency_snapshot": snapshot,
             "model_predictions_path": storage_dir,
+            "unc_modelling_layer1": unc_modelling_layer1,
+            "unc_modelling_layer2": unc_modelling_layer2,
+            "unc_modelling_layer3": unc_modelling_layer3,
+            "unc_modelling_layer4": unc_modelling_layer4,            
         }
 
         results_dir = "data/results"

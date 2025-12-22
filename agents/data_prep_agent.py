@@ -6,7 +6,6 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 from typing import Dict, Any, List
-#from langchain_community.memory import ConversationBufferMemory
 from utils.general_utils import save_json_safe
 from utils.prompt_library import PROMPTS
 from utils.data_pipeline import DataPipeline
@@ -142,7 +141,8 @@ class DataPrepAgent(BaseAgent):
         suggestion_prompt = PROMPTS["dataprep_layer2"].format(summary1=summary1,info_dict=json.dumps(info_dict, indent=2),pipeline_code=open("utils/data_pipeline.py").read())
         suggestion, unc_dataprep_layer2 = self.llm(suggestion_prompt, return_uncertainty=True)
 
-        confidence = 0.8
+        confidence = unc_dataprep_layer2
+        print(f"[{self.name}] Layer 2 confidence: {confidence:.4f}")
 
         # === Apply deterministic pipeline
         det_pipe = DataCleaning()

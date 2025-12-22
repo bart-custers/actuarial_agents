@@ -3,12 +3,10 @@ import json
 from datetime import datetime
 import numpy as np
 import re
-#from langchain_community.memory import ConversationBufferMemory
 from utils.general_utils import save_json_safe, extract_analysis, generate_review_report_txt
 from utils.message_types import Message
 from utils.prompt_library import PROMPTS
 from agents.base_agent import BaseAgent
-from utils.model_evaluation import ModelEvaluation
 from utils.consistency import compare_dataprep_consistency_snapshots, summarize_dataprep_snapshot_comparison, compare_modelling_consistency_snapshots, summarize_modelling_snapshot_comparison
 
 
@@ -71,7 +69,7 @@ class ReviewingAgent(BaseAgent):
         print(f"[{self.name}] Invoke layer 1...planning")
 
         layer1_prompt = PROMPTS["review_layer1"].format(phase=phase)
-        layer1_out = self.llm(layer1_prompt)
+        layer1_out, unc_reviewing_layer1 = self.llm(layer1_prompt, return_uncertainty=True)
 
         # --------------------
         # Get context from memory
@@ -131,7 +129,7 @@ class ReviewingAgent(BaseAgent):
         else:
             print(f"[{self.name}] WARNING: Unknown phase '{phase}' for review agent.")
 
-        analysis = self.llm(layer2_prompt)
+        analysis, unc_reviewing_layer2 = self.llm(layer2_prompt, return_uncertainty=True)
         analysis_text = extract_analysis(analysis)
 
         # --------------------
@@ -160,7 +158,7 @@ class ReviewingAgent(BaseAgent):
             phase=phase,
             consistency_summary=consistency_summary)
         
-        consistency_check = self.llm(layer3_prompt)
+        consistency_check, unc_reviewing_layer3 = self.llm(layer3_prompt, return_uncertainty=True)
         consistency_text = extract_analysis(consistency_check)
 
         # --------------------
@@ -170,13 +168,14 @@ class ReviewingAgent(BaseAgent):
         if phase == "dataprep":
             print(f"[{self.name}] No impact analysis - skip layer 4...")
             impact_analysis_output = "No impact analysis for dataprep"
+            unc_reviewing_layer4 = 1
             impact_text = "No impact analysis for dataprep"
         elif phase == "modelling":
             print(f"[{self.name}] Invoke layer 4...impact analysis")
             impact_analysis_input = metadata.get("impact_analysis", "unknown")
             layer4_prompt = PROMPTS["review_layer4"].format(
             impact_analysis_input=impact_analysis_input)
-            impact_analysis_output = self.llm(layer4_prompt)
+            impact_analysis_output, unc_reviewing_layer4 = self.llm(layer4_prompt, return_uncertainty=True)
             impact_text = extract_analysis(impact_analysis_output)
 
         # --------------------
@@ -191,7 +190,7 @@ class ReviewingAgent(BaseAgent):
         
         #print(layer5_prompt)
 
-        review_output = self.llm(layer5_prompt)
+        review_output, unc_reviewing_layer5 = self.llm(layer5_prompt, return_uncertainty=True)
 
         #print(review_output)
 
@@ -254,6 +253,11 @@ class ReviewingAgent(BaseAgent):
             "decision": decision,
             "revision_prompt": revision_prompt,
             "action": next_action,
+            "unc_reviewing_layer1": unc_reviewing_layer1,
+            "unc_reviewing_layer2": unc_reviewing_layer2,
+            "unc_reviewing_layer3": unc_reviewing_layer3,
+            "unc_reviewing_layer4": unc_reviewing_layer4, 
+            "unc_reviewing_layer5": unc_reviewing_layer5,
             "review_iteration": iteration + 1
         }
 

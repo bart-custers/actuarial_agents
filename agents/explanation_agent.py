@@ -125,7 +125,7 @@ class ExplanationAgent(BaseAgent):
 
         # Now assess the belief
         belief_prompt = PROMPTS["belief_prompt"].format(reasoning_summary = reasoning_state)
-        belief_assessment = self.llm(belief_prompt)
+        belief_assessment, unc_explanation_layer1 = self.llm(belief_prompt, return_uncertainty=True)
         belief_assessment_text = extract_analysis(belief_assessment)
         belief_score = self._extract_score(belief_assessment)
 
@@ -161,7 +161,7 @@ class ExplanationAgent(BaseAgent):
         )
 
         tcav_prompt = PROMPTS["tcav_prompt"].format(tcav_table=tcav_table)
-        tcav_assessment = self.llm(tcav_prompt)
+        tcav_assessment, unc_explanation_layer2 = self.llm(tcav_prompt, return_uncertainty=True)
         tcav_assessment_text = extract_analysis(tcav_assessment)
         tcav_score = self._extract_score(tcav_assessment)
 
@@ -176,7 +176,7 @@ class ExplanationAgent(BaseAgent):
         table_age, table_density = group_fairness(df_predictions, 'Prediction', 'ClaimNb', 'data/final')
 
         fairness_prompt = PROMPTS["fairness_prompt"].format(table_age=table_age, table_density=table_density)
-        fairness_assessment = self.llm(fairness_prompt)
+        fairness_assessment, unc_explanation_layer3 = self.llm(fairness_prompt, return_uncertainty=True)
         fairness_assessment_text = extract_analysis(fairness_assessment)
         fairness_score = self._extract_score(fairness_assessment)
 
@@ -195,7 +195,7 @@ class ExplanationAgent(BaseAgent):
             tcav_score=tcav_score,
             fairness_score=fairness_score
         )
-        final_evaluation = self.llm(final_prompt)
+        final_evaluation, unc_explanation_layer4 = self.llm(final_prompt, return_uncertainty=True)
         final_evaluation_text = extract_analysis(final_evaluation)
 
         decision = self._extract_decision(final_evaluation)
@@ -257,6 +257,10 @@ class ExplanationAgent(BaseAgent):
             "action": next_action,
             "recommendations": recommendations,
             "final_report": final_report,
+            "unc_explanation_layer1": unc_explanation_layer1,
+            "unc_explanation_layer2": unc_explanation_layer2,
+            "unc_explanation_layer3": unc_explanation_layer3,
+            "unc_explanation_layer4": unc_explanation_layer4, 
             "explanation_iteration": iteration + 1
         }
 
