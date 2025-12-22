@@ -140,7 +140,7 @@ class UncertaintyGraphBN:
 
         # WorkflowOK has no own uncertainty; pure AND
         wf_id = self.bn.idFromName("WorkflowOK")
-        parent = self.bn.parents(wf_id)[0]
+        parent = list(self.bn.parents(wf_id))[0]
         self.bn.cpt(wf_id)[{'ExplainOK': 0}] = [0.99, 0.01]
         self.bn.cpt(wf_id)[{'ExplainOK': 1}] = [0.01, 0.99]
 
