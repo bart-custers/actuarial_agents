@@ -4,7 +4,7 @@ import time
 from datetime import datetime
 from utils.message_types import Message
 from utils.general_utils import make_json_compatible
-from utils.performance import WorkflowAudit, UncertaintyGraphBN
+from utils.audit import WorkflowAudit, UncertaintyGraphBN
 from utils.central_memory import CentralMemory
 from llms.wrappers import LLMWrapper
 from agents.data_prep_agent import DataPrepAgent
@@ -105,13 +105,13 @@ class CentralHub:
                 print("\n--- Data Preparation Completed ---")
                 print(r1.content)
 
-                # Validation
-                phase = "reviewing"
-                current_metadata["phase_before_review"] = "dataprep"
-
                 # Uncertainty propagation
                 uncertainty_BN.update_from_metadata(current_metadata)
                 posterior = uncertainty_BN.infer()
+
+                # Validation
+                phase = "reviewing"
+                current_metadata["phase_before_review"] = "dataprep"
 
                 audit.record_event("dataprep", iteration, "data_cleaning",
                                    current_metadata, uncertainty_posterior=posterior, sent=msg, received=r1)
@@ -132,14 +132,14 @@ class CentralHub:
 
                 print("\n--- Modelling Completed ---")
                 print(r2.content)
-                
-                #Validation
-                phase = "reviewing"
-                current_metadata["phase_before_review"] = "modelling"
 
                 # Uncertainty propagation
                 uncertainty_BN.update_from_metadata(current_metadata)
                 posterior = uncertainty_BN.infer()
+                
+                #Validation
+                phase = "reviewing"
+                current_metadata["phase_before_review"] = "modelling"             
 
                 audit.record_event("modelling", iteration, "model_training",
                                    current_metadata, uncertainty_posterior=posterior, sent=msg, received=r2)
@@ -168,11 +168,15 @@ class CentralHub:
                 print("\n--- Review Completed ---")
                 print(r3.content)
 
+                # Uncertainty propagation
+                uncertainty_BN.update_from_metadata(current_metadata)
+                posterior = uncertainty_BN.infer()
+
                 action = current_metadata.get("action", "proceed_to_explanation")
                 print(f"[Hub] Review decision → {action.upper()}")
 
                 audit.record_event("reviewing", iteration, action,
-                                   current_metadata, sent=msg, received=r3)
+                                   current_metadata, uncertainty_posterior=posterior, sent=msg, received=r3)
 
                 # ========= ROUTE BASED ON DECISION =========
 
@@ -242,11 +246,15 @@ class CentralHub:
                 print("\n--- Explanation Completed ---")
                 print(r4.content)
 
+                # Uncertainty propagation
+                uncertainty_BN.update_from_metadata(current_metadata)
+                posterior = uncertainty_BN.infer()
+
                 explanation_action = current_metadata.get("action", "finalize")
                 print(f"[Hub] Explanation decision → {explanation_action.upper()}")
 
                 audit.record_event("explanation", iteration, explanation_action,
-                                   current_metadata, sent=msg, received=r4)
+                                   current_metadata, uncertainty_posterior=posterior, sent=msg, received=r4)
 
                 # ========= ROUTE BASED ON DECISION =========
 

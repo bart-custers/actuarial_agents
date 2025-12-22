@@ -12,7 +12,7 @@ class WorkflowAudit:
         self.records = []
         self.start_time = time.time()
 
-    def record_event(self, phase, iteration, action, metadata=None, sent=None, received=None):
+    def record_event(self, phase, iteration, action, metadata=None, sent=None, received=None, uncertainty_posterior=None):
         """Record an audit event. Optionally include the sent message and received response.
 
         sent / received should be JSON-serializable or will be converted using
@@ -26,6 +26,7 @@ class WorkflowAudit:
             "status": metadata.get("status") if metadata else None,
             "sent": make_json_compatible(sent) if sent is not None else None,
             "received": make_json_compatible(received) if received is not None else None,
+            "uncertainty_posterior": make_json_compatible(uncertainty_posterior) if uncertainty_posterior is not None else None
         }
         self.records.append(entry)
 
@@ -129,7 +130,7 @@ class UncertaintyGraphBN:
                 self.bn.cpt(node_id)[1] = p_ok
             else:
                 # Conditional node → Noisy-AND CPT
-                parent_id = self.bn.parents(node_id)[0]
+                parent_id = list(self.bn.parents(node_id))[0]
 
                 # Parent = 0 → almost sure failure
                 self.bn.cpt(node_id)[{'%s'%self.bn.variable(parent_id).name(): 0}] = [0.99, 0.01]
