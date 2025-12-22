@@ -258,10 +258,25 @@ class LLMWrapper:
 
                 joint_logprob += token_logprob
 
-            text = self.tokenizer.decode(
-                gen_token_ids,
+            # text = self.tokenizer.decode(
+            #     gen_token_ids,
+            #     skip_special_tokens=True
+            # )
+            
+            # Decode full sequence (prompt + generation)
+            full_text = self.tokenizer.decode(
+                gen_out.sequences[0],
                 skip_special_tokens=True
             )
+
+            # Decode prompt alone
+            prompt_text = self.tokenizer.decode(
+                inputs["input_ids"][0],
+                skip_special_tokens=True
+            )
+
+            # Remove prompt from full text
+            text = full_text[len(prompt_text):].strip()
 
             mean_logprob = joint_logprob / max(len(tokens), 1)
 
