@@ -257,10 +257,10 @@ class ExplanationAgent(BaseAgent):
             "action": next_action,
             "recommendations": recommendations,
             "final_report": final_report,
-            "unc_explanation_layer1": unc_explanation_layer1,
-            "unc_explanation_layer2": unc_explanation_layer2,
-            "unc_explanation_layer3": unc_explanation_layer3,
-            "unc_explanation_layer4": unc_explanation_layer4, 
+            "unc_explanation_layer1": 1-unc_explanation_layer1,
+            "unc_explanation_layer2": 1-unc_explanation_layer2,
+            "unc_explanation_layer3": 1-unc_explanation_layer3,
+            "unc_explanation_layer4": 1-unc_explanation_layer4, 
             "explanation_iteration": iteration + 1
         }
 

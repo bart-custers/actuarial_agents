@@ -253,11 +253,11 @@ class ReviewingAgent(BaseAgent):
             "decision": decision,
             "revision_prompt": revision_prompt,
             "action": next_action,
-            "unc_reviewing_layer1": unc_reviewing_layer1,
-            "unc_reviewing_layer2": unc_reviewing_layer2,
-            "unc_reviewing_layer3": unc_reviewing_layer3,
-            "unc_reviewing_layer4": unc_reviewing_layer4, 
-            "unc_reviewing_layer5": unc_reviewing_layer5,
+            "unc_reviewing_layer1": 1-unc_reviewing_layer1,
+            "unc_reviewing_layer2": 1-unc_reviewing_layer2,
+            "unc_reviewing_layer3": 1-unc_reviewing_layer3,
+            "unc_reviewing_layer4": 1-unc_reviewing_layer4, 
+            "unc_reviewing_layer5": 1-unc_reviewing_layer5,
             "review_iteration": iteration + 1
         }
 

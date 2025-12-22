@@ -309,10 +309,10 @@ class ModellingAgent(BaseAgent):
             "impact_analysis": impact_analysis_text,
             "consistency_snapshot": snapshot,
             "model_predictions_path": storage_dir,
-            "unc_modelling_layer1": unc_modelling_layer1,
-            "unc_modelling_layer2": unc_modelling_layer2,
-            "unc_modelling_layer3": unc_modelling_layer3,
-            "unc_modelling_layer4": unc_modelling_layer4,            
+            "unc_modelling_layer1": 1-unc_modelling_layer1,
+            "unc_modelling_layer2": 1-unc_modelling_layer2,
+            "unc_modelling_layer3": 1-unc_modelling_layer3,
+            "unc_modelling_layer4": 1-unc_modelling_layer4,            
         }
 
         results_dir = "data/results"
