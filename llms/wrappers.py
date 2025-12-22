@@ -182,7 +182,7 @@ class LLMWrapper:
             "text-generation",
             model=model,
             tokenizer=tokenizer,
-            max_new_tokens=1024,
+            max_new_tokens=1600,
             do_sample=False,
         )
 
@@ -195,7 +195,7 @@ class LLMWrapper:
     def generate_with_logprobs(
             self,
             prompt,
-            max_new_tokens=128,
+            max_new_tokens=1600,
             temperature=0.7,
             do_sample=True
         ):
@@ -258,25 +258,25 @@ class LLMWrapper:
 
                 joint_logprob += token_logprob
 
-            # text = self.tokenizer.decode(
-            #     gen_token_ids,
+            text = self.tokenizer.decode(
+                gen_token_ids,
+                skip_special_tokens=True
+            )
+
+            # # Decode full sequence (prompt + generation)
+            # full_text = self.tokenizer.decode(
+            #     gen_out.sequences[0],
             #     skip_special_tokens=True
             # )
-            
-            # Decode full sequence (prompt + generation)
-            full_text = self.tokenizer.decode(
-                gen_out.sequences[0],
-                skip_special_tokens=True
-            )
 
-            # Decode prompt alone
-            prompt_text = self.tokenizer.decode(
-                inputs["input_ids"][0],
-                skip_special_tokens=True
-            )
+            # # Decode prompt alone
+            # prompt_text = self.tokenizer.decode(
+            #     inputs["input_ids"][0],
+            #     skip_special_tokens=True
+            # )
 
-            # Remove prompt from full text
-            text = full_text[len(prompt_text):].strip()
+            # # Remove prompt from full text
+            # text = full_text[len(prompt_text):].strip()
 
             mean_logprob = joint_logprob / max(len(tokens), 1)
 
