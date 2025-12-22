@@ -32,10 +32,6 @@ class DataPrepAgent(BaseAgent):
         """Extract ```python ... ``` code block from LLM output."""
         match = re.search(r"```python(.*?)```", text, re.DOTALL)
         return match.group(1).strip() if match else None
-  
-    def _extract_confidence(self, text):
-        match = re.search(r"confidence:\s*([\d\.]+)", text.lower())
-        return float(match.group(1)) if match else 0.5
 
     def _apply_llm_pipeline(self, df: pd.DataFrame, suggestion_text: str):
         """Executes LLM-generated preprocessing code safely."""
@@ -133,9 +129,9 @@ class DataPrepAgent(BaseAgent):
         else:
             plan_prompt = PROMPTS["dataprep_layer1"].format(info_dict=json.dumps(info_dict, indent=2), recommendations=recommendations)
         #summary1 = self.llm(plan_prompt)
-        summary1, unc = self.llm(plan_prompt, return_uncertainty=True)
+        summary1, unc_dataprep_layer1 = self.llm(plan_prompt, return_uncertainty=True)
 
-        print(unc)
+        print(unc_dataprep_layer1)
         print(summary1)
         
         print(f"[{self.name}] Invoke layer 2...develop data preparation")
@@ -144,10 +140,9 @@ class DataPrepAgent(BaseAgent):
         # Layer 2: suggestions (LLM)
         # --------------------
         suggestion_prompt = PROMPTS["dataprep_layer2"].format(summary1=summary1,info_dict=json.dumps(info_dict, indent=2),pipeline_code=open("utils/data_pipeline.py").read())
-        suggestion = self.llm(suggestion_prompt)
+        suggestion, unc_dataprep_layer2 = self.llm(suggestion_prompt, return_uncertainty=True)
 
-        confidence = self._extract_confidence(suggestion)
-        print(f"[{self.name}] Layer 2 confidence: {confidence:.2f}")
+        confidence = 0.8
 
         # === Apply deterministic pipeline
         det_pipe = DataCleaning()
@@ -171,7 +166,7 @@ class DataPrepAgent(BaseAgent):
         # Layer 3: verification (LLM)
         # --------------------
         verify_prompt = PROMPTS["dataprep_layer3"].format(comparison=json.dumps(comparison_summary, indent=2),confidence=confidence)
-        verification = self.llm(verify_prompt)
+        verification, unc_dataprep_layer3 = self.llm(verify_prompt, return_uncertainty=True)
 
          # Decide based on verification judgment
         decision = self._extract_dataprep_choice(verification)
@@ -228,7 +223,7 @@ class DataPrepAgent(BaseAgent):
         # Layer 4: LLM inspects result
         # --------------------
         explain_prompt = PROMPTS["dataprep_layer4"].format(verification=verification)
-        explanation = self.llm(explain_prompt)
+        explanation, unc_dataprep_layer4 = self.llm(explain_prompt, return_uncertainty=True)
 
         # --------------------
         # Save metadata
@@ -252,6 +247,10 @@ class DataPrepAgent(BaseAgent):
             "verification": verification,
             "explanation": explanation,
             "consistency_snapshot": snapshot,
+            "unc_dataprep_layer1": unc_dataprep_layer1,
+            "unc_dataprep_layer2": unc_dataprep_layer2,
+            "unc_dataprep_layer3": unc_dataprep_layer3,
+            "unc_dataprep_layer4": unc_dataprep_layer4,
             "processed_paths": {
                 "X_train": X_train_path,
                 "X_test": X_test_path,
