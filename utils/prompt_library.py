@@ -18,10 +18,15 @@ PROMPTS = {
 
     "dataprep_layer2": """
     You are advising on preprocessing transformations for actuarial modeling.
-    Given this dataset summary and the existing pipeline code, suggest
-    any improvements or additional transformations.
+    You are generating EXECUTABLE Python preprocessing code for actuarial modeling.
 
-    Context (summary of your earlier recommendations):
+    Your task:
+    - Propose deterministic preprocessing transformations
+    - The code MUST run without errors
+    - The code MUST be directly executable
+
+    Context:
+    Earlier reasoning summary (do NOT repeat):
     {summary1}
 
     Dataset summary:
@@ -30,16 +35,13 @@ PROMPTS = {
     Existing pipeline:
     {pipeline_code}
 
-    You will now propose OPTIONAL adaptive preprocessing code.
-
-    ### Instructions
-    - Think step-by-step, using the dataset summary and existing pipeline as context.
-    - ONLY output Python code inside a ```python``` code block.
-    - No explanations or comments outside the code block.
-    - Do NOT import any modules.
-    - Do NOT read/write files.
-    - Always output a dataframe named `df_out` at the end.
-    
+    ### HARD CONSTRAINTS (follow strictly)
+    - Output ONLY Python code inside ONE ```python``` code block
+    - Do NOT include explanations or comments
+    - Do NOT read or write files
+    - Do NOT invent column names
+    - ONLY use columns present in the dataset summary
+    - Always end with a variable named df_out
     - Wrap the code in triple backticks like this:
 
     ```python code here```

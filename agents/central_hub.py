@@ -4,7 +4,7 @@ import time
 from datetime import datetime
 from utils.message_types import Message
 from utils.general_utils import make_json_compatible
-from utils.performance import WorkflowAudit
+from utils.performance import WorkflowAudit, UncertaintyGraphBN
 from utils.central_memory import CentralMemory
 from llms.wrappers import LLMWrapper
 from agents.data_prep_agent import DataPrepAgent
@@ -75,6 +75,7 @@ class CentralHub:
         os.makedirs(log_dir, exist_ok=True)
 
         audit = WorkflowAudit(log_dir="data/audit")
+        uncertainty_BN = UncertaintyGraphBN()
 
         r1 = r2 = r3 = r4 = None
         summary_records = []
@@ -108,8 +109,12 @@ class CentralHub:
                 phase = "reviewing"
                 current_metadata["phase_before_review"] = "dataprep"
 
+                # Uncertainty propagation
+                uncertainty_BN.update_from_metadata(current_metadata)
+                posterior = uncertainty_BN.infer()
+
                 audit.record_event("dataprep", iteration, "data_cleaning",
-                                   current_metadata, sent=msg, received=r1)
+                                   current_metadata, uncertainty_posterior=posterior, sent=msg, received=r1)
 
             # --------------------------------------------------------------
             # MODELLING
@@ -132,8 +137,12 @@ class CentralHub:
                 phase = "reviewing"
                 current_metadata["phase_before_review"] = "modelling"
 
+                # Uncertainty propagation
+                uncertainty_BN.update_from_metadata(current_metadata)
+                posterior = uncertainty_BN.infer()
+
                 audit.record_event("modelling", iteration, "model_training",
-                                   current_metadata, sent=msg, received=r2)
+                                   current_metadata, uncertainty_posterior=posterior, sent=msg, received=r2)
 
             # --------------------------------------------------------------
             # REVIEWING
