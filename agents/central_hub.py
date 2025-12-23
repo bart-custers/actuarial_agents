@@ -349,9 +349,9 @@ class CentralHub:
         
         print("P(WorkflowOK=True) =", posterior['WorkflowOK'])
 
-        uncertainty_BN.save_structure("data/audit/bn_baseline", fmt="svg")
-        uncertainty_BN.save_posteriors("data/audit/bn_with_posterior", fmt="svg")
-        uncertainty_BN.save_node_posterior("WorkflowOK", "data/audit/bn_with_posterior", fmt="png")
+        uncertainty_BN.save_structure("data/audit/bn_baseline.svg")
+        uncertainty_BN.save_posteriors("data/audit/bn_with_posterior.png")
+        uncertainty_BN.save_node_posterior("WorkflowOK", "data/audit/posterior_WorkflowOK.png")
 
         summary_path = os.path.join(log_dir, "workflow_summary.json")
         with open(summary_path, "w") as f:

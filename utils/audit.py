@@ -3,7 +3,9 @@ import os
 import pandas as pd
 from utils.general_utils import make_json_compatible
 import pyagrum as gum
-import pyagrum.lib.notebook as gnb
+import pyagrum.lib.image as gumimage
+import matplotlib.pyplot as plt
+from pathlib import Path
 
 class WorkflowAudit:
     def __init__(self, log_dir="data/audit"):
@@ -214,59 +216,46 @@ class UncertaintyGraphBN:
             print(f"\nNode: {var.name()}  |  States: {var.labels()}")
             print(self.bn.cpt(node))
     
-    def save_structure(self, filename="bn_structure", fmt="pdf"):
+    def save_structure(self, filename="bn_structure.png", **kwargs):
         """
-        Save BN structure using Graphviz (works in scripts too).
+        Save the Bayesian network structure as an image file.
         """
-        dot = gum.exportBN(self.bn, "dot")  # returns a dot string
-        dot_path = f"{filename}.dot"
+        # Ensure the directory exists
+        Path(filename).parent.mkdir(parents=True, exist_ok=True)
 
-        # Save dot file
-        with open(dot_path, "w") as f:
-            f.write(dot)
-
-        # Convert to png/pdf/svg using graphviz
-        try:
-            from graphviz import Source
-            src = Source(dot)
-            src.format = fmt
-            src.render(filename, cleanup=True)
-        except ImportError:
-            print(f"Graphviz Python package not installed, dot saved to {dot_path}")
+        # Export the BN
+        gumimage.export(self.bn, filename, **kwargs)
     
-    def save_posteriors(self, filename="bn_posteriors", fmt="pdf"):
+    def save_posteriors(self, filename="bn_with_inference.png", evs=None, targets=None, **kwargs):
+        """
+        Save a graphical representation of the inference (posteriors) as an image.
+        """
+        # Ensure the directory exists
+        Path(filename).parent.mkdir(parents=True, exist_ok=True)
+
+        # Export inference
+        gumimage.exportInference(
+            self.bn,
+            filename,
+            evs=evs or {},        # evidence if any
+            targets=targets or set(),  # nodes to show (empty=set => all)
+            **kwargs
+        )
+
+    def save_node_posterior(self, node_name, filename="posterior_node.png"):
         ie = gum.LazyPropagation(self.bn)
         ie.makeInference()
 
-        dot_str = gum.exportInference(ie, "dot")  # returns a dot string
-        dot_path = f"{filename}.dot"
+        posterior = ie.posterior(node_name)
+        values = posterior.toarray()
+        labels = posterior.variable().labels()
 
-        with open(dot_path, "w") as f:
-            f.write(dot_str)
+        plt.figure(figsize=(6, 4))
+        plt.bar(labels, values)
+        plt.title(f"Posterior for {node_name}")
+        plt.ylabel("Probability")
+        plt.tight_layout()
+        Path(filename).parent.mkdir(parents=True, exist_ok=True)
+        plt.savefig(filename, dpi=300)
+        plt.close()
 
-        try:
-            from graphviz import Source
-            src = Source(dot_str)
-            src.format = fmt
-            src.render(filename, cleanup=True)
-        except ImportError:
-            print(f"Graphviz Python package not installed, dot saved to {dot_path}")
-    
-    def save_node_posterior(self, node_name, filename=None, fmt="png"):
-        ie = gum.LazyPropagation(self.bn)
-        ie.makeInference()
-
-        dot_str = gum.exportPosterior(ie, node_name, "dot")
-        if filename is None:
-            filename = f"posterior_{node_name}"
-
-        with open(f"{filename}.dot", "w") as f:
-            f.write(dot_str)
-
-        try:
-            from graphviz import Source
-            src = Source(dot_str)
-            src.format = fmt
-            src.render(filename, cleanup=True)
-        except ImportError:
-            print(f"Graphviz Python package not installed, dot saved to {filename}.dot")
