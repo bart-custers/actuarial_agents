@@ -107,7 +107,7 @@ class CentralHub:
 
                 # Uncertainty propagation
                 uncertainty_BN.update_from_metadata(current_metadata, active_phase="dataprep")
-                uncertainty_BN.debug_print()
+                #uncertainty_BN.debug_print()
                 posterior = uncertainty_BN.infer()
 
                 # Validation
@@ -136,7 +136,7 @@ class CentralHub:
 
                 # Uncertainty propagation
                 uncertainty_BN.update_from_metadata(current_metadata, active_phase="modelling")
-                uncertainty_BN.debug_print()
+                #uncertainty_BN.debug_print()
                 posterior = uncertainty_BN.infer()
 
                 # Validation
@@ -173,11 +173,11 @@ class CentralHub:
                 # Uncertainty propagation
                 if current_metadata["phase_before_review"] == "dataprep":
                     uncertainty_BN.update_from_metadata(current_metadata, active_phase="review_dataprep")
-                    uncertainty_BN.debug_print()
+                    #uncertainty_BN.debug_print()
                     posterior = uncertainty_BN.infer()
                 elif current_metadata["phase_before_review"] == "modelling":
                     uncertainty_BN.update_from_metadata(current_metadata, active_phase="review_model")
-                    uncertainty_BN.debug_print()
+                    #uncertainty_BN.debug_print()
                     posterior = uncertainty_BN.infer()
 
                 action = current_metadata.get("action", "proceed_to_explanation")
@@ -256,7 +256,7 @@ class CentralHub:
 
                 # Uncertainty propagation
                 uncertainty_BN.update_from_metadata(current_metadata, active_phase="explanation")
-                uncertainty_BN.debug_print()
+                #uncertainty_BN.debug_print()
                 posterior = uncertainty_BN.infer()
 
                 explanation_action = current_metadata.get("action", "finalize")
@@ -351,7 +351,6 @@ class CentralHub:
 
         uncertainty_BN.save_structure("data/audit/bn_baseline.svg")
         uncertainty_BN.save_posteriors("data/audit/bn_with_posterior.png")
-        uncertainty_BN.save_node_posterior("WorkflowOK", "data/audit/posterior_WorkflowOK.png")
 
         summary_path = os.path.join(log_dir, "workflow_summary.json")
         with open(summary_path, "w") as f:

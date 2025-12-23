@@ -242,20 +242,3 @@ class UncertaintyGraphBN:
             **kwargs
         )
 
-    def save_node_posterior(self, node_name, filename="posterior_node.png"):
-        ie = gum.LazyPropagation(self.bn)
-        ie.makeInference()
-
-        posterior = ie.posterior(node_name)
-        values = posterior.toarray()
-        labels = posterior.variable().labels()
-
-        plt.figure(figsize=(6, 4))
-        plt.bar(labels, values)
-        plt.title(f"Posterior for {node_name}")
-        plt.ylabel("Probability")
-        plt.tight_layout()
-        Path(filename).parent.mkdir(parents=True, exist_ok=True)
-        plt.savefig(filename, dpi=300)
-        plt.close()
-
