@@ -107,6 +107,7 @@ class CentralHub:
 
                 # Uncertainty propagation
                 uncertainty_BN.update_from_metadata(current_metadata)
+                uncertainty_BN.debug_print()
                 posterior = uncertainty_BN.infer()
 
                 # Validation
@@ -135,6 +136,7 @@ class CentralHub:
 
                 # Uncertainty propagation
                 uncertainty_BN.update_from_metadata(current_metadata)
+                uncertainty_BN.debug_print()
                 posterior = uncertainty_BN.infer()
                 
                 #Validation
@@ -170,6 +172,7 @@ class CentralHub:
 
                 # Uncertainty propagation
                 uncertainty_BN.update_from_metadata(current_metadata)
+                uncertainty_BN.debug_print()
                 posterior = uncertainty_BN.infer()
 
                 action = current_metadata.get("action", "proceed_to_explanation")
@@ -248,6 +251,7 @@ class CentralHub:
 
                 # Uncertainty propagation
                 uncertainty_BN.update_from_metadata(current_metadata)
+                uncertainty_BN.debug_print()
                 posterior = uncertainty_BN.infer()
 
                 explanation_action = current_metadata.get("action", "finalize")

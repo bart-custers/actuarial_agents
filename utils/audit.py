@@ -157,3 +157,13 @@ class UncertaintyGraphBN:
             results[name] = ie.posterior(node)[1]  # P(node = OK)
 
         return results
+    
+    def debug_print(self):
+        print("\n=== Bayesian Network Structure ===")
+        print(self.bn)
+
+        print("\n=== CPTs ===")
+        for node in self.bn.nodes():
+            var = self.bn.variable(node)
+            print(f"\nNode: {var.name()}  |  States: {var.labels()}")
+            print(self.bn.cpt(node))
