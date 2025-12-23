@@ -216,34 +216,57 @@ class UncertaintyGraphBN:
     
     def save_structure(self, filename="bn_structure", fmt="pdf"):
         """
-        Save the Bayesian Network structure using Graphviz.
+        Save BN structure using Graphviz (works in scripts too).
         """
-        dot = gnb.showBN(self.bn)
-        dot.format = fmt
-        dot.render(filename, cleanup=True)
+        dot = gum.exportBN(self.bn, "dot")  # returns a dot string
+        dot_path = f"{filename}.dot"
+
+        # Save dot file
+        with open(dot_path, "w") as f:
+            f.write(dot)
+
+        # Convert to png/pdf/svg using graphviz
+        try:
+            from graphviz import Source
+            src = Source(dot)
+            src.format = fmt
+            src.render(filename, cleanup=True)
+        except ImportError:
+            print(f"Graphviz Python package not installed, dot saved to {dot_path}")
     
     def save_posteriors(self, filename="bn_posteriors", fmt="pdf"):
-        """
-        Save BN annotated with posterior probabilities.
-        """
         ie = gum.LazyPropagation(self.bn)
         ie.makeInference()
 
-        dot = gnb.showInference(self.bn, ie)
-        dot.format = fmt
-        dot.render(filename, cleanup=True)
+        dot_str = gum.exportInference(ie, "dot")  # returns a dot string
+        dot_path = f"{filename}.dot"
+
+        with open(dot_path, "w") as f:
+            f.write(dot_str)
+
+        try:
+            from graphviz import Source
+            src = Source(dot_str)
+            src.format = fmt
+            src.render(filename, cleanup=True)
+        except ImportError:
+            print(f"Graphviz Python package not installed, dot saved to {dot_path}")
     
     def save_node_posterior(self, node_name, filename=None, fmt="png"):
-        """
-        Save posterior distribution for a single node.
-        """
         ie = gum.LazyPropagation(self.bn)
         ie.makeInference()
 
-        dot = gnb.showPosterior(ie, node_name)
-
+        dot_str = gum.exportPosterior(ie, node_name, "dot")
         if filename is None:
             filename = f"posterior_{node_name}"
 
-        dot.format = fmt
-        dot.render(filename, cleanup=True)
+        with open(f"{filename}.dot", "w") as f:
+            f.write(dot_str)
+
+        try:
+            from graphviz import Source
+            src = Source(dot_str)
+            src.format = fmt
+            src.render(filename, cleanup=True)
+        except ImportError:
+            print(f"Graphviz Python package not installed, dot saved to {filename}.dot")
