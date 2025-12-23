@@ -106,7 +106,7 @@ class CentralHub:
                 print(r1.content)
 
                 # Uncertainty propagation
-                uncertainty_BN.update_from_metadata(current_metadata)
+                uncertainty_BN.update_from_metadata(current_metadata, active_phase="dataprep")
                 uncertainty_BN.debug_print()
                 posterior = uncertainty_BN.infer()
 
@@ -135,11 +135,11 @@ class CentralHub:
                 print(r2.content)
 
                 # Uncertainty propagation
-                uncertainty_BN.update_from_metadata(current_metadata)
+                uncertainty_BN.update_from_metadata(current_metadata, active_phase="modelling")
                 uncertainty_BN.debug_print()
                 posterior = uncertainty_BN.infer()
-                
-                #Validation
+
+                # Validation
                 phase = "reviewing"
                 current_metadata["phase_before_review"] = "modelling"             
 
@@ -171,9 +171,14 @@ class CentralHub:
                 print(r3.content)
 
                 # Uncertainty propagation
-                uncertainty_BN.update_from_metadata(current_metadata)
-                uncertainty_BN.debug_print()
-                posterior = uncertainty_BN.infer()
+                if current_metadata["phase_before_review"] == "dataprep":
+                    uncertainty_BN.update_from_metadata(current_metadata, active_phase="dataprep")
+                    uncertainty_BN.debug_print()
+                    posterior = uncertainty_BN.infer()
+                elif current_metadata["phase_before_review"] == "modelling":
+                    uncertainty_BN.update_from_metadata(current_metadata, active_phase="modelling")
+                    uncertainty_BN.debug_print()
+                    posterior = uncertainty_BN.infer()
 
                 action = current_metadata.get("action", "proceed_to_explanation")
                 print(f"[Hub] Review decision → {action.upper()}")
@@ -250,7 +255,7 @@ class CentralHub:
                 print(r4.content)
 
                 # Uncertainty propagation
-                uncertainty_BN.update_from_metadata(current_metadata)
+                uncertainty_BN.update_from_metadata(current_metadata, active_phase="explanation")
                 uncertainty_BN.debug_print()
                 posterior = uncertainty_BN.infer()
 

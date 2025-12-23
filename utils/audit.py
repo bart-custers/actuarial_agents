@@ -48,13 +48,19 @@ class UncertaintyGraphBN:
         # Define BN structure (success view, AND-gates)
         # --------------------------------------------------
         self.bn = gum.fastBN(
-            "DataOK->ModelOK->ReviewOK->ExplainOK->WorkflowOK"
+            "DataOK"
+            "->ReviewDataOK"
+            "->ModelOK"
+            "->ReviewModelOK"
+            "->ExplainOK"
+            "->WorkflowOK"
         )
 
         self.node_map = {
             "dataprep": "DataOK",
+            "review_dataprep": "ReviewDataOK",
             "modelling": "ModelOK",
-            "reviewing": "ReviewOK",
+            "review_model": "ReviewModelOK",
             "explanation": "ExplainOK",
         }
 
@@ -63,36 +69,29 @@ class UncertaintyGraphBN:
     # --------------------------------------------------
     # Default CPTs (neutral priors)
     # --------------------------------------------------
-    # def _init_default_cpts(self):
-    #     for node in self.bn.nodes():
-    #         var = self.bn.variable(node)
-    #         name = var.name()
-
-    #         if self.bn.parents(node):
-    #             # Temporary placeholder CPTs
-    #             self.bn.cpt(node).fillWith([0.1, 0.9])
-    #         else:
-    #             # Root priors default to high confidence
-    #             self.bn.cpt(node).fillWith([0.1, 0.9])
-
     def _init_default_cpts(self):
         # Root node
         self.bn.cpt("DataOK")[:] = [0.01, 0.99]
 
-        # ModelOK conditional on DataOK
+        # ReviewDataOK conditional on DataOK
+        cpt_rd = self.bn.cpt("ReviewDataOK")
+        cpt_rd[{"DataOK": 1}] = [0.05, 0.95]
+        cpt_rd[{"DataOK": 0}] = [0.95, 0.05]
+
+        # ModelOK conditional on ReviewDataOK
         cpt_m = self.bn.cpt("ModelOK")
-        cpt_m[{"DataOK": 1}] = [0.02, 0.98]
-        cpt_m[{"DataOK": 0}] = [0.30, 0.70]
+        cpt_m[{"ReviewDataOK": 1}] = [0.10, 0.90]
+        cpt_m[{"ReviewDataOK": 0}] = [0.90, 0.10]
 
-        # ReviewOK conditional on ModelOK
-        cpt_r = self.bn.cpt("ReviewOK")
-        cpt_r[{"ModelOK": 1}] = [0.05, 0.95]
-        cpt_r[{"ModelOK": 0}] = [0.90, 0.10]
+        # ReviewModelOK conditional on ModelOK
+        cpt_rm = self.bn.cpt("ReviewModelOK")
+        cpt_rm[{"ModelOK": 1}] = [0.05, 0.95]
+        cpt_rm[{"ModelOK": 0}] = [0.95, 0.05]
 
-        # ExplainOK conditional on ReviewOK
+        # ExplainOK conditional on ReviewModelOK
         cpt_e = self.bn.cpt("ExplainOK")
-        cpt_e[{"ReviewOK": 1}] = [0.05, 0.95]
-        cpt_e[{"ReviewOK": 0}] = [0.90, 0.10]
+        cpt_e[{"ReviewModelOK": 1}] = [0.05, 0.95]
+        cpt_e[{"ReviewModelOK": 0}] = [0.95, 0.05]
 
         # WorkflowOK conditional on ExplainOK
         cpt_wf = self.bn.cpt("WorkflowOK")
@@ -102,25 +101,59 @@ class UncertaintyGraphBN:
     # --------------------------------------------------
     # Aggregate layered uncertainty
     # --------------------------------------------------
+    # @staticmethod
+    # def aggregate_layers(layers):
+    #     clean = [u for u in layers if u is not None]
+    #     if not clean:
+    #         return 0.0
+    #     return 1.0 - math.prod(1.0 - u for u in clean)
+    
     @staticmethod
     def aggregate_layers(layers):
         clean = [u for u in layers if u is not None]
         if not clean:
             return 0.0
-        return 1.0 - math.prod(1.0 - u for u in clean)
+        return 1.0 - sum(clean) / len(clean)
 
     # --------------------------------------------------
     # Inject agent uncertainty into CPTs
     # --------------------------------------------------
-    def update_from_metadata(self, metadata):
-        for agent, node in self.node_map.items():
+    def update_from_metadata(self, metadata, active_phase=None):
+        phase_to_prefix = {
+            "DataOK": "unc_dataprep",
+            "ReviewDataOK": "unc_review_dataprep",
+            "ModelOK": "unc_modelling",
+            "ReviewModelOK": "unc_review_model",
+            "ExplainOK": "unc_explanation",
+        }
+        
+        for prefix, node in self.phase_to_node.items():
+
+            # Skip if not active
+            if active_phase:
+                allowed_prefixes = phase_to_prefix.get(active_phase, [])
+                if prefix not in allowed_prefixes:
+                    continue
+
             layers = [
                 v for k, v in metadata.items()
-                if k.startswith(f"unc_{agent}_layer")
+                if k.startswith(prefix)
             ]
 
+            if not layers:
+                continue
+
             unc = self.aggregate_layers(layers)
-            p_ok = 1.0 - unc
+            p_ok = 1 - unc
+
+        # for agent, node in self.node_map.items():
+        #     layers = [
+        #         v for k, v in metadata.items()
+        #         if k.startswith(f"unc_{agent}_layer")
+        #     ]
+
+        #     unc = self.aggregate_layers(layers)
+        #     p_ok = 1.0 - unc
 
             node_id = self.bn.idFromName(node)
 

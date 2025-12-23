@@ -239,6 +239,12 @@ class ReviewingAgent(BaseAgent):
             model_metrics = None
         generate_review_report_txt(report_path, phase, model_metrics, analysis, consistency_summary, consistency_check, impact_analysis_output,
                                review_output, final_report)
+        
+        # Uncertainty values
+        if metadata["phase_before_review"] == "dataprep":
+            prefix = "unc_review_dataprep"
+        elif metadata["phase_before_review"] == "modelling":
+            prefix = "unc_review_model"
 
         # Store metadata
         metadata = {
@@ -253,11 +259,11 @@ class ReviewingAgent(BaseAgent):
             "decision": decision,
             "revision_prompt": revision_prompt,
             "action": next_action,
-            "unc_reviewing_layer1": 1-unc_reviewing_layer1,
-            "unc_reviewing_layer2": 1-unc_reviewing_layer2,
-            "unc_reviewing_layer3": 1-unc_reviewing_layer3,
-            "unc_reviewing_layer4": 1-unc_reviewing_layer4, 
-            "unc_reviewing_layer5": 1-unc_reviewing_layer5,
+            f"{prefix}_layer1": 1-unc_reviewing_layer1,
+            f"{prefix}_layer2": 1-unc_reviewing_layer2,
+            f"{prefix}_layer3": 1-unc_reviewing_layer3,
+            f"{prefix}_layer4": 1-unc_reviewing_layer4, 
+            f"{prefix}_layer5": 1-unc_reviewing_layer5,
             "review_iteration": iteration + 1
         }
 
