@@ -123,7 +123,7 @@ class UncertaintyGraphBN:
         clean = [u for u in layers if u is not None]
         if not clean:
             return 0.0
-        return 1.0 - sum(clean) / len(clean)
+        return sum(clean) / len(clean)
 
     # --------------------------------------------------
     # Inject agent uncertainty into CPTs
@@ -219,17 +219,23 @@ class UncertaintyGraphBN:
             print(f"\nNode: {var.name()}  |  States: {var.labels()}")
             print(self.bn.cpt(node))
     
-    def display_final(self):
+    def display_final(self, save_path="bn_final.png"):
         """
         Display the final BN structure and posterior probabilities
-        side by side (pyAgrum notebook style).
+        side by side (pyAgrum notebook style) and save as a PNG.
         """
-        # Ensure inference has been run
-        #self.ie.makeInference()
 
+        # Perform inference
+        ie = gum.LazyPropagation(self.bn)
+        ie.makeInference()
+
+        # Display side-by-side in notebook
         display(
             gnb.sideBySide(
                 self.bn,
                 gnb.getInference(self.bn)
             )
         )
+
+        # Save the BN with inference as a static image
+        gnb.saveInference(self.bn, ie, save_path)

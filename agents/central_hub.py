@@ -172,11 +172,11 @@ class CentralHub:
 
                 # Uncertainty propagation
                 if current_metadata["phase_before_review"] == "dataprep":
-                    uncertainty_BN.update_from_metadata(current_metadata, active_phase="dataprep")
+                    uncertainty_BN.update_from_metadata(current_metadata, active_phase="review_dataprep")
                     uncertainty_BN.debug_print()
                     posterior = uncertainty_BN.infer()
                 elif current_metadata["phase_before_review"] == "modelling":
-                    uncertainty_BN.update_from_metadata(current_metadata, active_phase="modelling")
+                    uncertainty_BN.update_from_metadata(current_metadata, active_phase="review_model")
                     uncertainty_BN.debug_print()
                     posterior = uncertainty_BN.infer()
 
@@ -345,7 +345,7 @@ class CentralHub:
         end_time = time.time()
         print(f"\nWorkflow runtime: {end_time - start_time:.2f} seconds")
 
-        uncertainty_BN.display_final()
+        uncertainty_BN.display_final(save_path="data/audit/bn_with_posterior.png")
 
         audit.finalize()
 
