@@ -1,9 +1,11 @@
 import time
-import json
 import os
 import pandas as pd
-import matplotlib.pyplot as plt
 from utils.general_utils import make_json_compatible
+import pyagrum as gum
+from IPython.display import Image, display
+import subprocess
+import tempfile
 
 class WorkflowAudit:
     def __init__(self, log_dir="data/audit"):
@@ -38,11 +40,6 @@ class WorkflowAudit:
         print(f"Audit log saved to: {self.log_dir}/audit_log.csv")
         return df
 
-
-import pyagrum as gum
-import math
-import pyagrum.lib.notebook as gnb
-from IPython.display import display
 
 class UncertaintyGraphBN:
     def __init__(self):
@@ -219,23 +216,29 @@ class UncertaintyGraphBN:
             print(f"\nNode: {var.name()}  |  States: {var.labels()}")
             print(self.bn.cpt(node))
     
-    def display_final(self, save_path="bn_final.png"):
+    def visualize_posteriors(self, posterior, save_path="bn_posteriors.png"):
         """
-        Display the final BN structure and posterior probabilities
-        side by side (pyAgrum notebook style) and save as a PNG.
+        Annotate the BN nodes with posterior probabilities, save as PNG, and display in notebook.
+        
+        Args:
+            posterior (dict): Dictionary of {node_name: P(node=OK)}
+            save_path (str): File path for the PNG output
         """
 
-        # Perform inference
-        ie = gum.LazyPropagation(self.bn)
-        ie.makeInference()
+        # Annotate nodes with posterior probabilities
+        for node_name, p_ok in posterior.items():
+            var = self.bn.variable(node_name)
+            # Update the "OK" state label
+            label_ok = f"{var.name()}\nP= {p_ok:.2f}"
+            var.setLabel(1, label_ok)
 
-        # Display side-by-side in notebook
-        display(
-            gnb.sideBySide(
-                self.bn,
-                gnb.getInference(self.bn)
-            )
-        )
+        # Export BN to DOT file
+        with tempfile.NamedTemporaryFile(mode='w', suffix=".dot", delete=False) as dot_file:
+            self.bn.saveToDot(dot_file.name)
+            dot_path = dot_file.name
 
-        # Save the BN with inference as a static image
-        #gnb.saveInference(self.bn, ie, save_path)
+        # Convert DOT to PNG using Graphviz
+        subprocess.run(["dot", "-Tpng", dot_path, "-o", save_path], check=True)
+
+        # Display PNG in notebook
+        display(Image(save_path))

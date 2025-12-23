@@ -345,9 +345,11 @@ class CentralHub:
         end_time = time.time()
         print(f"\nWorkflow runtime: {end_time - start_time:.2f} seconds")
 
-        uncertainty_BN.display_final(save_path="data/audit/bn_with_posterior.png")
-
         audit.finalize()
+        
+        print("P(WorkflowOK=True) =", posterior['WorkflowOK'])
+        
+        uncertainty_BN.visualize_posteriors(posterior, save_path="data/audit/bn_with_posterior.png")
 
         summary_path = os.path.join(log_dir, "workflow_summary.json")
         with open(summary_path, "w") as f:
