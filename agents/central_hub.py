@@ -345,6 +345,8 @@ class CentralHub:
         end_time = time.time()
         print(f"\nWorkflow runtime: {end_time - start_time:.2f} seconds")
 
+        uncertainty_BN.display_final()
+
         audit.finalize()
 
         summary_path = os.path.join(log_dir, "workflow_summary.json")

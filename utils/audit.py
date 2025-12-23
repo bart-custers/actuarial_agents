@@ -41,6 +41,8 @@ class WorkflowAudit:
 
 import pyagrum as gum
 import math
+import pyAgrum.lib.notebook as gnb
+from IPython.display import display
 
 class UncertaintyGraphBN:
     def __init__(self):
@@ -62,6 +64,14 @@ class UncertaintyGraphBN:
             "modelling": "ModelOK",
             "review_model": "ReviewModelOK",
             "explanation": "ExplainOK",
+        }
+
+        self.phase_to_node = {
+            "unc_dataprep": "DataOK",
+            "unc_review_dataprep": "ReviewDataOK",
+            "unc_modelling": "ModelOK",
+            "unc_review_model": "ReviewModelOK",
+            "unc_explanation": "ExplainOK",
         }
 
         self._init_default_cpts()
@@ -200,3 +210,18 @@ class UncertaintyGraphBN:
             var = self.bn.variable(node)
             print(f"\nNode: {var.name()}  |  States: {var.labels()}")
             print(self.bn.cpt(node))
+    
+    def display_final(self):
+        """
+        Display the final BN structure and posterior probabilities
+        side by side (pyAgrum notebook style).
+        """
+        # Ensure inference has been run
+        #self.ie.makeInference()
+
+        display(
+            gnb.sideBySide(
+                self.bn,
+                gnb.getInference(self.bn)
+            )
+        )
