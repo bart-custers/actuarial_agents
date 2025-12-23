@@ -129,12 +129,20 @@ class UncertaintyGraphBN:
     # Inject agent uncertainty into CPTs
     # --------------------------------------------------
     def update_from_metadata(self, metadata, active_phase=None):
+        # phase_to_prefix = {
+        #     "DataOK": "unc_dataprep",
+        #     "ReviewDataOK": "unc_review_dataprep",
+        #     "ModelOK": "unc_modelling",
+        #     "ReviewModelOK": "unc_review_model",
+        #     "ExplainOK": "unc_explanation",
+        # }
+
         phase_to_prefix = {
-            "DataOK": "unc_dataprep",
-            "ReviewDataOK": "unc_review_dataprep",
-            "ModelOK": "unc_modelling",
-            "ReviewModelOK": "unc_review_model",
-            "ExplainOK": "unc_explanation",
+            "dataprep": ["unc_dataprep"],
+            "review_dataprep": ["unc_review_dataprep"],
+            "modelling": ["unc_modelling"],
+            "review_model": ["unc_review_model"],
+            "explanation": ["unc_explanation"],
         }
         
         for prefix, node in self.phase_to_node.items():
