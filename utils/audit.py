@@ -41,7 +41,7 @@ class WorkflowAudit:
 
 import pyagrum as gum
 import math
-import pyAgrum.lib.notebook as gnb
+import pyagrum.lib.notebook as gnb
 from IPython.display import display
 
 class UncertaintyGraphBN:
