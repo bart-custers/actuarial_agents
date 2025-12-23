@@ -238,4 +238,4 @@ class UncertaintyGraphBN:
         )
 
         # Save the BN with inference as a static image
-        gnb.saveInference(self.bn, ie, save_path)
+        #gnb.saveInference(self.bn, ie, save_path)
