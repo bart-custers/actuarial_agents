@@ -3,9 +3,7 @@ import os
 import pandas as pd
 from utils.general_utils import make_json_compatible
 import pyagrum as gum
-from IPython.display import Image, display
-import subprocess
-import tempfile
+import pyagrum.lib.notebook as gnb
 
 class WorkflowAudit:
     def __init__(self, log_dir="data/audit"):
@@ -216,31 +214,36 @@ class UncertaintyGraphBN:
             print(f"\nNode: {var.name()}  |  States: {var.labels()}")
             print(self.bn.cpt(node))
     
-    def visualize_posteriors(self, posterior, save_path="bn_posteriors.png"):
+    def save_structure(self, filename="bn_structure", fmt="pdf"):
         """
-        Annotate the BN nodes with posterior probabilities, save as PNG, and display in notebook.
-        
-        Args:
-            posterior (dict): Dictionary of {node_name: P(node=OK)}
-            save_path (str): File path for the PNG output
+        Save the Bayesian Network structure using Graphviz.
         """
+        dot = gnb.showBN(self.bn)
+        dot.format = fmt
+        dot.render(filename, cleanup=True)
+    
+    def save_posteriors(self, filename="bn_posteriors", fmt="pdf"):
+        """
+        Save BN annotated with posterior probabilities.
+        """
+        ie = gum.LazyPropagation(self.bn)
+        ie.makeInference()
 
-        # Annotate nodes with posterior probabilities
-        for node_name, p_ok in posterior.items():
-            var = self.bn.variable(node_name)
-            labels = list(var.labels())  # tuple → list
-            if len(labels) >= 2:
-                # state 1 is "OK"
-                labels[1] = f"{labels[1]}\nP={p_ok:.2f}"
-                var.setLabels(labels)
+        dot = gnb.showInference(self.bn, ie)
+        dot.format = fmt
+        dot.render(filename, cleanup=True)
+    
+    def save_node_posterior(self, node_name, filename=None, fmt="png"):
+        """
+        Save posterior distribution for a single node.
+        """
+        ie = gum.LazyPropagation(self.bn)
+        ie.makeInference()
 
-        # Export BN to DOT file
-        with tempfile.NamedTemporaryFile(mode='w', suffix=".dot", delete=False) as dot_file:
-            self.bn.saveToDot(dot_file.name)
-            dot_path = dot_file.name
+        dot = gnb.showPosterior(ie, node_name)
 
-        # Convert DOT to PNG using Graphviz
-        subprocess.run(["dot", "-Tpng", dot_path, "-o", save_path], check=True)
+        if filename is None:
+            filename = f"posterior_{node_name}"
 
-        # Display PNG in notebook
-        display(Image(save_path))
+        dot.format = fmt
+        dot.render(filename, cleanup=True)
