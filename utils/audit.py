@@ -228,9 +228,10 @@ class UncertaintyGraphBN:
         # Annotate nodes with posterior probabilities
         for node_name, p_ok in posterior.items():
             var = self.bn.variable(node_name)
-            # Update the "OK" state label
-            label_ok = f"{var.name()}\nP= {p_ok:.2f}"
-            var.setLabel(1, label_ok)
+            labels = var.labels()  # get current labels
+            if len(labels) > 1:
+                # Update the label for the second state (index 1 = OK)
+                var.setLabel(1, f"{labels[1]}\nP= {p_ok:.2f}")
 
         # Export BN to DOT file
         with tempfile.NamedTemporaryFile(mode='w', suffix=".dot", delete=False) as dot_file:
