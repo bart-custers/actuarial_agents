@@ -69,7 +69,7 @@ class CentralHub:
         phase = "dataprep"
         iteration = 0
         continue_workflow = True
-        MAX_ITERATIONS = 4
+        MAX_ITERATIONS = 2
 
         log_dir = "data/workflow_logs"
         os.makedirs(log_dir, exist_ok=True)
