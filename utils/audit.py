@@ -95,11 +95,19 @@ class UncertaintyGraphBN:
         cpt_wf = self.bn.cpt("WorkflowOK")
         parents = ["ModelOK", "ReviewModelOK", "ExplainOK"]
 
-        for cfg in cpt_wf.loopOnConfigurations():
-            if all(cfg[p] == 1 for p in parents):
-                cpt_wf[cfg] = [0.01, 0.99]
+        inst = gum.Instantiation(cpt_wf)
+
+        while not inst.end():
+            if (
+                inst["ModelOK"] == 1
+                and inst["ReviewModelOK"] == 1
+                and inst["ExplainOK"] == 1
+            ):
+                cpt_wf[inst] = [0.01, 0.99]
             else:
-                cpt_wf[cfg] = [0.99, 0.01]
+                cpt_wf[inst] = [0.99, 0.01]
+
+            inst.inc()
 
     # --------------------------------------------------
     # Aggregate layered uncertainty
@@ -152,11 +160,19 @@ class UncertaintyGraphBN:
         # WorkflowOK stays a pure AND
         cpt_wf = self.bn.cpt("WorkflowOK")
         parents = ["ModelOK", "ReviewModelOK", "ExplainOK"]
-        for cfg in cpt_wf.loopOnConfigurations():
-            if all(cfg[p] == 1 for p in parents):
-                cpt_wf[cfg] = [0.01, 0.99]
+        inst = gum.Instantiation(cpt_wf)
+
+        while not inst.end():
+            if (
+                inst["ModelOK"] == 1
+                and inst["ReviewModelOK"] == 1
+                and inst["ExplainOK"] == 1
+            ):
+                cpt_wf[inst] = [0.01, 0.99]
             else:
-                cpt_wf[cfg] = [0.99, 0.01]
+                cpt_wf[inst] = [0.99, 0.01]
+
+            inst.inc()
 
     # --------------------------------------------------
     # Inference
