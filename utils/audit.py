@@ -40,16 +40,19 @@ class WorkflowAudit:
         print(f"Audit log saved to: {self.log_dir}/audit_log.csv")
         return df
 
+import pyagrum as gum
+from pathlib import Path
+import pyagrum.lib.image as gumimage
+
+
 class UncertaintyGraphBN:
     def __init__(self):
         # --------------------------------------------------
-        # Define BN structure (verified schema)
+        # Define BN structure (FINAL schema)
         # --------------------------------------------------
         self.bn = gum.fastBN(
             "DataOK->ReviewDataOK;"
             "ReviewDataOK->ModelOK;"
-            "ReviewDataOK->ReviewModelOK;"
-            "ReviewDataOK->ExplainOK;"
             "ModelOK->WorkflowOK;"
             "ReviewModelOK->WorkflowOK;"
             "ExplainOK->WorkflowOK"
@@ -102,22 +105,37 @@ class UncertaintyGraphBN:
         inst.chgVal("ReviewDataOK", 1)
         cpt[inst] = 0.95
 
-        # ---------- Children of ReviewDataOK ----------
-        for node in ["ModelOK", "ReviewModelOK", "ExplainOK"]:
-            cpt = self.bn.cpt(node)
-            inst = gum.Instantiation(cpt)
+        # ---------- ModelOK | ReviewDataOK ----------
+        cpt = self.bn.cpt("ModelOK")
+        inst = gum.Instantiation(cpt)
 
-            inst.chgVal("ReviewDataOK", 0)
-            inst.chgVal(node, 0)
-            cpt[inst] = 0.90
-            inst.chgVal(node, 1)
-            cpt[inst] = 0.10
+        inst.chgVal("ReviewDataOK", 0)
+        inst.chgVal("ModelOK", 0)
+        cpt[inst] = 0.90
+        inst.chgVal("ModelOK", 1)
+        cpt[inst] = 0.10
 
-            inst.chgVal("ReviewDataOK", 1)
-            inst.chgVal(node, 0)
-            cpt[inst] = 0.10
-            inst.chgVal(node, 1)
-            cpt[inst] = 0.90
+        inst.chgVal("ReviewDataOK", 1)
+        inst.chgVal("ModelOK", 0)
+        cpt[inst] = 0.10
+        inst.chgVal("ModelOK", 1)
+        cpt[inst] = 0.90
+
+        # ---------- ReviewModelOK (root) ----------
+        cpt = self.bn.cpt("ReviewModelOK")
+        inst = gum.Instantiation(cpt)
+        inst.chgVal("ReviewModelOK", 0)
+        cpt[inst] = 0.05
+        inst.chgVal("ReviewModelOK", 1)
+        cpt[inst] = 0.95
+
+        # ---------- ExplainOK (root) ----------
+        cpt = self.bn.cpt("ExplainOK")
+        inst = gum.Instantiation(cpt)
+        inst.chgVal("ExplainOK", 0)
+        cpt[inst] = 0.05
+        inst.chgVal("ExplainOK", 1)
+        cpt[inst] = 0.95
 
         # ---------- WorkflowOK = AND(ModelOK, ReviewModelOK, ExplainOK) ----------
         cpt = self.bn.cpt("WorkflowOK")
@@ -190,7 +208,7 @@ class UncertaintyGraphBN:
                 inst.chgVal(node, 1)
                 cpt[inst] = p_ok
 
-        # Re-apply AND-gate (WorkflowOK has no own uncertainty)
+        # Re-apply AND-gate (WorkflowOK has no direct uncertainty)
         cpt = self.bn.cpt("WorkflowOK")
         inst = gum.Instantiation(cpt)
 
@@ -239,8 +257,6 @@ class UncertaintyGraphBN:
             targets=targets or set(),
             **kwargs,
         )
-
-
 
 
 # class UncertaintyGraphBN:
