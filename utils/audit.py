@@ -326,20 +326,24 @@ class UncertaintyGraphBN:
         #cpt_e[{"ReviewModelOK": 1}] = [0.05, 0.95]
         #cpt_e[{"ReviewModelOK": 0}] = [0.95, 0.05]
 
-        # WorkflowOK conditional on ExplainOK
+        # WorkflowOK conditional on ModelOK, ReviewModelOK, ExplainOK
         cpt_wf = self.bn.cpt("WorkflowOK")
-        # list all 8 combinations of parent states
-        for model_ok in [0, 1]:
-            for review_model_ok in [0, 1]:
-                for explain_ok in [0, 1]:
-                    if model_ok == 0 and review_model_ok == 0 and explain_ok == 0:
-                        cpt_wf[{"ModelOK": model_ok,
-                                "ReviewModelOK": review_model_ok,
-                                "ExplainOK": explain_ok}] = [0.99, 0.01]
-                    else:
-                        cpt_wf[{"ModelOK": model_ok,
-                                "ReviewModelOK": review_model_ok,
-                                "ExplainOK": explain_ok}] = [0.01, 0.99]
+
+        for model_ok, review_model_ok, explain_ok in product([0, 1], repeat=3):
+            if model_ok == 1 and review_model_ok == 1 and explain_ok == 1:
+                # All parents OK → workflow OK with high probability
+                cpt_wf[{
+                    "ModelOK": model_ok,
+                    "ReviewModelOK": review_model_ok,
+                    "ExplainOK": explain_ok
+                }] = [0.01, 0.99]
+            else:
+                # Any parent fails → workflow almost surely fails
+                cpt_wf[{
+                    "ModelOK": model_ok,
+                    "ReviewModelOK": review_model_ok,
+                    "ExplainOK": explain_ok
+                }] = [0.99, 0.01]
 
     # --------------------------------------------------
     # Aggregate layered uncertainty
