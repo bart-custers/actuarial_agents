@@ -385,12 +385,7 @@ class UncertaintyGraphBN:
                 # Multi-parent node → Noisy-AND style update
                 for state in product([0, 1], repeat=len(parents)):
                     state_dict = dict(zip(parents, state))
-                    if 0 in state:
-                        # Any parent failed → almost sure failure
-                        self.bn.cpt(node_id)[state_dict] = [0.99, 0.01]
-                    else:
-                        # All parents OK → apply node's own uncertainty
-                        self.bn.cpt(node_id)[state_dict] = [unc, p_ok]
+                    self.bn.cpt(node_id)[state_dict] = [unc, p_ok]
 
     # --------------------------------------------------
     # Inference
