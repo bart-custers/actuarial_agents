@@ -40,10 +40,15 @@ class WorkflowAudit:
         print(f"Audit log saved to: {self.log_dir}/audit_log.csv")
         return df
 
+import pyagrum as gum
+from pathlib import Path
+import pyagrum.lib.image as gumimage
+
+
 class UncertaintyGraphBN:
     def __init__(self):
         # --------------------------------------------------
-        # Define BN structure (fan-out + AND-gate)
+        # Define BN structure (correct schema)
         # --------------------------------------------------
         self.bn = gum.fastBN(
             "DataOK->ReviewDataOK;"
@@ -74,27 +79,32 @@ class UncertaintyGraphBN:
         self._init_default_cpts()
 
     # --------------------------------------------------
-    # Default CPTs (neutral priors)
+    # Default CPTs (Tensor-safe)
     # --------------------------------------------------
     def _init_default_cpts(self):
-        # Root
-        self.bn.cpt("DataOK")[:] = [0.01, 0.99]
 
-        # ReviewDataOK | DataOK
-        cpt_rd = self.bn.cpt("ReviewDataOK")
-        cpt_rd[{"DataOK": 1}] = [0.05, 0.95]
-        cpt_rd[{"DataOK": 0}] = [0.95, 0.05]
+        # ---------- DataOK (root) ----------
+        cpt = self.bn.cpt("DataOK")
+        cpt[0] = 0.01
+        cpt[1] = 0.99
 
-        # Children of ReviewDataOK
+        # ---------- ReviewDataOK | DataOK ----------
+        cpt = self.bn.cpt("ReviewDataOK")
+        cpt[{ "DataOK": 0 }, 0] = 0.95
+        cpt[{ "DataOK": 0 }, 1] = 0.05
+        cpt[{ "DataOK": 1 }, 0] = 0.05
+        cpt[{ "DataOK": 1 }, 1] = 0.95
+
+        # ---------- Children of ReviewDataOK ----------
         for node in ["ModelOK", "ReviewModelOK", "ExplainOK"]:
             cpt = self.bn.cpt(node)
-            cpt[{"ReviewDataOK": 1}] = [0.10, 0.90]
-            cpt[{"ReviewDataOK": 0}] = [0.90, 0.10]
+            cpt[{ "ReviewDataOK": 0 }, 0] = 0.90
+            cpt[{ "ReviewDataOK": 0 }, 1] = 0.10
+            cpt[{ "ReviewDataOK": 1 }, 0] = 0.10
+            cpt[{ "ReviewDataOK": 1 }, 1] = 0.90
 
-        # WorkflowOK = AND(ModelOK, ReviewModelOK, ExplainOK)
+        # ---------- WorkflowOK = AND(ModelOK, ReviewModelOK, ExplainOK) ----------
         cpt_wf = self.bn.cpt("WorkflowOK")
-        parents = ["ModelOK", "ReviewModelOK", "ExplainOK"]
-
         inst = gum.Instantiation(cpt_wf)
 
         while not inst.end():
@@ -103,10 +113,11 @@ class UncertaintyGraphBN:
                 and inst["ReviewModelOK"] == 1
                 and inst["ExplainOK"] == 1
             ):
-                cpt_wf[inst] = [0.01, 0.99]
+                cpt_wf[inst, 0] = 0.01
+                cpt_wf[inst, 1] = 0.99
             else:
-                cpt_wf[inst] = [0.99, 0.01]
-
+                cpt_wf[inst, 0] = 0.99
+                cpt_wf[inst, 1] = 0.01
             inst.inc()
 
     # --------------------------------------------------
@@ -123,6 +134,7 @@ class UncertaintyGraphBN:
     # Inject agent uncertainty into CPTs
     # --------------------------------------------------
     def update_from_metadata(self, metadata, active_phase=None):
+
         phase_to_prefix = {
             "dataprep": ["unc_dataprep"],
             "review_dataprep": ["unc_review_dataprep"],
@@ -134,8 +146,7 @@ class UncertaintyGraphBN:
         for prefix, node in self.phase_to_node.items():
 
             if active_phase:
-                allowed = phase_to_prefix.get(active_phase, [])
-                if prefix not in allowed:
+                if prefix not in phase_to_prefix.get(active_phase, []):
                     continue
 
             layers = [v for k, v in metadata.items() if k.startswith(prefix)]
@@ -144,22 +155,23 @@ class UncertaintyGraphBN:
 
             unc = self.aggregate_layers(layers)
             p_ok = 1.0 - unc
-            node_id = self.bn.idFromName(node)
+            cpt = self.bn.cpt(node)
 
-            parents = list(self.bn.parents(node_id))
+            parents = list(self.bn.parents(self.bn.idFromName(node)))
 
             if not parents:
-                # Root
-                self.bn.cpt(node_id)[0] = unc
-                self.bn.cpt(node_id)[1] = p_ok
+                # Root node
+                cpt[0] = unc
+                cpt[1] = p_ok
             else:
                 parent_name = self.bn.variable(parents[0]).name()
-                self.bn.cpt(node_id)[{parent_name: 0}] = [0.95, 0.05]
-                self.bn.cpt(node_id)[{parent_name: 1}] = [unc, p_ok]
+                cpt[{ parent_name: 0 }, 0] = 0.95
+                cpt[{ parent_name: 0 }, 1] = 0.05
+                cpt[{ parent_name: 1 }, 0] = unc
+                cpt[{ parent_name: 1 }, 1] = p_ok
 
-        # WorkflowOK stays a pure AND
+        # Re-enforce AND-gate (no direct uncertainty on WorkflowOK)
         cpt_wf = self.bn.cpt("WorkflowOK")
-        parents = ["ModelOK", "ReviewModelOK", "ExplainOK"]
         inst = gum.Instantiation(cpt_wf)
 
         while not inst.end():
@@ -168,10 +180,11 @@ class UncertaintyGraphBN:
                 and inst["ReviewModelOK"] == 1
                 and inst["ExplainOK"] == 1
             ):
-                cpt_wf[inst] = [0.01, 0.99]
+                cpt_wf[inst, 0] = 0.01
+                cpt_wf[inst, 1] = 0.99
             else:
-                cpt_wf[inst] = [0.99, 0.01]
-
+                cpt_wf[inst, 0] = 0.99
+                cpt_wf[inst, 1] = 0.01
             inst.inc()
 
     # --------------------------------------------------
@@ -184,6 +197,8 @@ class UncertaintyGraphBN:
             self.bn.variable(n).name(): ie.posterior(n)[1]
             for n in self.bn.nodes()
         }
+
+
 
 # class UncertaintyGraphBN:
 #     def __init__(self):
