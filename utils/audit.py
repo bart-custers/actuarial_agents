@@ -40,15 +40,10 @@ class WorkflowAudit:
         print(f"Audit log saved to: {self.log_dir}/audit_log.csv")
         return df
 
-import pyagrum as gum
-from pathlib import Path
-import pyagrum.lib.image as gumimage
-
-
 class UncertaintyGraphBN:
     def __init__(self):
         # --------------------------------------------------
-        # Define BN structure (correct schema)
+        # Define BN structure (verified schema)
         # --------------------------------------------------
         self.bn = gum.fastBN(
             "DataOK->ReviewDataOK;"
@@ -79,45 +74,63 @@ class UncertaintyGraphBN:
         self._init_default_cpts()
 
     # --------------------------------------------------
-    # Default CPTs (Tensor-safe)
+    # Default CPTs (Instantiation-only, Tensor-safe)
     # --------------------------------------------------
     def _init_default_cpts(self):
 
         # ---------- DataOK (root) ----------
         cpt = self.bn.cpt("DataOK")
-        cpt[0] = 0.01
-        cpt[1] = 0.99
+        inst = gum.Instantiation(cpt)
+        inst.chgVal("DataOK", 0)
+        cpt[inst] = 0.01
+        inst.chgVal("DataOK", 1)
+        cpt[inst] = 0.99
 
         # ---------- ReviewDataOK | DataOK ----------
         cpt = self.bn.cpt("ReviewDataOK")
-        cpt[{ "DataOK": 0 }, 0] = 0.95
-        cpt[{ "DataOK": 0 }, 1] = 0.05
-        cpt[{ "DataOK": 1 }, 0] = 0.05
-        cpt[{ "DataOK": 1 }, 1] = 0.95
+        inst = gum.Instantiation(cpt)
+
+        inst.chgVal("DataOK", 0)
+        inst.chgVal("ReviewDataOK", 0)
+        cpt[inst] = 0.95
+        inst.chgVal("ReviewDataOK", 1)
+        cpt[inst] = 0.05
+
+        inst.chgVal("DataOK", 1)
+        inst.chgVal("ReviewDataOK", 0)
+        cpt[inst] = 0.05
+        inst.chgVal("ReviewDataOK", 1)
+        cpt[inst] = 0.95
 
         # ---------- Children of ReviewDataOK ----------
         for node in ["ModelOK", "ReviewModelOK", "ExplainOK"]:
             cpt = self.bn.cpt(node)
-            cpt[{ "ReviewDataOK": 0 }, 0] = 0.90
-            cpt[{ "ReviewDataOK": 0 }, 1] = 0.10
-            cpt[{ "ReviewDataOK": 1 }, 0] = 0.10
-            cpt[{ "ReviewDataOK": 1 }, 1] = 0.90
+            inst = gum.Instantiation(cpt)
+
+            inst.chgVal("ReviewDataOK", 0)
+            inst.chgVal(node, 0)
+            cpt[inst] = 0.90
+            inst.chgVal(node, 1)
+            cpt[inst] = 0.10
+
+            inst.chgVal("ReviewDataOK", 1)
+            inst.chgVal(node, 0)
+            cpt[inst] = 0.10
+            inst.chgVal(node, 1)
+            cpt[inst] = 0.90
 
         # ---------- WorkflowOK = AND(ModelOK, ReviewModelOK, ExplainOK) ----------
-        cpt_wf = self.bn.cpt("WorkflowOK")
-        inst = gum.Instantiation(cpt_wf)
+        cpt = self.bn.cpt("WorkflowOK")
+        inst = gum.Instantiation(cpt)
 
+        inst.setFirst()
         while not inst.end():
-            if (
+            ok = (
                 inst["ModelOK"] == 1
                 and inst["ReviewModelOK"] == 1
                 and inst["ExplainOK"] == 1
-            ):
-                cpt_wf[inst, 0] = 0.01
-                cpt_wf[inst, 1] = 0.99
-            else:
-                cpt_wf[inst, 0] = 0.99
-                cpt_wf[inst, 1] = 0.01
+            )
+            cpt[inst] = 0.99 if ok else 0.01
             inst.inc()
 
     # --------------------------------------------------
@@ -126,9 +139,7 @@ class UncertaintyGraphBN:
     @staticmethod
     def aggregate_layers(layers):
         clean = [u for u in layers if u is not None]
-        if not clean:
-            return 0.0
-        return sum(clean) / len(clean)
+        return sum(clean) / len(clean) if clean else 0.0
 
     # --------------------------------------------------
     # Inject agent uncertainty into CPTs
@@ -145,9 +156,8 @@ class UncertaintyGraphBN:
 
         for prefix, node in self.phase_to_node.items():
 
-            if active_phase:
-                if prefix not in phase_to_prefix.get(active_phase, []):
-                    continue
+            if active_phase and prefix not in phase_to_prefix.get(active_phase, []):
+                continue
 
             layers = [v for k, v in metadata.items() if k.startswith(prefix)]
             if not layers:
@@ -155,36 +165,43 @@ class UncertaintyGraphBN:
 
             unc = self.aggregate_layers(layers)
             p_ok = 1.0 - unc
-            cpt = self.bn.cpt(node)
 
+            cpt = self.bn.cpt(node)
+            inst = gum.Instantiation(cpt)
             parents = list(self.bn.parents(self.bn.idFromName(node)))
 
             if not parents:
-                # Root node
-                cpt[0] = unc
-                cpt[1] = p_ok
+                inst.chgVal(node, 0)
+                cpt[inst] = unc
+                inst.chgVal(node, 1)
+                cpt[inst] = p_ok
             else:
-                parent_name = self.bn.variable(parents[0]).name()
-                cpt[{ parent_name: 0 }, 0] = 0.95
-                cpt[{ parent_name: 0 }, 1] = 0.05
-                cpt[{ parent_name: 1 }, 0] = unc
-                cpt[{ parent_name: 1 }, 1] = p_ok
+                parent = self.bn.variable(parents[0]).name()
 
-        # Re-enforce AND-gate (no direct uncertainty on WorkflowOK)
-        cpt_wf = self.bn.cpt("WorkflowOK")
-        inst = gum.Instantiation(cpt_wf)
+                inst.chgVal(parent, 0)
+                inst.chgVal(node, 0)
+                cpt[inst] = 0.95
+                inst.chgVal(node, 1)
+                cpt[inst] = 0.05
 
+                inst.chgVal(parent, 1)
+                inst.chgVal(node, 0)
+                cpt[inst] = unc
+                inst.chgVal(node, 1)
+                cpt[inst] = p_ok
+
+        # Re-apply AND-gate (WorkflowOK has no own uncertainty)
+        cpt = self.bn.cpt("WorkflowOK")
+        inst = gum.Instantiation(cpt)
+
+        inst.setFirst()
         while not inst.end():
-            if (
+            ok = (
                 inst["ModelOK"] == 1
                 and inst["ReviewModelOK"] == 1
                 and inst["ExplainOK"] == 1
-            ):
-                cpt_wf[inst, 0] = 0.01
-                cpt_wf[inst, 1] = 0.99
-            else:
-                cpt_wf[inst, 0] = 0.99
-                cpt_wf[inst, 1] = 0.01
+            )
+            cpt[inst] = 0.99 if ok else 0.01
             inst.inc()
 
     # --------------------------------------------------
@@ -197,6 +214,32 @@ class UncertaintyGraphBN:
             self.bn.variable(n).name(): ie.posterior(n)[1]
             for n in self.bn.nodes()
         }
+
+    # --------------------------------------------------
+    # Debug & visualisation
+    # --------------------------------------------------
+    def debug_print(self):
+        print("\n=== Bayesian Network Structure ===")
+        print(self.bn)
+        print("\n=== CPTs ===")
+        for node in self.bn.nodes():
+            print(self.bn.variable(node).name())
+            print(self.bn.cpt(node))
+
+    def save_structure(self, filename="bn_structure.png", **kwargs):
+        Path(filename).parent.mkdir(parents=True, exist_ok=True)
+        gumimage.export(self.bn, filename, **kwargs)
+
+    def save_posteriors(self, filename="bn_with_inference.png", evs=None, targets=None, **kwargs):
+        Path(filename).parent.mkdir(parents=True, exist_ok=True)
+        gumimage.exportInference(
+            self.bn,
+            filename,
+            evs=evs or {},
+            targets=targets or set(),
+            **kwargs,
+        )
+
 
 
 
