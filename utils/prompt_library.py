@@ -18,12 +18,14 @@ PROMPTS = {
 
     "dataprep_layer2": """
     You are advising on preprocessing transformations for actuarial modeling.
-    You are generating EXECUTABLE Python preprocessing code for actuarial modeling.
+    You are generating EXECUTABLE Python code that DEFINES a reusable preprocessing artifact.
+    The code will be executed in a controlled environment and then instantiated by the system.
 
     Your task:
-    - Propose deterministic preprocessing transformations
-    - The code MUST run without errors
-    - The code MUST be directly executable
+    - Propose a preprocessing pipeline suitable for actuarial modeling
+    - Follow the structure and style of the existing pipeline
+    - Adapt or improve the existing pipeline if appropriate
+    - The code MUST run without errors when executed
 
     Context:
     Earlier reasoning summary (do NOT repeat):
@@ -32,19 +34,38 @@ PROMPTS = {
     Dataset summary:
     {info_dict}
 
-    Existing pipeline:
+    Existing pipeline (example to follow and adapt):
     {pipeline_code}
 
-    ### HARD CONSTRAINTS (follow strictly)
-    - Output ONLY Python code inside ONE ```python``` code block
-    - Do NOT include explanations or comments
-    - Do NOT read or write files
-    - Do NOT invent column names
-    - ONLY use columns present in the dataset summary
-    - Always end with a variable named df_out
-    - Wrap the code in triple backticks like this:
+    ### REQUIRED OUTPUT CONTRACT (follow strictly)
 
-    ```python code here```
+    - Output ONLY Python code inside ONE ```python``` code block
+    - Do NOT include explanations, comments, or text outside the code block
+    - Do NOT read or write files
+    - Do NOT execute the pipeline (do not call process)
+    - Do NOT invent column names; only use columns present in the dataset summary
+    - Imports ARE allowed, but only from:
+    pandas, numpy, sklearn.compose, sklearn.preprocessing, sklearn.model_selection
+
+    ### REQUIRED CODE STRUCTURE
+
+    - The code MUST define a class named `DataPipeline`
+    - The class MUST have:
+    - an `__init__` method
+    - a method `process(self, data: pd.DataFrame)` that performs preprocessing
+    - `process` MUST return a dictionary containing at least:
+    - "X_train"
+    - "X_test"
+    - "y_train"
+    - "y_test"
+
+    ### FORMAT
+
+    Return the code wrapped EXACTLY like this:
+
+    ```python
+    # code here
+    ```
     """,
 
     "dataprep_layer3": """

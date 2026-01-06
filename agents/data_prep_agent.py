@@ -21,7 +21,6 @@ class DataPrepAgent(BaseAgent):
         self.llm = shared_llm
         self.system_prompt = system_prompt
         self.hub = hub
-    #    self.memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True, k=1) # Short-term conversation memory for layered prompting
 
     # --------------------------
     # Helper functions
@@ -29,46 +28,147 @@ class DataPrepAgent(BaseAgent):
     @staticmethod
     def extract_code_block(text: str) -> str | None:
         """Extract ```python ... ``` code block from LLM output."""
-        match = re.search(r"```python(.*?)```", text, re.DOTALL)
+        match = re.search(r"```(?:python)?\s*(.*?)```", text, re.DOTALL | re.IGNORECASE)
         return match.group(1).strip() if match else None
 
+    # def _apply_llm_pipeline(self, df: pd.DataFrame, suggestion_text: str):
+    #     """Executes LLM-generated preprocessing code safely."""
+    #     code = self.extract_code_block(suggestion_text)
+    #     if code is None:
+    #         raise ValueError("No Python code block found in LLM suggestion.")
+
+    #     # Safety: forbid imports or system calls
+    #     if "import os" in code or "subprocess" in code or "open(" in code:
+    #         raise ValueError("Unsafe code detected.")
+
+    #     # Local execution namespace
+    #     local_env = {"df": df.copy(), "np": np, "pd": pd}
+
+    #     try:
+    #         exec(code, local_env, local_env)
+    #     except Exception as e:
+    #         raise ValueError(f"Adaptive preprocessing code failed: {e}")
+
+    #     if "df" not in local_env:
+    #         raise ValueError("Adaptive code did not modify df.")
+
+    #     return local_env["df"]
+
+
     def _apply_llm_pipeline(self, df: pd.DataFrame, suggestion_text: str):
-        """Executes LLM-generated preprocessing code safely."""
+        """
+        Executes an LLM-generated sklearn-style DataPipeline artifact.
+        Expected contract:
+        - Defines a class named `DataPipeline`
+        - Class implements `process(data: pd.DataFrame) -> dict`
+        """
+
         code = self.extract_code_block(suggestion_text)
         if code is None:
             raise ValueError("No Python code block found in LLM suggestion.")
 
-        # Safety: forbid imports or system calls
-        if "import os" in code or "subprocess" in code or "open(" in code:
-            raise ValueError("Unsafe code detected.")
+        # ---- Static safety checks (cheap but effective) ----
+        FORBIDDEN_TOKENS = [
+            "os.", "sys.", "subprocess", "open(", "exec(", "eval("
+        ]
+        if any(tok in code for tok in FORBIDDEN_TOKENS):
+            raise ValueError("Unsafe operations detected in adaptive pipeline code.")
 
-        # Local execution namespace
-        local_env = {"df": df.copy(), "np": np, "pd": pd}
+        # ---- Controlled execution environment ----
+        SAFE_BUILTINS = {
+            "len": len,
+            "range": range,
+            "min": min,
+            "max": max,
+            "sum": sum,
+            "print": print,
+        }
+
+        exec_env = {
+            "__builtins__": SAFE_BUILTINS,
+        }
 
         try:
-            exec(code, {}, local_env)
+            exec(code, exec_env, exec_env)
         except Exception as e:
-            raise ValueError(f"Adaptive preprocessing code failed: {e}")
+            raise ValueError(f"Pipeline definition failed to execute: {e}")
 
-        if "df" not in local_env:
-            raise ValueError("Adaptive code did not modify df.")
+        # ---- Validate artifact ----
+        if "DataPipeline" not in exec_env:
+            raise ValueError("Adaptive code did not define a DataPipeline class.")
 
-        return local_env["df"]
+        PipelineCls = exec_env["DataPipeline"]
 
-    def _compare_pipelines(self, det, adapt):
-        """Quantitative comparison of two pipelines."""
+        try:
+            pipeline = PipelineCls()
+        except Exception as e:
+            raise ValueError(f"Failed to instantiate DataPipeline: {e}")
+
+        if not hasattr(pipeline, "process"):
+            raise ValueError("DataPipeline has no process() method.")
+
+        # ---- Execute pipeline ----
+        try:
+            results = pipeline.process(df.copy())
+        except Exception as e:
+            raise ValueError(f"Pipeline execution failed: {e}")
+
+        if not isinstance(results, dict):
+            raise ValueError("DataPipeline.process() must return a dict.")
+
+        REQUIRED_KEYS = {
+            "X_train", "X_test", "y_train", "y_test"
+        }
+        missing = REQUIRED_KEYS - set(results.keys())
+        if missing:
+            raise ValueError(f"Pipeline output missing required keys: {missing}")
+
+        return results
+
+    def _compare_pipelines(self, det: dict, adapt: dict | None):
+        """
+        Compare two preprocessing pipelines at the artifact level.
+        """
+
         if adapt is None:
-            return {"status": "adaptive_failed"}
-        det_shape = det.shape
-        adapt_shape = adapt.shape
-        det_cols = det.columns.to_list() if hasattr(det, 'columns') else []
-        adapt_cols = adapt.columns.to_list() if hasattr(adapt, 'columns') else []
-        feature_overlap = len(set(det_cols) & set(adapt_cols))
+            return {
+                "status": "adaptive_failed",
+            }
+
+        def summarize(p):
+            return {
+                "n_train": p["X_train"].shape[0],
+                "n_test": p["X_test"].shape[0],
+                "n_features": p["X_train"].shape[1],
+                "has_feature_names": "feature_names" in p,
+            }
+
+        det_summary = summarize(det)
+        adapt_summary = summarize(adapt)
+
+        feature_diff = adapt_summary["n_features"] - det_summary["n_features"]
+
         return {
             "status": "adaptive_succeeded",
-            "feature_overlap": feature_overlap,
-            "shape_diff": (det_shape, adapt_shape),
+            "deterministic": det_summary,
+            "adaptive": adapt_summary,
+            "feature_diff": feature_diff,
         }
+
+    # def _compare_pipelines(self, det, adapt):
+    #     """Quantitative comparison of two pipelines."""
+    #     if adapt is None:
+    #         return {"status": "adaptive_failed"}
+    #     det_shape = det.shape
+    #     adapt_shape = adapt.shape
+    #     det_cols = det.columns.to_list() if hasattr(det, 'columns') else []
+    #     adapt_cols = adapt.columns.to_list() if hasattr(adapt, 'columns') else []
+    #     feature_overlap = len(set(det_cols) & set(adapt_cols))
+    #     return {
+    #         "status": "adaptive_succeeded",
+    #         "feature_overlap": feature_overlap,
+    #         "shape_diff": (det_shape, adapt_shape),
+    #     }
     
     def _extract_dataprep_choice(self, llm_text: str) -> str:
         text = llm_text
