@@ -88,6 +88,7 @@ class DataPrepAgent(BaseAgent):
 
         exec_env = {
             "__builtins__": SAFE_BUILTINS,
+            "__name__": "__adaptive_pipeline__",
         }
 
         try:
