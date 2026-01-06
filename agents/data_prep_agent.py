@@ -29,7 +29,7 @@ class DataPrepAgent(BaseAgent):
     def extract_code_block(text: str) -> str | None:
         """Extract ```python ... ``` code block from LLM output."""
         match = re.search(r"```(?:python)?\s*(.*?)```", text, re.DOTALL | re.IGNORECASE)
-        return match.group(1).strip() if match else None
+        return match.group(1) if match else None
 
     # def _apply_llm_pipeline(self, df: pd.DataFrame, suggestion_text: str):
     #     """Executes LLM-generated preprocessing code safely."""

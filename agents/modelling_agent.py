@@ -28,7 +28,7 @@ class ModellingAgent(BaseAgent):
     def extract_code_block(text: str) -> str | None:
         """Extract ```python ... ``` code block from LLM output."""
         match = re.search(r"```python(.*?)```", text, re.DOTALL)
-        return match.group(1).strip() if match else None
+        return match.group(1) if match else None
     
     def _apply_llm_pipeline(self, X_train, y_train, exposure_train, X_test, model_code: str):
         """Executes LLM-generated model training code safely, returning predictions."""
