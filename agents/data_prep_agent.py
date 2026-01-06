@@ -76,6 +76,7 @@ class DataPrepAgent(BaseAgent):
 
         # ---- Controlled execution environment ----
         SAFE_BUILTINS = {
+            "__import__": __import__,
             "len": len,
             "range": range,
             "min": min,
