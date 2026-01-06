@@ -23,8 +23,7 @@ PROMPTS = {
 
     Your task:
     - Propose a preprocessing pipeline suitable for actuarial modeling
-    - Follow the structure and style of the existing pipeline
-    - Adapt or improve the existing pipeline if appropriate
+    - Use the structure and style of the existing pipeline and only modify where needed
     - The code MUST run without errors when executed
 
     Context:
@@ -44,8 +43,6 @@ PROMPTS = {
     - Do NOT read or write files
     - Do NOT execute the pipeline (do not call process)
     - Do NOT invent column names; only use columns present in the dataset summary
-    - Imports ARE allowed, but only from:
-    pandas, numpy, sklearn.compose, sklearn.preprocessing, sklearn.model_selection
 
     ### REQUIRED CODE STRUCTURE
 

@@ -142,22 +142,34 @@ class DataPrepAgent(BaseAgent):
         """
 
         if adapt is None:
-            return {
-                "status": "adaptive_failed",
-            }
+            return {"status": "adaptive_failed"}
 
         def summarize(p):
+            # Ensure p is a dict
+            if not isinstance(p, dict):
+                return {
+                    "n_train": None,
+                    "n_test": None,
+                    "n_features": None,
+                    "has_feature_names": False,
+                }
+
+            X_train = p.get("X_train")
+            X_test = p.get("X_test")
+
             return {
-                "n_train": p["X_train"].shape[0],
-                "n_test": p["X_test"].shape[0],
-                "n_features": p["X_train"].shape[1],
+                "n_train": X_train.shape[0] if X_train is not None else None,
+                "n_test": X_test.shape[0] if X_test is not None else None,
+                "n_features": X_train.shape[1] if X_train is not None else None,
                 "has_feature_names": "feature_names" in p,
             }
 
         det_summary = summarize(det)
         adapt_summary = summarize(adapt)
 
-        feature_diff = adapt_summary["n_features"] - det_summary["n_features"]
+        feature_diff = None
+        if det_summary["n_features"] is not None and adapt_summary["n_features"] is not None:
+            feature_diff = adapt_summary["n_features"] - det_summary["n_features"]
 
         return {
             "status": "adaptive_succeeded",
