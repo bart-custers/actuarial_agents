@@ -84,6 +84,14 @@ class DataPrepAgent(BaseAgent):
             "max": max,
             "sum": sum,
             "print": print,
+            "dict": dict,
+            "list": list,
+            "set": set,
+            "tuple": tuple,
+            "float": float,
+            "int": int,
+            "str": str,
+            "bool": bool,
         }
 
         exec_env = {
