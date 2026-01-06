@@ -97,6 +97,8 @@ class DataPrepAgent(BaseAgent):
         exec_env = {
             "__builtins__": SAFE_BUILTINS,
             "__name__": "__adaptive_pipeline__",
+            "pd": pd,
+            "np": np,
         }
 
         try:
@@ -104,78 +106,45 @@ class DataPrepAgent(BaseAgent):
         except Exception as e:
             raise ValueError(f"Pipeline definition failed to execute: {e}")
 
-        # ---- Validate artifact ----
-        if "DataPipeline" not in exec_env:
-            raise ValueError("Adaptive code did not define a DataPipeline class.")
+        if "DataCleaning" not in exec_env:
+            raise ValueError("Adaptive code did not define a DataCleaning class.")
 
-        PipelineCls = exec_env["DataPipeline"]
+        # Instantiate and run
+        pipeline = exec_env["DataCleaning"]()
+        if not hasattr(pipeline, "clean"):
+            raise ValueError("DataCleaning class has no clean() method.")
 
         try:
-            pipeline = PipelineCls()
+            df_out = pipeline.clean(df.copy())
         except Exception as e:
-            raise ValueError(f"Failed to instantiate DataPipeline: {e}")
+            raise ValueError(f"Adaptive pipeline execution failed: {e}")
 
-        if not hasattr(pipeline, "process"):
-            raise ValueError("DataPipeline has no process() method.")
+        if not isinstance(df_out, pd.DataFrame):
+            raise ValueError("DataCleaning.clean() must return a DataFrame.")
 
-        # ---- Execute pipeline ----
-        try:
-            results = pipeline.process(df.copy())
-        except Exception as e:
-            raise ValueError(f"Pipeline execution failed: {e}")
+        return df_out
 
-        if not isinstance(results, dict):
-            raise ValueError("DataPipeline.process() must return a dict.")
-
-        REQUIRED_KEYS = {
-            "X_train", "X_test", "y_train", "y_test"
-        }
-        missing = REQUIRED_KEYS - set(results.keys())
-        if missing:
-            raise ValueError(f"Pipeline output missing required keys: {missing}")
-
-        return results
-
-    def _compare_pipelines(self, det: dict, adapt: dict | None):
+    def _compare_pipelines(self, det: pd.DataFrame, adapt: pd.DataFrame | None):
         """
-        Compare two preprocessing pipelines at the artifact level.
+        Compare deterministic and adaptive pipelines at the DataFrame level.
         """
 
         if adapt is None:
             return {"status": "adaptive_failed"}
 
-        def summarize(p):
-            # Ensure p is a dict
-            if not isinstance(p, dict):
-                return {
-                    "n_train": None,
-                    "n_test": None,
-                    "n_features": None,
-                    "has_feature_names": False,
-                }
-
-            X_train = p.get("X_train")
-            X_test = p.get("X_test")
-
-            return {
-                "n_train": X_train.shape[0] if X_train is not None else None,
-                "n_test": X_test.shape[0] if X_test is not None else None,
-                "n_features": X_train.shape[1] if X_train is not None else None,
-                "has_feature_names": "feature_names" in p,
-            }
-
-        det_summary = summarize(det)
-        adapt_summary = summarize(adapt)
-
-        feature_diff = None
-        if det_summary["n_features"] is not None and adapt_summary["n_features"] is not None:
-            feature_diff = adapt_summary["n_features"] - det_summary["n_features"]
+        det_cols = set(det.columns)
+        adapt_cols = set(adapt.columns)
+        feature_overlap = len(det_cols & adapt_cols)
 
         return {
             "status": "adaptive_succeeded",
-            "deterministic": det_summary,
-            "adaptive": adapt_summary,
-            "feature_diff": feature_diff,
+            "n_rows_det": len(det),
+            "n_rows_adapt": len(adapt),
+            "n_cols_det": len(det.columns),
+            "n_cols_adapt": len(adapt.columns),
+            "feature_overlap": feature_overlap,
+            "shape_det": det.shape,
+            "shape_adapt": adapt.shape,
         }
 
     # def _compare_pipelines(self, det, adapt):
@@ -297,7 +266,6 @@ class DataPrepAgent(BaseAgent):
             # fallback behavior if unclear
             use_adaptive = False
 
-        #use_adaptive = "USE_ADAPTIVE" in verification.upper() and adaptive_success
         chosen_results = adaptive_results if use_adaptive else deterministic_results
         chosen_pipeline_name = "adaptive" if use_adaptive else "deterministic"
 

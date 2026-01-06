@@ -41,20 +41,17 @@ PROMPTS = {
     - Output ONLY Python code inside ONE ```python``` code block
     - Do NOT include explanations, comments, or text outside the code block
     - Do NOT read or write files
-    - Do NOT execute the pipeline (do not call process)
+    - Do NOT execute the pipeline (do not call `clean`)
     - Do NOT invent column names; only use columns present in the dataset summary
+    - The class MUST be named `DataCleaning` to match the existing baseline
 
     ### REQUIRED CODE STRUCTURE
 
-    - The code MUST define a class named `DataPipeline`
+    - The code MUST define a class named `DataCleaning`
     - The class MUST have:
     - an `__init__` method
-    - a method `process(self, data: pd.DataFrame)` that performs preprocessing
-    - `process` MUST return a dictionary containing at least:
-    - "X_train"
-    - "X_test"
-    - "y_train"
-    - "y_test"
+    - a method `clean(self, data: pd.DataFrame)` that performs preprocessing
+    - `clean` MUST return a **pandas DataFrame** representing the cleaned data
 
     ### FORMAT
 
