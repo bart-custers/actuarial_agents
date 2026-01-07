@@ -31,7 +31,7 @@ class DataCleaning:
 
         # --- Step 3: Drop missing values ---
         before = len(data)
-        data = data.dropna()
+        #data = data.dropna()
         after = len(data)
         self.actions_log.append(f"Dropped {before - after} rows with missing values.")
         
