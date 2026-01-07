@@ -63,24 +63,27 @@ PROMPTS = {
     """,
 
     "dataprep_layer3": """
-    Compare deterministic vs adaptive pipelines:
-    {comparison}
+    You are an expert data preparation agent for actuarial datasets on insurance claims.
 
-    Think step-by-step.
-    1. Does the adaptive pipeline output a dataframe?
-    2. The adaptive pipeline should not produce an empty dataframe!!
-    2. How does the adaptive pipeline compare to the deterministic pipeline?
+    Your task: Evaluate the performance of deterministic versus adaptive pipelines using the following comparison data: {comparison}
+
+    Guidelines:
+    - Verify if the adaptive pipeline successfully outputs a valid dataframe. If status:adaptive_failed, you should advise the deterministic pipeline.
+    - Ensure the adaptive pipeline does not result in an empty dataframe. If status:adaptive_empty, you should advise the deterministic pipeline.
+    - Analyze the differences and similarities between the adaptive and deterministic pipelines.
     
-    Task: Decide whether the adaptive pipeline should be used. Justify in a short bullet list
+    Think step-by-step and justify in a short bullet list.
     
-    The final line of your answer should contain: Decision: USE_ADAPTIVE or KEEP_BASELINE.
+    The final line of your answer MUST contain: Decision: USE_ADAPTIVE or KEEP_DETERMINISTIC.
     """,
 
     "dataprep_layer4": """
-    Summarize the verified data preparation and reasoning.
-    Think step-by-step.
-    Include stability, differences, and final rationale.
-    Verification feedback: {verification}.
+    You are an expert data preparation agent for actuarial datasets on insurance claims.
+
+    Your task: Summarize the verified data preparation and reasoning, based on context: {verification}.
+    
+    Think step-by-step. Include stability, differences, and final rationale.
+    
     """,
     # --------------------
     # Modelling agent prompts

@@ -171,15 +171,15 @@ class DataPrepAgent(BaseAgent):
         text = llm_text
 
         # 1) Prefer explicit Decision: line
-        m = re.search(r'^\s*Decision\s*:\s*(USE_ADAPTIVE|KEEP_BASELINE)\s*$',
+        m = re.search(r'^\s*Decision\s*:\s*(USE_ADAPTIVE|KEEP_DETERMINISTIC)\s*$',
                     text, flags=re.IGNORECASE | re.MULTILINE)
         if m:
-            return "adaptive" if m.group(1).upper() == "USE_ADAPTIVE" else "baseline"
+            return "adaptive" if m.group(1).upper() == "USE_ADAPTIVE" else "deterministic"
 
         # 2) tolerant Decision: anywhere
-        m2 = re.search(r'Decision\s*:\s*(USE_ADAPTIVE|KEEP_BASELINE)', text, flags=re.IGNORECASE)
+        m2 = re.search(r'Decision\s*:\s*(USE_ADAPTIVE|KEEP_DETERMINISTIC)', text, flags=re.IGNORECASE)
         if m2:
-            return "adaptive" if m2.group(1).upper() == "USE_ADAPTIVE" else "baseline"
+            return "adaptive" if m2.group(1).upper() == "USE_ADAPTIVE" else "deterministic"
 
     # ---------------------------
     # Main handler
@@ -268,7 +268,7 @@ class DataPrepAgent(BaseAgent):
         decision = self._extract_dataprep_choice(verification)
         if decision == "adaptive" and adaptive_success:
             use_adaptive = True
-        elif decision == "baseline":
+        elif decision == "deterministic":
             use_adaptive = False
         else:
             # fallback behavior if unclear
