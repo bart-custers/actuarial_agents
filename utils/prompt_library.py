@@ -67,14 +67,15 @@ PROMPTS = {
 
     Your task: Evaluate the performance of deterministic versus adaptive pipelines using the following comparison data: {comparison}
 
-    Guidelines:
-    - Verify if the adaptive pipeline successfully outputs a valid dataframe. If status:adaptive_failed, you should advise the deterministic pipeline.
-    - Ensure the adaptive pipeline does not result in an empty dataframe. If status:adaptive_empty, you should advise the deterministic pipeline.
-    - Analyze the differences and similarities between the adaptive and deterministic pipelines.
-    
-    Think step-by-step and justify in a short bullet list.
-    
-    The final line of your answer MUST contain: Decision: USE_ADAPTIVE or KEEP_DETERMINISTIC.
+    Critical Guidelines:
+
+    Priority Check: If the status is "adaptive_empty" or "adaptive_failed," immediately advise the deterministic pipeline.
+    Verify if the adaptive pipeline successfully outputs a valid dataframe.
+    Ensure the adaptive pipeline does not result in an empty dataframe.
+    Analyze the differences and similarities between the adaptive and deterministic pipelines.
+    Task: Determine whether the adaptive pipeline is preferable. Provide your reasoning in concise bullet points.
+
+    Conclusion: Your final statement must clearly indicate your decision: either Decision: USE_ADAPTIVE or Decision: KEEP_DETERMINISTIC.
     """,
 
     "dataprep_layer4": """
@@ -104,7 +105,7 @@ PROMPTS = {
     4. Justify your choice in maximum 5 bullet points (actuarial + ML reasoning).
     5. State any risks or pitfalls you anticipate for this model type.
 
-    Respond concisely. The final line of your answer should contain: Decision: USE_GLM or USE_GBM.
+    Respond concisely. The final line of your answer should contain: Decision: USE_GLM or Decision: USE_GBM.
     """,
 
     "modelling_layer2":""" 
