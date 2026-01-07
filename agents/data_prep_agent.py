@@ -235,8 +235,6 @@ class DataPrepAgent(BaseAgent):
         suggestion_prompt = PROMPTS["dataprep_layer2"].format(summary1=summary1,info_dict=json.dumps(info_dict, indent=2),pipeline_code=open("utils/data_cleaning.py").read())
         suggestion, unc_dataprep_layer2 = self.llm(suggestion_prompt, return_uncertainty=True)
 
-        confidence = unc_dataprep_layer2
-
         # === Apply deterministic pipeline
         det_pipe = DataCleaning()
         deterministic_results = det_pipe.clean(df)
@@ -252,6 +250,8 @@ class DataPrepAgent(BaseAgent):
 
         # === Compare pipelines
         comparison_summary = self._compare_pipelines(deterministic_results, adaptive_results)
+
+        print(comparison_summary)
 
         print(f"[{self.name}] Invoke layer 3...choose pipeline")
 
@@ -332,7 +332,6 @@ class DataPrepAgent(BaseAgent):
             "timestamp": timestamp,
             "status": "success",
             "used_pipeline": decision,
-            "confidence": confidence,
             "plan_dataprep": summary1,
             "adaptive_suggestion": suggestion,
             "comparison": comparison_summary,
