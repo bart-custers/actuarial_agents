@@ -113,6 +113,8 @@ PROMPTS = {
 
     Your task is to produce ONLY Python code that trains the model type chosen earlier: {model_choice}
 
+    Existing model trainer (example to follow and adapt): {trainer_code}
+
     YOU MUST OUTPUT *ONLY ONE* PYTHON CODE BLOCK AND NOTHING ELSE.
     - NO explanations. 
     - NO text before or after. 

@@ -1,0 +1,39 @@
+import joblib
+from sklearn.ensemble import HistGradientBoostingRegressor
+from sklearn.model_selection import GridSearchCV
+
+class GBMTrainer:
+    def __init__(self):
+        self.model = None
+
+    def train(self, X_train, y_train, exposure_train):
+        gbm = HistGradientBoostingRegressor(
+            loss="poisson",
+            random_state=42,
+            verbose=1
+        )
+        param_grid = {
+            "max_iter": [200],
+            "learning_rate": [0.01, 0.05],
+            "max_depth": [4]
+        }
+        search = GridSearchCV(
+            estimator=gbm,
+            param_grid=param_grid,
+            scoring="neg_mean_poisson_deviance",
+            cv=3,
+            n_jobs=-1,
+            verbose=2
+        )
+        search.fit(X_train, y_train, sample_weight=exposure_train)
+        self.model = search.best_estimator_
+
+    def predict(self, X):
+        return self.model.predict(X)
+
+    def save(self, path):
+        """Save the trained model."""
+        if self.model:
+            joblib.dump(self.model, path)
+        else:
+            raise ValueError("No trained model to save.")

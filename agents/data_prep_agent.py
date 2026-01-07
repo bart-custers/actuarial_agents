@@ -92,6 +92,7 @@ class DataPrepAgent(BaseAgent):
             "int": int,
             "str": str,
             "bool": bool,
+            "object": object, 
         }
 
         exec_env = {
@@ -255,25 +256,26 @@ class DataPrepAgent(BaseAgent):
 
         print(comparison_summary)
 
-        print(f"[{self.name}] Invoke layer 3...choose pipeline")
-
         # --------------------
         # Layer 3: verification (LLM)
         # --------------------
-        verify_prompt = PROMPTS["dataprep_layer3"].format(comparison=json.dumps(comparison_summary, indent=2))
-        verification, unc_dataprep_layer3 = self.llm(verify_prompt, return_uncertainty=True)
+        print(f"[{self.name}] Invoke layer 3...choose pipeline")
 
-        print(verify_prompt)
-        print(verification)
+        status = comparison_summary.get("status")
 
-         # Decide based on verification judgment
-        decision = self._extract_dataprep_choice(verification)
+        if status in ["adaptive_empty", "adaptive_failed"]:
+            decision = "deterministic"
+            print(f"[{self.name}] Forced decision due to status={status}")
+        else:
+            verify_prompt = PROMPTS["dataprep_layer3"].format(comparison=json.dumps(comparison_summary, indent=2))
+            verification, unc_dataprep_layer3 = self.llm(verify_prompt, return_uncertainty=True)
+            decision = self._extract_dataprep_choice(verification)
+
         if decision == "adaptive" and adaptive_success:
             use_adaptive = True
         elif decision == "deterministic":
             use_adaptive = False
         else:
-            # fallback behavior if unclear
             use_adaptive = False
 
         chosen_results = adaptive_results if use_adaptive else deterministic_results
