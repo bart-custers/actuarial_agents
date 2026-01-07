@@ -5,7 +5,7 @@ class GLMTrainer:
     def __init__(self):
         self.model = None
 
-    def train(self, X_train, y_train):
+    def train(self, X_train, y_train,  exposure_train=None):
         self.model = PoissonRegressor(alpha=1e-6, max_iter=500)
         self.model.fit(X_train, y_train)
 

@@ -14,6 +14,9 @@ from utils.gbm_trainer_code import GBMTrainer
 from utils.model_evaluation import ModelEvaluation
 from utils.prompt_library import PROMPTS
 from agents.base_agent import BaseAgent
+from sklearn.linear_model import PoissonRegressor
+from sklearn.ensemble import HistGradientBoostingRegressor
+from sklearn.model_selection import GridSearchCV
 
 
 class ModellingAgent(BaseAgent):
@@ -46,6 +49,9 @@ class ModellingAgent(BaseAgent):
         local_env = {
             "pd": pd,
             "np": np,
+            "PoissonRegressor": PoissonRegressor,
+            "HistGradientBoostingRegressor": HistGradientBoostingRegressor,
+            "GridSearchCV": GridSearchCV,
             "X_train": X_train,
             "y_train": y_train,
             "exposure_train": exposure_train,
