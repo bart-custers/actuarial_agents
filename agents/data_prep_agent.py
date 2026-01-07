@@ -235,6 +235,8 @@ class DataPrepAgent(BaseAgent):
         suggestion_prompt = PROMPTS["dataprep_layer2"].format(summary1=summary1,info_dict=json.dumps(info_dict, indent=2),pipeline_code=open("utils/data_cleaning.py").read())
         suggestion, unc_dataprep_layer2 = self.llm(suggestion_prompt, return_uncertainty=True)
 
+        print(suggestion)
+
         # === Apply deterministic pipeline
         det_pipe = DataCleaning()
         deterministic_results = det_pipe.clean(df)
