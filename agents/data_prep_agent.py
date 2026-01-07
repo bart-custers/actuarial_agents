@@ -261,6 +261,8 @@ class DataPrepAgent(BaseAgent):
         verify_prompt = PROMPTS["dataprep_layer3"].format(comparison=json.dumps(comparison_summary, indent=2))
         verification, unc_dataprep_layer3 = self.llm(verify_prompt, return_uncertainty=True)
 
+        print(verification)
+
          # Decide based on verification judgment
         decision = self._extract_dataprep_choice(verification)
         if decision == "adaptive" and adaptive_success:
