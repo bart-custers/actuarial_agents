@@ -65,10 +65,10 @@ PROMPTS = {
     "dataprep_layer3": """
     Compare deterministic vs adaptive pipelines:
     {comparison}
-    The model gave confidence={confidence}.
 
     Think step-by-step.
-    1. Was the model confident about the adaptive pipeline?
+    1. Does the adaptive pipeline output a dataframe?
+    2. The adaptive pipeline should not produce an empty dataframe!!
     2. How does the adaptive pipeline compare to the deterministic pipeline?
     
     Task: Decide whether the adaptive pipeline should be used. Justify in a short bullet list

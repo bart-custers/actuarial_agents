@@ -131,6 +131,11 @@ class DataPrepAgent(BaseAgent):
 
         if adapt is None:
             return {"status": "adaptive_failed"}
+        
+        if det.empty:
+            return {"status": "deterministic_empty"}
+        if adapt.empty:
+            return {"status": "adaptive_empty"}
 
         det_cols = set(det.columns)
         adapt_cols = set(adapt.columns)
@@ -253,7 +258,7 @@ class DataPrepAgent(BaseAgent):
         # --------------------
         # Layer 3: verification (LLM)
         # --------------------
-        verify_prompt = PROMPTS["dataprep_layer3"].format(comparison=json.dumps(comparison_summary, indent=2),confidence=confidence)
+        verify_prompt = PROMPTS["dataprep_layer3"].format(comparison=json.dumps(comparison_summary, indent=2))
         verification, unc_dataprep_layer3 = self.llm(verify_prompt, return_uncertainty=True)
 
          # Decide based on verification judgment
