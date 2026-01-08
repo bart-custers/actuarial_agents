@@ -60,7 +60,7 @@ class ModellingAgent(BaseAgent):
 
         # Execute LLM code
         try:
-            exec(code, {}, local_env)
+            exec(code, local_env, local_env)
         except Exception as e:
             raise ValueError(f"Adaptive model training code failed: {e}")
         
