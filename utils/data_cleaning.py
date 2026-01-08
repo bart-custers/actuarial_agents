@@ -29,4 +29,8 @@ class DataCleaning:
         data['Area'] = data['Area'].map(area_mapping)
         self.actions_log.append("Mapped Area categories to numeric scale (A→1,...,F→6).")
         
+        empty_cols = data.columns[data.isna().all()].tolist()
+        if empty_cols:
+            data = data.drop(columns=empty_cols)
+    
         return data
