@@ -18,3 +18,12 @@ class GLMTrainer:
             joblib.dump(self.model, path)
         else:
             raise ValueError("No trained model to save.")
+
+trainer = GLMTrainer()
+trainer.train(X_train, y_train, exposure_train)
+    
+model = trainer.model
+preds_train = trainer.predict(X_train)
+preds_test = trainer.predict(X_test)
+
+result = {"preds_train": preds_train, "preds_test": preds_test, "model": model}
