@@ -31,30 +31,6 @@ class DataPrepAgent(BaseAgent):
         match = re.search(r"```(?:python)?\s*(.*?)```", text, re.DOTALL | re.IGNORECASE)
         return match.group(1) if match else None
 
-    # def _apply_llm_pipeline(self, df: pd.DataFrame, suggestion_text: str):
-    #     """Executes LLM-generated preprocessing code safely."""
-    #     code = self.extract_code_block(suggestion_text)
-    #     if code is None:
-    #         raise ValueError("No Python code block found in LLM suggestion.")
-
-    #     # Safety: forbid imports or system calls
-    #     if "import os" in code or "subprocess" in code or "open(" in code:
-    #         raise ValueError("Unsafe code detected.")
-
-    #     # Local execution namespace
-    #     local_env = {"df": df.copy(), "np": np, "pd": pd}
-
-    #     try:
-    #         exec(code, local_env, local_env)
-    #     except Exception as e:
-    #         raise ValueError(f"Adaptive preprocessing code failed: {e}")
-
-    #     if "df" not in local_env:
-    #         raise ValueError("Adaptive code did not modify df.")
-
-    #     return local_env["df"]
-
-
     def _apply_llm_pipeline(self, df: pd.DataFrame, suggestion_text: str):
         """
         Executes an LLM-generated sklearn-style DataPipeline artifact.
@@ -153,21 +129,6 @@ class DataPrepAgent(BaseAgent):
             "shape_det": det.shape,
             "shape_adapt": adapt.shape,
         }
-
-    # def _compare_pipelines(self, det, adapt):
-    #     """Quantitative comparison of two pipelines."""
-    #     if adapt is None:
-    #         return {"status": "adaptive_failed"}
-    #     det_shape = det.shape
-    #     adapt_shape = adapt.shape
-    #     det_cols = det.columns.to_list() if hasattr(det, 'columns') else []
-    #     adapt_cols = adapt.columns.to_list() if hasattr(adapt, 'columns') else []
-    #     feature_overlap = len(set(det_cols) & set(adapt_cols))
-    #     return {
-    #         "status": "adaptive_succeeded",
-    #         "feature_overlap": feature_overlap,
-    #         "shape_diff": (det_shape, adapt_shape),
-    #     }
     
     def _extract_dataprep_choice(self, llm_text: str) -> str:
         text = llm_text
@@ -237,8 +198,6 @@ class DataPrepAgent(BaseAgent):
         suggestion_prompt = PROMPTS["dataprep_layer2"].format(summary1=summary1,info_dict=json.dumps(info_dict, indent=2),pipeline_code=open("utils/data_cleaning.py").read())
         suggestion, unc_dataprep_layer2 = self.llm(suggestion_prompt, return_uncertainty=True)
 
-        print(suggestion)
-
         # === Apply deterministic pipeline
         det_pipe = DataCleaning()
         deterministic_results = det_pipe.clean(df)
@@ -254,8 +213,6 @@ class DataPrepAgent(BaseAgent):
 
         # === Compare pipelines
         comparison_summary = self._compare_pipelines(deterministic_results, adaptive_results)
-
-        print(comparison_summary)
 
         # --------------------
         # Layer 3: verification (LLM)
@@ -273,7 +230,6 @@ class DataPrepAgent(BaseAgent):
             verify_prompt = PROMPTS["dataprep_layer3"].format(comparison=json.dumps(comparison_summary, indent=2))
             verification, unc_dataprep_layer3 = self.llm(verify_prompt, return_uncertainty=True)
             decision = self._extract_dataprep_choice(verification)
-            print(verification)
 
         if decision == "adaptive" and adaptive_success:
             use_adaptive = True

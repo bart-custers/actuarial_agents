@@ -203,7 +203,6 @@ class ModellingAgent(BaseAgent):
         
         model_code, unc_modelling_layer2 = self.llm(layer2_prompt, return_uncertainty=True)
 
-        print(layer2_prompt)
         print(model_code)
 
         # --------------------
@@ -223,6 +222,7 @@ class ModellingAgent(BaseAgent):
 
         # Fallback pipeline
         if llm_model_success == True:
+            print(f"[{self.name}] Model training with LLM-generated code succeeded.")
             model_used = "llm_adaptive"
             model_reason = "llm pipeline succeeded"
             model_train_predictions = llm_model_preds_train
