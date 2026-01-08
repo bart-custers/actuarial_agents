@@ -235,13 +235,14 @@ class ModellingAgent(BaseAgent):
             trainer.train(X_train, y_train, exposure_train)
             model_train_predictions = trainer.predict(X_train)
             model_test_predictions = trainer.predict(X_test)
+            trainer = trainer.model
 
         # --------------------
         # Evaluate model
         # --------------------
         print(f"[{self.name}] Invoke model evaluation...")
         # Get high over metrics
-        evaluator = ModelEvaluation(model=trainer.model, model_type=model_choice)
+        evaluator = ModelEvaluation(model=trainer, model_type=model_choice)
         model_metrics = evaluator.evaluate(y_test, model_test_predictions, feature_names, exposure_test)
         
         # Perform actual vs expected

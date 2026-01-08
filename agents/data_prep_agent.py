@@ -93,6 +93,7 @@ class DataPrepAgent(BaseAgent):
             "str": str,
             "bool": bool,
             "object": object, 
+            "map": map,
         }
 
         exec_env = {
