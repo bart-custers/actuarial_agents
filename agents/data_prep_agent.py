@@ -266,6 +266,7 @@ class DataPrepAgent(BaseAgent):
         if status in ["adaptive_empty", "adaptive_failed"]:
             decision = "deterministic"
             verification = f"Forced decision due to status={status}"
+            unc_dataprep_layer3 = 1
             print(f"[{self.name}] Forced decision due to status={status}")
         else:
             verify_prompt = PROMPTS["dataprep_layer3"].format(comparison=json.dumps(comparison_summary, indent=2))
