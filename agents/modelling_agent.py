@@ -187,10 +187,10 @@ class ModellingAgent(BaseAgent):
 
         if model_choice == "glm":
             trainer = GLMTrainer()
-            example_code = "utils/glm_trainer_code.py"
+            example_code = "utils/glm_trainer_code.txt"
         elif model_choice == "gbm":
             trainer = GBMTrainer()
-            example_code = "utils/gbm_trainer_code.py"
+            example_code = "utils/gbm_trainer_code.txt"
         else:
             raise ValueError(f"Unknown model type: {model_choice}")
         
@@ -231,7 +231,6 @@ class ModellingAgent(BaseAgent):
             print(f"[{self.name}] Fallback to deterministic model training")
             model_used = "deterministic_fallback"
             model_reason = pipeline_error
-            #trainer = ModelTrainer(model_type=model_choice)
             trainer.train(X_train, y_train, exposure_train)
             model_train_predictions = trainer.predict(X_train)
             model_test_predictions = trainer.predict(X_test)
