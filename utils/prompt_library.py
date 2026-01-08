@@ -75,7 +75,11 @@ PROMPTS = {
     Analyze the differences and similarities between the adaptive and deterministic pipelines.
     Task: Determine whether the adaptive pipeline is preferable. Provide your reasoning in concise bullet points.
 
-    Conclusion: Your final statement must clearly indicate your decision: either Decision: USE_ADAPTIVE or Decision: KEEP_DETERMINISTIC.
+    At the end of your response, output exactly one line in this format:
+    Decision: USE_ADAPTIVE
+    or
+    Decision: KEEP_DETERMINISTIC
+    Do not add any text on that line.
     """,
 
     "dataprep_layer4": """
@@ -113,7 +117,7 @@ PROMPTS = {
 
     Your task is to produce ONLY Python code that trains the model type chosen earlier: {model_choice}
 
-    Existing model trainer (example to follow and adapt): {trainer_code}
+    Reference example: (example to follow and adapt): {trainer_code}
 
     YOU MUST OUTPUT *ONLY ONE* PYTHON CODE BLOCK AND NOTHING ELSE.
     - NO explanations. 
