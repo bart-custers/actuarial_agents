@@ -38,14 +38,9 @@ class GBMTrainer:
         else:
             raise ValueError("No trained model to save.")
 
-# --- Instantiate and train ---
 trainer = GBMTrainer()
 trainer.train(X_train, y_train, exposure_train)
-
-# --- Predictions ---
 preds_train = trainer.predict(X_train)
 preds_test = trainer.predict(X_test)
 model = trainer.model
-
-# --- Required output ---
 result = {"preds_train": preds_train, "preds_test": preds_test, "model": model}
