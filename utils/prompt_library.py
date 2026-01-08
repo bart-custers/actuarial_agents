@@ -134,33 +134,7 @@ PROMPTS = {
 
     The FINAL line of your code must be:
 
-    result = {{"model": model, "preds": preds}}
-
-    Here is the template you must complete:
-
-    ```python
-    # ----- YOU MUST ONLY FILL IN THE TWO FUNCTIONS BELOW -----
-    import # Import necessary libraries
-
-    def train_model(X_train, y_train):
-        # Train your model here.
-        # Must return a trained model object named `model`.
-
-        model = None  # REPLACE THIS BASED ON model_choice
-        return model
-
-    def generate_predictions(model, X_test):
-        # Must return predictions for X_test as a 1D array named `preds`.
-
-        preds = None  # REPLACE THIS
-        return preds
-
-    # ----- DO NOT MODIFY ANYTHING BELOW THIS LINE -----
-
-    model = train_model(X_train, y_train, exposure_train)
-    preds = generate_predictions(model, X_test)
-
-    result = {{"model": model, "preds": preds}}
+    result = {{"preds_train": preds_train, "preds_test": preds_test, "model": model}}
     ```
     """
     ,
