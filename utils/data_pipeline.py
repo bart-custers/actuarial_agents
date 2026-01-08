@@ -26,8 +26,10 @@ class DataPipeline:
         y = y.clip(upper=10)
         X = data.drop(columns=['ClaimNb', 'Exposure', 'IDpol'], errors='ignore')
 
-        numerical_features = ['VehPower', 'VehAge', 'DrivAge', 'BonusMalus', 'Area', 'Density']
-        categorical_features = ['VehBrand', 'Region', 'VehGas']
+        #numerical_features = ['VehPower', 'VehAge', 'DrivAge', 'BonusMalus', 'Area', 'Density']
+        #categorical_features = ['VehBrand', 'Region', 'VehGas']
+        numerical_features = X.select_dtypes(include=['number']).columns.tolist()
+        categorical_features = X.select_dtypes(exclude=['number']).columns.tolist()
         self.actions_log.append(f"Defined {len(numerical_features)} numerical and {len(categorical_features)} categorical features.")
 
         # --- Step 2: Split dataset ---
