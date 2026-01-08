@@ -119,7 +119,8 @@ PROMPTS = {
 
     Reference example: (example to follow and adapt): {trainer_code}
 
-    YOU MUST OUTPUT *ONLY ONE* PYTHON CODE BLOCK AND NOTHING ELSE.
+    YOU MUST OUTPUT A PYTHON CODE BLOCK AND NOTHING ELSE.
+    - Define a class and instantiate it inside the code block
     - NO explanations. 
     - NO text before or after. 
     - NO commentary. 
