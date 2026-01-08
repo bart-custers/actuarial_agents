@@ -129,8 +129,9 @@ PROMPTS = {
     - X_test  : pandas DataFrame
 
     You MUST produce:
+    - `preds_train` : predictions for X_train as a 1D numpy array
+    - `preds_test`  : predictions for X_test as a 1D numpy array
     - `model` : the trained model object
-    - `preds` : predictions for X_test as a 1D numpy array
 
     The FINAL line of your code must be:
 
