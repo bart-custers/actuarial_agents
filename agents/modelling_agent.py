@@ -203,6 +203,7 @@ class ModellingAgent(BaseAgent):
         
         model_code, unc_modelling_layer2 = self.llm(layer2_prompt, return_uncertainty=True)
 
+        print(layer2_prompt)
         print(model_code)
 
         # --------------------
