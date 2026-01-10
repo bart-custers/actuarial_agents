@@ -88,7 +88,7 @@ class ReviewingAgent(BaseAgent):
         # --------------------
         if phase == "dataprep":
             used_pipeline = metadata.get("used_pipeline", "N/A")
-            confidence = metadata.get("confidence", "N/A")
+          #  confidence = metadata.get("confidence", "N/A")
           #  adaptive_suggestion = metadata.get("adaptive_suggestion", "N/A")
             verification = metadata.get("verification", "N/A")
         elif phase == "modelling":
@@ -109,7 +109,6 @@ class ReviewingAgent(BaseAgent):
                 phase=phase,
                 layer1_out=layer1_out,
                 used_pipeline=used_pipeline,
-                confidence=confidence,
               #  adaptive_suggestion=adaptive_suggestion,
                 verification=verification,
                 review_memory=review_memory,
