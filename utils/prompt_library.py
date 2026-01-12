@@ -199,7 +199,6 @@ PROMPTS = {
     Think step-by-step, using the following context: 
     - Summary of your earlier thinking: {layer1_out}
     - The used preprocessing pipeline: {used_pipeline}
-    - The confidence score for the preprocessing: {confidence}
     - The verification feedback received: {verification}
 
     If previous memory of dataprep, modelling and reviews exist, ensure consistency with them.
