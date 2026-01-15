@@ -118,10 +118,10 @@ class ExplanationAgent(BaseAgent):
             # Query the LLM
             reasoning_state[phase] = self.llm(summary_prompt)
         
-        belief_dir = "data/memory"
-        os.makedirs(belief_dir, exist_ok=True)
-        meta_path = os.path.join(belief_dir, f"{self.name}_belief_state.json")
-        save_json_safe(reasoning_state, meta_path)
+        # belief_dir = "data/memory"
+        # os.makedirs(belief_dir, exist_ok=True)
+        # meta_path = os.path.join(belief_dir, f"{self.name}_belief_state.json")
+        # save_json_safe(reasoning_state, meta_path)
 
         # Now assess the belief
         belief_prompt = PROMPTS["belief_prompt"].format(reasoning_summary = reasoning_state)
@@ -173,7 +173,7 @@ class ExplanationAgent(BaseAgent):
         print(f"[{self.name}] Invoke layer 3...fairness assessment")
 
         df_predictions = self.load_latest_prediction_df()
-        table_age, table_density = group_fairness(df_predictions, 'Prediction', 'ClaimNb', 'data/final')
+        table_age, table_density = group_fairness(df_predictions, 'Prediction', 'ClaimNb', 'data/audit')
 
         fairness_prompt = PROMPTS["fairness_prompt"].format(table_age=table_age, table_density=table_density)
         fairness_assessment, unc_explanation_layer3 = self.llm(fairness_prompt, return_uncertainty=True)
@@ -240,7 +240,7 @@ class ExplanationAgent(BaseAgent):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
         # Store review report
-        report_path = f"data/final/explanation_report_{timestamp}.txt"
+        report_path = f"data/audit/explanation_report_{timestamp}.txt"
         generate_explanation_report_txt(report_path, final_report, belief_assessment_text, tcav_assessment_text, fairness_assessment_text, final_evaluation_text)
 
         # Store metadata

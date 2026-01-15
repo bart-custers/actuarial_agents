@@ -1,4 +1,3 @@
-import json
 from abc import ABC, abstractmethod
 from utils.message_types import Message
 

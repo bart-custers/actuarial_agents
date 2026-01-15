@@ -22,7 +22,7 @@ class CentralHub:
             system_prompt="You are a helpful actuarial assistant that can handle multiple reasoning tasks.",
         )
 
-        # Agents
+        # Initiate the agents
         self.agents = {
             "dataprep": DataPrepAgent(
                 "dataprep",
@@ -67,7 +67,7 @@ class CentralHub:
         # ------------------------------------------------------------------
         current_metadata = {"dataset_path": "data/raw/freMTPL2freq.csv"}
         phase = "dataprep"
-        iteration = 0
+        iteration = 1
         continue_workflow = True
         MAX_ITERATIONS = 4
 
@@ -107,7 +107,6 @@ class CentralHub:
 
                 # Uncertainty propagation
                 uncertainty_BN.update_from_metadata(current_metadata, active_phase="dataprep")
-                #uncertainty_BN.debug_print()
                 posterior = uncertainty_BN.infer()
 
                 # Validation
@@ -136,7 +135,6 @@ class CentralHub:
 
                 # Uncertainty propagation
                 uncertainty_BN.update_from_metadata(current_metadata, active_phase="modelling")
-                #uncertainty_BN.debug_print()
                 posterior = uncertainty_BN.infer()
 
                 # Validation
@@ -173,11 +171,9 @@ class CentralHub:
                 # Uncertainty propagation
                 if current_metadata["phase_before_review"] == "dataprep":
                     uncertainty_BN.update_from_metadata(current_metadata, active_phase="review_dataprep")
-                    #uncertainty_BN.debug_print()
                     posterior = uncertainty_BN.infer()
                 elif current_metadata["phase_before_review"] == "modelling":
                     uncertainty_BN.update_from_metadata(current_metadata, active_phase="review_model")
-                    #uncertainty_BN.debug_print()
                     posterior = uncertainty_BN.infer()
 
                 action = current_metadata.get("action", "proceed_to_explanation")
@@ -256,7 +252,6 @@ class CentralHub:
 
                 # Uncertainty propagation
                 uncertainty_BN.update_from_metadata(current_metadata, active_phase="explanation")
-                #uncertainty_BN.debug_print()
                 posterior = uncertainty_BN.infer()
 
                 explanation_action = current_metadata.get("action", "finalize")
@@ -347,10 +342,11 @@ class CentralHub:
 
         audit.finalize()
         
-        print("P(WorkflowOK=True) =", posterior['WorkflowOK'])
+        print(f"P(WorkflowOK=True) = {posterior['WorkflowOK']:.2%}")
 
-        uncertainty_BN.save_structure("data/audit/bn_baseline.svg")
-        uncertainty_BN.save_posteriors("data/audit/bn_with_posterior.png")
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        uncertainty_BN.save_structure(f"data/audit/bn_baseline_{timestamp}.svg")
+        uncertainty_BN.save_posteriors(f"data/audit/bn_with_posterior_{timestamp}.png")
 
         summary_path = os.path.join(log_dir, "workflow_summary.json")
         with open(summary_path, "w") as f:

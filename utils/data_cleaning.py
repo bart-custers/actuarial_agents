@@ -31,5 +31,8 @@ class DataCleaning:
         empty_cols = data.columns[data.isna().all()].tolist()
         if empty_cols:
             data = data.drop(columns=empty_cols)
+        
+        # Remove missing values
+        data = data.dropna()
     
         return data

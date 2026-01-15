@@ -61,7 +61,7 @@ class ReviewingAgent(BaseAgent):
         metadata = message.metadata or {}
         phase = metadata.get("phase_before_review", "unknown")
         iteration = metadata.get("review_iteration", 0)
-        print(f"[{self.name}] Starting {phase} review iteration {iteration}...")
+        print(f"[{self.name}] Starting {phase} review iteration...")
 
         # --------------------
         # Layer 1: recall & plan (LLM)
@@ -186,12 +186,8 @@ class ReviewingAgent(BaseAgent):
             analysis=analysis_text,
             consistency_check=consistency_text,
             impact_analysis_output=impact_text)
-        
-        #print(layer5_prompt)
 
         review_output, unc_reviewing_layer5 = self.llm(layer5_prompt, return_uncertainty=True)
-
-        #print(review_output)
 
         # Extract decision from LLM output
         decision = self._extract_decision(review_output)
@@ -233,7 +229,7 @@ class ReviewingAgent(BaseAgent):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
         # Store review report
-        report_path = f"data/final/review_report_{timestamp}.txt"
+        report_path = f"data/audit/review_report_{timestamp}.txt"
         if phase == "dataprep":
             model_metrics = None
         generate_review_report_txt(report_path, phase, model_metrics, analysis, consistency_summary, consistency_check, impact_analysis_output,
