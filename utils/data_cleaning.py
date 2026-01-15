@@ -24,9 +24,8 @@ class DataCleaning:
         data['ClaimNb'] = data['ClaimNb'].clip(upper=5)
 
         # --- Step 2: Encode Area as ordinal numeric ---
-        data['Area'] = data['Area'].astype(str).str.strip().str.upper()
-        area_mapping = {'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5, 'F': 6}
-        data['Area'] = data['Area'].map(area_mapping)
+        data['Area'] = data['Area'].astype('category').cat.codes + 1
+
         self.actions_log.append("Mapped Area categories to numeric scale (A→1,...,F→6).")
         
         empty_cols = data.columns[data.isna().all()].tolist()

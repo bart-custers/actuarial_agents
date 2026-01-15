@@ -5,7 +5,6 @@ import joblib
 import pandas as pd
 import numpy as np
 from datetime import datetime
-from typing import Dict, Any, List
 from utils.general_utils import save_json_safe
 from utils.prompt_library import PROMPTS
 from utils.data_pipeline import DataPipeline
@@ -22,21 +21,61 @@ class DataPrepAgent(BaseAgent):
         self.system_prompt = system_prompt
         self.hub = hub
 
-    # --------------------------
+    # --------------------------    
     # Helper functions
     # --------------------------
     @staticmethod
     def extract_code_block(text: str) -> str | None:
-        """Extract ```python ... ``` code block from LLM output."""
+        """
+        Extract a Python code block from LLM-generated text.
+
+        This function searches for the first fenced code block of the form
+        ```python ... ``` or ``` ... ``` and returns its contents without
+        the surrounding backticks.
+
+        Parameters
+        ----------
+        text : str
+            Raw text output from an LLM.
+
+        Returns
+        -------
+        str | None
+            The extracted Python source code if a code block is found.
+
+        Notes
+        -----
+        - Matching is case-insensitive and supports optional 'python' tags.
+        - Only the first matching code block is returned.
+        """
         match = re.search(r"```(?:python)?\s*(.*?)```", text, re.DOTALL | re.IGNORECASE)
         return match.group(1) if match else None
 
     def _apply_llm_pipeline(self, df: pd.DataFrame, suggestion_text: str):
         """
-        Executes an LLM-generated sklearn-style DataPipeline artifact.
-        Expected contract:
-        - Defines a class named `DataPipeline`
-        - Class implements `process(data: pd.DataFrame) -> dict`
+        Execute an LLM-generated data-cleaning pipeline in a controlled environment.
+
+        The LLM output is expected to contain a Python code block defining a
+        `DataCleaning` class with a `clean(pd.DataFrame) -> pd.DataFrame` method.
+        The code is executed in a restricted namespace with limited built-ins
+        and explicit safety checks to reduce the risk of unsafe operations.
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+        suggestion_text : str (raw LLM code)
+
+        Returns
+        -------
+        pd.DataFrame
+            The cleaned DataFrame produced by the adaptive pipeline.
+
+        Raises
+        ------
+        ValueError, if no Python code block is found in the LLM output.
+        ValueError, if forbidden operations or unsafe tokens are detected.
+        ValueError, if the adaptive code fails to execute or violates the expected contract.
+        ValueError, if the `clean` method does not return a pandas DataFrame.
         """
 
         code = self.extract_code_block(suggestion_text)
@@ -104,9 +143,30 @@ class DataPrepAgent(BaseAgent):
 
     def _compare_pipelines(self, det: pd.DataFrame, adapt: pd.DataFrame | None):
         """
-        Compare deterministic and adaptive pipelines at the DataFrame level.
-        """
+        Compare deterministic and adaptive data-preparation outputs at the DataFrame level.
 
+        This comparison is used to validate whether the adaptive pipeline
+        produced a usable result and to provide summary statistics for LLM verification.
+
+        Parameters
+        ----------
+        det : pd.DataFrame
+            Output of the deterministic (baseline) data-cleaning pipeline.
+        adapt : pd.DataFrame | None
+            Output of the adaptive pipeline, or None if the adaptive pipeline failed.
+
+        Returns
+        -------
+        dict
+            A summary dictionary containing:
+            - status : str
+                One of {'adaptive_failed', 'deterministic_empty',
+                        'adaptive_empty', 'adaptive_succeeded'}
+            - n_rows_det, n_rows_adapt : int
+            - n_cols_det, n_cols_adapt : int
+            - feature_overlap : int
+            - shape_det, shape_adapt : tuple
+        """
         if adapt is None:
             return {"status": "adaptive_failed"}
         
@@ -131,6 +191,23 @@ class DataPrepAgent(BaseAgent):
         }
     
     def _extract_dataprep_choice(self, llm_text: str) -> str:
+        """
+        Extract the data-cleaning pipeline decision from LLM output.
+
+        The function looks for a decision directive of the form:
+            Decision: USE_ADAPTIVE
+            Decision: KEEP_DETERMINISTIC
+
+        Parameters
+        ----------
+        llm_text : str
+            LLM-generated verification and decision text.
+
+        Returns
+        -------
+        str
+            Either 'adaptive' or 'deterministic'.
+        """
         text = llm_text
 
         # 1) Prefer explicit Decision: line
@@ -175,34 +252,31 @@ class DataPrepAgent(BaseAgent):
             "cat_vars": df.select_dtypes(exclude="number").columns.tolist(),
         }
 
-        print(f"[{self.name}] Invoke layer 1...planning")
-
         # --------------------
         # Layer 1: recall & plan (LLM)
         # --------------------
-        # Optional: get recommendations from the ExplanationAgent
+        print(f"[{self.name}] Invoke layer 1...planning")
+
+        # Optional: get recommendations from the ExplanationAgent from a previous iteration
         recommendations = metadata.get("recommendations", "No recommendations provided.")
 
+        # Determine the LLM prompt, can either be normal prompt or revised prompt from the review agent
         if metadata.get("revised_prompt"):
             plan_prompt = metadata["revised_prompt"]
         else:
             plan_prompt = PROMPTS["dataprep_layer1"].format(info_dict=json.dumps(info_dict, indent=2), recommendations=recommendations)
-        #summary1 = self.llm(plan_prompt)
         summary1, unc_dataprep_layer1 = self.llm(plan_prompt, return_uncertainty=True)
-        
-        print(f"[{self.name}] Invoke layer 2...develop data preparation")
 
         # --------------------
         # Layer 2: suggestions (LLM)
         # --------------------
+        print(f"[{self.name}] Invoke layer 2...develop data preparation")
+
+        # Prompt to get data cleaning code
         suggestion_prompt = PROMPTS["dataprep_layer2"].format(summary1=summary1,info_dict=json.dumps(info_dict, indent=2),pipeline_code=open("utils/data_cleaning.py").read())
         suggestion, unc_dataprep_layer2 = self.llm(suggestion_prompt, return_uncertainty=True)
 
-        # === Apply deterministic pipeline
-        det_pipe = DataCleaning()
-        deterministic_results = det_pipe.clean(df)
-
-        # === Attempt adaptive pipeline
+        # Try to execute the adaptive pipeline
         try:
             adaptive_results = self._apply_llm_pipeline(df, suggestion)
             adaptive_success = True
@@ -211,7 +285,11 @@ class DataPrepAgent(BaseAgent):
             adaptive_success = False
             print(f"[{self.name}] Adaptive pipeline failed: {e}")
 
-        # === Compare pipelines
+        # Execute deterministic pipeline
+        det_pipe = DataCleaning()
+        deterministic_results = det_pipe.clean(df)
+
+        # Compare both pipelines
         comparison_summary = self._compare_pipelines(deterministic_results, adaptive_results)
 
         # --------------------
@@ -221,23 +299,26 @@ class DataPrepAgent(BaseAgent):
 
         status = comparison_summary.get("status")
 
+        # Enforce deterministic pipeline in case of failures/empty results
         if status in ["adaptive_empty", "adaptive_failed"]:
             decision = "deterministic"
             verification = f"Forced decision due to status={status}"
             unc_dataprep_layer3 = 1
             print(f"[{self.name}] Forced decision due to status={status}")
+        # Otherwise the agent will decide
         else:
             verify_prompt = PROMPTS["dataprep_layer3"].format(comparison=json.dumps(comparison_summary, indent=2))
             verification, unc_dataprep_layer3 = self.llm(verify_prompt, return_uncertainty=True)
             decision = self._extract_dataprep_choice(verification)
 
-        if decision == "adaptive" and adaptive_success:
-            use_adaptive = True
-        elif decision == "deterministic":
-            use_adaptive = False
-        else:
-            use_adaptive = False
-
+        # if decision == "adaptive" and adaptive_success:
+        #     use_adaptive = True
+        # elif decision == "deterministic":
+        #     use_adaptive = False
+        # else:
+        #     use_adaptive = False
+        
+        use_adaptive = decision == "adaptive" and adaptive_success
         chosen_results = adaptive_results if use_adaptive else deterministic_results
         chosen_pipeline_name = "adaptive" if use_adaptive else "deterministic"
 
@@ -246,6 +327,7 @@ class DataPrepAgent(BaseAgent):
         # --------------------
         # Preprocess the data
         # --------------------
+        print(f"[{self.name}] Preprocessing the data.")
 
         preprocess_pipe = DataPipeline()
         df_processed = preprocess_pipe.process(chosen_results)
