@@ -41,4 +41,4 @@ This thesis is grounded in three interconnected areas of research:
 
 ### Architecture
 
-![alt text](thesis_architecture_v3.png)
+![alt text](project_architecture_v4.png)
