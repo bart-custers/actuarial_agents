@@ -8,7 +8,6 @@ import glob
 from datetime import datetime
 from utils.general_utils import save_json_safe, make_json_compatible, extract_analysis
 from utils.message_types import Message
-#from utils.model_trainer import ModelTrainer
 from utils.glm_trainer_code import GLMTrainer
 from utils.gbm_trainer_code import GBMTrainer
 from utils.model_evaluation import ModelEvaluation
@@ -29,23 +28,103 @@ class ModellingAgent(BaseAgent):
     # -------------------------------
     # Helper functions
     # -------------------------------
+    def _extract_model_choice(self, llm_text: str) -> str:
+        """
+        Extract the model selection decision from LLM output.
+
+        The function looks for an answer of the form:
+            Decision: USE_GLM
+            Decision: USE_GBM
+
+        Parameters
+        ----------
+        llm_text : str
+
+        Returns
+        -------
+        str (model choice)
+        """
+        text = llm_text
+        # 1) Prefer explicit Decision: line (the prompt already asks for this)
+        m = re.search(r'^\s*Decision\s*:\s*(USE_GLM|USE_GBM)\s*$', text, flags=re.IGNORECASE | re.MULTILINE)
+        if m:
+            return "glm" if m.group(1).upper() == "USE_GLM" else "gbm"
+
+        # 2) Look for short explicit phrase "Decision: USE_GLM" inside any line (more tolerant)
+        m2 = re.search(r'Decision\s*:\s*(USE_GLM|USE_GBM)', text, flags=re.IGNORECASE)
+        if m2:
+            return "glm" if m2.group(1).upper() == "USE_GLM" else "gbm"
+        
+        return "glm" # safe fallback
+    
     @staticmethod
     def extract_code_block(text: str) -> str | None:
-        """Extract ```python ... ``` code block from LLM output."""
+        """
+        Extract a Python code block from LLM-generated text.
+
+        This function searches for the first fenced code block of the form
+        ```python ... ``` or ``` ... ``` and returns its contents without
+        the surrounding backticks.
+
+        Parameters
+        ----------
+        text : str
+            Raw text output from an LLM.
+
+        Returns
+        -------
+        str | None
+            The extracted Python source code if a code block is found.
+        """
         match = re.search(r"```python(.*?)```", text, re.DOTALL)
         return match.group(1) if match else None
     
     def _apply_llm_pipeline(self, X_train, y_train, exposure_train, X_test, model_code: str):
-        """Executes LLM-generated model training code safely, returning predictions."""
+        """
+        Execute LLM-generated model training code in a controlled environment and return predictions.
+
+        The LLM-generated code is expected to define a variable named `result`
+        in the execution environment. The `result` object must be a dictionary
+        with the following keys:
+            - 'preds_train': training set predictions
+            - 'preds_test': test set predictions
+            - 'model': trained model object
+
+        Parameters
+        ----------
+        X_train : array-like or pd.DataFrame
+            Training feature matrix.
+        y_train : array-like
+            Training target values.
+        exposure_train : array-like
+            Exposure values corresponding to the training data.
+        X_test : array-like or pd.DataFrame
+            Test feature matrix.
+        model_code : str
+            Raw LLM output containing a Python code block that performs model training and prediction.
+
+        Returns
+        -------
+        tuple[np.ndarray, np.ndarray, object]
+            - Training predictions
+            - Test predictions
+            - Trained model object
+
+        Raises
+        ------
+        ValueError, if no Python code block is found in the LLM output.
+        ValueError, if unsafe operations are detected in the generated code.
+        ValueError, if execution fails or the expected output contract is violated.
+        """
         code = self.extract_code_block(model_code)
         if code is None:
             raise ValueError("No Python code block found in LLM suggestion.")
 
-        # Safety: forbid imports or system calls
+        # Safety checks
         if any(x in code for x in ["import os", "subprocess", "open("]):
             raise ValueError("Unsafe code detected.")
 
-        # Local namespace with training data
+        # Controlled execution environment
         local_env = {
             "pd": pd,
             "np": np,
@@ -84,25 +163,31 @@ class ModellingAgent(BaseAgent):
         preds_train = np.asarray(preds_train).ravel()
 
         if not isinstance(preds_test, (pd.Series, np.ndarray, list)):
-            raise ValueError("`train predictions` must be array-like.")
+            raise ValueError("`test predictions` must be array-like.")
         preds_test = np.asarray(preds_test).ravel()
 
         return preds_train, preds_test, model
-    
-    def _extract_model_choice(self, llm_text: str) -> str:
-        text = llm_text
-        # 1) Prefer explicit Decision: line (the prompt already asks for this)
-        m = re.search(r'^\s*Decision\s*:\s*(USE_GLM|USE_GBM)\s*$', text, flags=re.IGNORECASE | re.MULTILINE)
-        if m:
-            return "glm" if m.group(1).upper() == "USE_GLM" else "gbm"
-
-        # 2) Look for short explicit phrase "Decision: USE_GLM" inside any line (more tolerant)
-        m2 = re.search(r'Decision\s*:\s*(USE_GLM|USE_GBM)', text, flags=re.IGNORECASE)
-        if m2:
-            return "glm" if m2.group(1).upper() == "USE_GLM" else "gbm"
 
     @staticmethod
     def load_latest_predictions(folder="data/final"):
+        """
+        Load the most recent train and test prediction files from disk, based on timestamped filenames.
+
+        The function searches for CSV files named:
+            - train_predictions_*.csv
+            - test_predictions_*.csv
+
+        Parameters
+        ----------
+        folder : str, default="data/final"
+            Directory containing stored prediction files.
+
+        Returns
+        -------
+        tuple[np.ndarray, np.ndarray]
+            - Latest training predictions
+            - Latest test predictions
+        """
         # Find all prediction files
         train_files = glob.glob(os.path.join(folder, "train_predictions_*.csv"))
         test_files  = glob.glob(os.path.join(folder, "test_predictions_*.csv"))
@@ -132,6 +217,9 @@ class ModellingAgent(BaseAgent):
 
         metadata = message.metadata or {}
 
+        # --------------------
+        # Load datasets
+        # --------------------
         processed_paths = message.metadata.get("processed_paths", None)
         artifacts_dir = "data/artifacts"
         os.makedirs(artifacts_dir, exist_ok=True)
@@ -143,10 +231,7 @@ class ModellingAgent(BaseAgent):
                 type="error",
                 content="Missing processed dataset paths."
             )
-
-        # --------------------
-        # Load dataset
-        # --------------------
+        
         X_train = pd.read_csv(processed_paths["X_train"])
         X_test = pd.read_csv(processed_paths["X_test"])
         y_train = pd.read_csv(processed_paths["y_train"]).values.ravel()
@@ -161,14 +246,15 @@ class ModellingAgent(BaseAgent):
             "features": X_train.columns.tolist(),
         }
 
-        print(f"[{self.name}] Invoke layer 1...model selection")
-
         # --------------------
         # Layer 1: recall & plan (LLM)
         # --------------------
-        # Optional: get recommendations from the ExplanationAgent
+        print(f"[{self.name}] Invoke layer 1...model selection")
+
+        # Optional: get recommendations from the ExplanationAgent from a previous iteration
         recommendations = metadata.get("recommendations", "No recommendations provided.")
 
+        # Determine the LLM prompt, can either be normal prompt or revised prompt from the review agent
         if metadata.get("revised_prompt"):
             layer1_prompt = metadata["revised_prompt"]
         else:
@@ -185,6 +271,7 @@ class ModellingAgent(BaseAgent):
         # --------------------
         print(f"[{self.name}] Invoke layer 2...develop model code")
 
+        # Load example code based on model choice
         if model_choice == "glm":
             trainer = GLMTrainer()
             example_code = "utils/glm_trainer_code.txt"
@@ -197,10 +284,10 @@ class ModellingAgent(BaseAgent):
         with open(example_code, "r") as f:
             trainer_code = f.read()
 
+        # Prompt to get modelling code
         layer2_prompt = PROMPTS["modelling_layer2"].format(
         model_choice=model_choice, trainer_code=trainer_code
         )
-        
         model_code, unc_modelling_layer2 = self.llm(layer2_prompt, return_uncertainty=True)
 
         print(model_code)
@@ -210,7 +297,7 @@ class ModellingAgent(BaseAgent):
         # --------------------
         print(f"[{self.name}] Invoke model training...")
 
-        # Attempt LLM pipeline
+        # Attempt to execute the LLM model training pipeline
         try:
             llm_model_preds_train, llm_model_preds_test, llm_model_obj = self._apply_llm_pipeline(X_train, y_train, exposure_train, X_test, model_code)
             llm_model_success = True
@@ -241,6 +328,7 @@ class ModellingAgent(BaseAgent):
         # Evaluate model
         # --------------------
         print(f"[{self.name}] Invoke model evaluation...")
+        
         # Get high over metrics
         evaluator = ModelEvaluation(model=trainer, model_type=model_choice)
         model_metrics = evaluator.evaluate(y_test, model_test_predictions, feature_names, exposure_test)

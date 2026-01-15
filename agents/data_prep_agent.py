@@ -82,14 +82,14 @@ class DataPrepAgent(BaseAgent):
         if code is None:
             raise ValueError("No Python code block found in LLM suggestion.")
 
-        # ---- Static safety checks (cheap but effective) ----
+        # Safety checks
         FORBIDDEN_TOKENS = [
             "os.", "sys.", "subprocess", "open(", "exec(", "eval("
         ]
         if any(tok in code for tok in FORBIDDEN_TOKENS):
             raise ValueError("Unsafe operations detected in adaptive pipeline code.")
 
-        # ---- Controlled execution environment ----
+        # Controlled execution environment
         SAFE_BUILTINS = {
             "__import__": __import__,
             "__build_class__": __build_class__,
@@ -220,6 +220,8 @@ class DataPrepAgent(BaseAgent):
         m2 = re.search(r'Decision\s*:\s*(USE_ADAPTIVE|KEEP_DETERMINISTIC)', text, flags=re.IGNORECASE)
         if m2:
             return "adaptive" if m2.group(1).upper() == "USE_ADAPTIVE" else "deterministic"
+        
+        return "deterministic"  # default fallback
 
     # ---------------------------
     # Main handler
@@ -276,7 +278,7 @@ class DataPrepAgent(BaseAgent):
         suggestion_prompt = PROMPTS["dataprep_layer2"].format(summary1=summary1,info_dict=json.dumps(info_dict, indent=2),pipeline_code=open("utils/data_cleaning.py").read())
         suggestion, unc_dataprep_layer2 = self.llm(suggestion_prompt, return_uncertainty=True)
 
-        # Try to execute the adaptive pipeline
+        # Attempt to execute the adaptive pipeline
         try:
             adaptive_results = self._apply_llm_pipeline(df, suggestion)
             adaptive_success = True
@@ -310,13 +312,6 @@ class DataPrepAgent(BaseAgent):
             verify_prompt = PROMPTS["dataprep_layer3"].format(comparison=json.dumps(comparison_summary, indent=2))
             verification, unc_dataprep_layer3 = self.llm(verify_prompt, return_uncertainty=True)
             decision = self._extract_dataprep_choice(verification)
-
-        # if decision == "adaptive" and adaptive_success:
-        #     use_adaptive = True
-        # elif decision == "deterministic":
-        #     use_adaptive = False
-        # else:
-        #     use_adaptive = False
         
         use_adaptive = decision == "adaptive" and adaptive_success
         chosen_results = adaptive_results if use_adaptive else deterministic_results
