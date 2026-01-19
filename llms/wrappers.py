@@ -5,6 +5,7 @@ from math import exp
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 from langchain_community.llms import HuggingFacePipeline
 from google.colab import drive
+from dotenv import load_dotenv
 
 # ------------------------------------------------------------
 # Environment & cache
@@ -18,6 +19,7 @@ os.environ["HF_HOME"] = model_cache_dir
 os.environ["HF_DATASETS_CACHE"] = model_cache_dir
 os.environ["TRANSFORMERS_CACHE"] = model_cache_dir
 
+load_dotenv("/content/drive/MyDrive/Thesis/.env")
 hf_token = os.getenv("HF_TOKEN")
 
 # ------------------------------------------------------------
@@ -31,7 +33,7 @@ class LLMWrapper:
         hf_token=None,
     ):
         """
-        backend: one of ["llama7b", "llama32_11b", "mistral3_14b", "mock"]
+        backend: one of ["llama7b", "llama31_8b", "mistral3_14b", "mock"]
         """
 
         self.backend = backend
@@ -44,8 +46,8 @@ class LLMWrapper:
         if backend == "llama7b":
             self._init_llama7b()
 
-        elif backend == "llama32_11b":
-            self._init_llama32_11b()
+        elif backend == "llama31_8b":
+            self._init_llama31_8b()
 
         elif backend == "mistral3_14b":
             self._init_mistral3_14b()
@@ -91,7 +93,7 @@ class LLMWrapper:
                 f"{prompt}\n[/INST]"
             )
 
-        if self.backend == "llama32_11b":
+        if self.backend == "llama31_8b":
             messages = [
                 {"role": "system", "content": self.system_prompt},
                 {"role": "user", "content": prompt},
@@ -108,7 +110,7 @@ class LLMWrapper:
         return prompt
 
     # ------------------------------------------------------------
-    # Logprob-enabled generation (ALL models)
+    # Logprob-enabled generation (ALL HF models)
     # ------------------------------------------------------------
     def generate_with_logprobs(
         self,
@@ -166,8 +168,8 @@ class LLMWrapper:
         model_name = "meta-llama/Llama-2-7b-chat-hf"
         self._init_hf_model(model_name)
 
-    def _init_llama32_11b(self):
-        model_name = "meta-llama/Llama-3.2-11B-Instruct"
+    def _init_llama31_8b(self):
+        model_name = "meta-llama/Meta-Llama-3.1-8B-Instruct"
         self._init_hf_model(model_name)
 
     def _init_mistral3_14b(self):
@@ -251,6 +253,7 @@ class LLMWrapper:
                 vectors.append(vec.cpu().numpy())
 
         return np.array(vectors)
+
 # ------------------------------------------------------------
 
 
