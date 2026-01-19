@@ -250,12 +250,12 @@ PROMPTS = {
     Based on the analysis: {analysis} and {consistency_check} and {impact_analysis_output}, choose the correct next action. Think step-by-step.
 
     Valid actions:
-    - APPROVE: proceed to next agent
+    - APPROVE: proceed to next agent (approve if the deterministic pipeline is used)
     - REQUEST_RECLEAN: redo data cleaning
     - REQUEST_RETRAIN: redo model training
     - ABORT: stop workflow entirely
 
-    Do not provide explanations. The final line of your answer should contain: Decision: APPROVE or REQUEST_RECLEAN or REQUEST_RETRAIN or ABORT.
+    The final line of your answer should contain: Decision: APPROVE or REQUEST_RECLEAN or REQUEST_RETRAIN or ABORT.
     """,
 
     "review_layer6": """

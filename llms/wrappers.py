@@ -6,6 +6,8 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 from langchain_community.llms import HuggingFacePipeline
 from google.colab import drive
 from dotenv import load_dotenv
+import logging
+logging.getLogger("transformers").setLevel(logging.ERROR)
 
 # ------------------------------------------------------------
 # Environment & cache
@@ -216,6 +218,7 @@ class LLMWrapper:
             do_sample=True,
             temperature=0.7,
             truncation=False,
+            trust_remote_code=True
         )
 
         self.model = model
