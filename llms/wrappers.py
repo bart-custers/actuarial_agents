@@ -180,16 +180,22 @@ class LLMWrapper:
         model_path = os.path.join(model_cache_dir, model_name.replace("/", "_"))
         os.makedirs(model_path, exist_ok=True)
 
+        fix_regex = "Ministral-3" in model_name or "Mistral-3" in model_name
         tokenizer = AutoTokenizer.from_pretrained(
             model_name,
             token=self.hf_token,
             cache_dir=model_path,
             use_fast=True,
+            fix_mistral_regex=fix_regex,  # Fix Mistral tokenizer
+            trust_remote_code=True        # Needed for custom model code
         )
 
         if tokenizer.pad_token is None:
             tokenizer.pad_token = tokenizer.eos_token
 
+        # --------------------------
+        # Model
+        # --------------------------
         model = AutoModelForCausalLM.from_pretrained(
             model_name,
             device_map="auto",
@@ -197,6 +203,7 @@ class LLMWrapper:
             torch_dtype="auto",
             token=self.hf_token,
             cache_dir=model_path,
+            trust_remote_code=True
         )
 
         model.eval()
