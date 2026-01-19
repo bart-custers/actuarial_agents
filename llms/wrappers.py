@@ -173,7 +173,7 @@ class LLMWrapper:
         self._init_hf_model(model_name)
 
     def _init_mistral3_14b(self):
-        model_name = "mistralai/Mistral-3-14B-Instruct"
+        model_name = "mistralai/Ministral-3-14B-Reasoning-2512"
         self._init_hf_model(model_name)
 
     def _init_hf_model(self, model_name):
