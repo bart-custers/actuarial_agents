@@ -256,6 +256,15 @@ PROMPTS = {
     - ABORT: stop workflow entirely
 
     The final line of your answer should contain: Decision: APPROVE or REQUEST_RECLEAN or REQUEST_RETRAIN or ABORT.
+    At the end of your response, output exactly one line in this format:
+    Decision: APPROVE
+    or
+    Decision: REQUEST_RECLEAN
+    or
+    Decision: REQUEST_RETRAIN
+    or
+    Decision: ABORT
+    Do not add any text on that line.
     """,
 
     "review_layer6": """
