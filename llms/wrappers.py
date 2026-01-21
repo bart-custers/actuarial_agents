@@ -260,7 +260,8 @@ class LLMWrapper:
                 else:
                     raise ValueError("pooling must be one of ['mean', 'max', 'last']")
 
-                vectors.append(vec.cpu().numpy())
+                #vectors.append(vec.cpu().numpy())
+                vectors.append(vec.detach().cpu().float().numpy())
 
         return np.array(vectors)
 

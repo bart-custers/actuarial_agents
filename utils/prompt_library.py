@@ -251,8 +251,8 @@ PROMPTS = {
 
     Valid actions:
     - APPROVE: proceed to next agent, YOU MUST ALWAYS APPROVE if the deterministic pipeline is used, or when the model delivers similar results as previous runs
-    - REQUEST_RECLEAN: redo data cleaning in case of severe issues
-    - REQUEST_RETRAIN: redo model training in case of severe issues
+    - REQUEST_RECLEAN: redo data cleaning in case of severe issues in the data preparation
+    - REQUEST_RETRAIN: redo model training in case of severe issues in the model performance
     - ABORT: stop workflow entirely
 
     The final line of your answer should contain: Decision: APPROVE or REQUEST_RECLEAN or REQUEST_RETRAIN or ABORT.
