@@ -246,25 +246,66 @@ PROMPTS = {
     """,
 
     "review_layer5": """
-    You are an expert in actuarial modelling, assisting in claim frequency prediction for insurance claims. 
-    Based on the analysis: {analysis} and {consistency_check} and {impact_analysis_output}, choose the correct next action. Think step-by-step.
+    You are an expert in actuarial modelling, assisting in claim frequency prediction for insurance claims.
+    Your task is to review the outcome of the current phase and choose the most appropriate next action
+    based on the provided evidence.
+
+    You are given:
+    - An analytical review: {analysis}
+    - A consistency check summary: {consistency_check}
+    - An impact analysis: {impact_analysis_output}
+
+    Think step-by-step and apply professional actuarial judgement.
+
+    IMPORTANT REVIEW PRINCIPLES:
+
+    1. Evidence-based severity
+    - Absence of documentation or missing explanations alone is NOT sufficient grounds for rejection.
+    - Severe actions require evidence of incorrectness, inconsistency, or material modelling risk.
+    - If a concern is speculative or due to missing detail rather than detected error, treat it as minor.
+
+    2. Proportionality
+    - Normal and expected preprocessing steps (e.g. one-hot encoding, type casting, dataset growth)
+        should NOT be treated as severe issues unless clear harm or inconsistency is demonstrated.
+    - Moderate changes in row counts or target distributions are acceptable if they fall within
+        historical variability or are plausibly explained by data updates.
+
+    3. Deterministic pipeline rule
+    - YOU MUST ALWAYS APPROVE if the deterministic pipeline is used,
+        or if outcomes are consistent with previous approved runs.
+
+    4. Decision discipline
+    - APPROVE_WITH_NOTES is appropriate when the workflow is acceptable to proceed,
+        but minor concerns, assumptions, or documentation gaps should be recorded.
+    - REQUEST_RECLEAN is appropriate ONLY when data is likely incorrect, biased,
+        or unusable for modelling.
+    - REQUEST_RETRAIN applies ONLY to severe model performance or training failures.
+    - ABORT is reserved for fundamental workflow breakdowns or irrecoverable errors.
+
+    5. Default bias toward progress
+    - When issues are primarily about transparency, missing explanation, or minor uncertainty,
+        prefer APPROVE or APPROVE_WITH_NOTES rather than blocking the workflow.
 
     Valid actions:
-    - APPROVE: proceed to next agent, YOU MUST ALWAYS APPROVE if the deterministic pipeline is used, or when the model training delivers similar results as previous runs
-    - REQUEST_RECLEAN: redo data cleaning in case of severe issues in the data preparation
-    - REQUEST_RETRAIN: redo model training in case of severe issues in the model performance
-    - ABORT: stop workflow entirely
+    - APPROVE: proceed to the next agent with no material concerns
+    - APPROVE_WITH_NOTES: proceed to the next agent, but record minor concerns or recommendations
+    - REQUEST_RECLEAN: redo data cleaning due to severe data preparation issues
+    - REQUEST_RETRAIN: redo model training due to severe model performance issues
+    - ABORT: stop the workflow entirely
 
-    The final line of your answer should contain: Decision: APPROVE or REQUEST_RECLEAN or REQUEST_RETRAIN or ABORT.
-    At the end of your response, output exactly one line in this format:
+    After your reasoning, output exactly one final decision line in the following format:
+
     Decision: APPROVE
+    or
+    Decision: APPROVE_WITH_NOTES
     or
     Decision: REQUEST_RECLEAN
     or
     Decision: REQUEST_RETRAIN
     or
     Decision: ABORT
-    Do not add any text on that line.
+
+    Do not add any text on that final line.
     """,
 
     "review_layer6": """

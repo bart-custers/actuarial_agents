@@ -38,7 +38,7 @@ class ReviewingAgent(BaseAgent):
 
         # Prefer explicit "Decision:" on its own line
         m = re.search(
-            r'^\s*Decision\s*:\s*(APPROVE|REQUEST_RECLEAN|REQUEST_RETRAIN|ABORT)\s*$',
+            r'^\s*Decision\s*:\s*(APPROVE|APPROVE_WITH_NOTES|REQUEST_RECLEAN|REQUEST_RETRAIN|ABORT)\s*$',
             text,
             flags=re.IGNORECASE | re.MULTILINE
         )
@@ -46,6 +46,7 @@ class ReviewingAgent(BaseAgent):
             decision = m.group(1).upper()
             return {
                 "APPROVE": "approve",
+                "APPROVE_WITH_NOTES": "approve_with_notes",
                 "REQUEST_RECLEAN": "request_reclean",
                 "REQUEST_RETRAIN": "request_retrain",
                 "ABORT": "abort",
@@ -53,7 +54,7 @@ class ReviewingAgent(BaseAgent):
 
         # Tolerant match anywhere
         m2 = re.search(
-            r'Decision\s*:\s*(APPROVE|REQUEST_RECLEAN|REQUEST_RETRAIN|ABORT)',
+            r'Decision\s*:\s*(APPROVE|APPROVE_WITH_NOTES|REQUEST_RECLEAN|REQUEST_RETRAIN|ABORT)',
             text,
             flags=re.IGNORECASE
         )
@@ -61,6 +62,7 @@ class ReviewingAgent(BaseAgent):
             decision = m2.group(1).upper()
             return {
                 "APPROVE": "approve",
+                "APPROVE_WITH_NOTES": "approve_with_notes",
                 "REQUEST_RECLEAN": "request_reclean",
                 "REQUEST_RETRAIN": "request_retrain",
                 "ABORT": "abort",
@@ -210,6 +212,7 @@ class ReviewingAgent(BaseAgent):
         # Routing
         routing = {
             "approve": "proceed",
+            "approve_with_notes": "proceed",
             "request_reclean": "reclean_data",
             "request_retrain": "retrain_model",
             "abort": "abort_workflow"
@@ -221,7 +224,7 @@ class ReviewingAgent(BaseAgent):
         # --------------------
         # Layer 6: prompt revision (LLM)
         # --------------------       
-        if decision in ["approve", "abort"]:
+        if decision in ["approve", "approve_with_notes", "abort"]:
             print(f"[{self.name}] Invoke layer 6...create final review report")
             revision_prompt = None
             layer6_prompt = PROMPTS["review_layer6"]
@@ -290,11 +293,11 @@ class ReviewingAgent(BaseAgent):
             history.append(metadata)
             self.hub.memory.update("review_history", history)
         
-        if decision == "approve" and phase == "dataprep":
+        if decision in ["approve", "approve_with_notes"] and phase == "dataprep":
             dataprep_snapshot_history.append(snapshot)
             self.hub.memory.update("dataprep_snapshots", dataprep_snapshot_history)
 
-        if decision == "approve" and phase == "modelling":
+        if decision in ["approve", "approve_with_notes"] and phase == "modelling":
             modelling_snapshot_history.append(snapshot)
             self.hub.memory.update("modelling_snapshots", modelling_snapshot_history)
 
