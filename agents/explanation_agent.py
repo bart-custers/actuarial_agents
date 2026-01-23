@@ -85,9 +85,7 @@ class ExplanationAgent(BaseAgent):
         )
         if m:
             SCORE_MAP.get(m.group(1).upper(), "none")
-            # decision = m.group(1).upper()
-            # return {"NO_ISSUES": "no issues", "MINOR_ISSUES": "minor issues", "SEVERE_ISSUES": "severe issues"}[decision]
-
+     
         # Tolerant match anywhere
         m2 = re.search(
             r'Decision\s*:\s*(NO_ISSUES|MINOR_ISSUES|SEVERE_ISSUES)',
@@ -131,14 +129,6 @@ class ExplanationAgent(BaseAgent):
         )
         if m:
             return DECISION_MAP_EXPLANATION.get(m.group(1).upper(), "minor_issues")
-            # decision = m.group(1).upper()
-            # return {
-            #     "APPROVE": "approve",
-            #     "MINOR_ISSUES": "minor_issues",
-            #     "REQUEST_RECLEAN": "request_reclean",
-            #     "REQUEST_RETRAIN": "request_retrain",
-            #     "ABORT": "abort",
-            # }[decision]
 
         # Tolerant match anywhere
         m2 = re.search(
@@ -148,36 +138,9 @@ class ExplanationAgent(BaseAgent):
         )
         if m2:
             return DECISION_MAP_EXPLANATION.get(m2.group(1).upper(), "minor_issues")
-            # decision = m2.group(1).upper()
-            # return {
-            #     "APPROVE": "approve",
-            #     "MINOR_ISSUES": "minor_issues",
-            #     "REQUEST_RECLEAN": "request_reclean",
-            #     "REQUEST_RETRAIN": "request_retrain",
-            #     "ABORT": "abort",
-            # }[decision]
 
         # Fallback
         return "minor_issues"
-    
-    # def _extract_decision(self, llm_text: str) -> str:
-    #     decisions = re.findall(
-    #         r'Decision\s*:\s*(APPROVE|MINOR_ISSUES|REQUEST_RECLEAN|REQUEST_RETRAIN|ABORT)',
-    #         llm_text,
-    #         flags=re.IGNORECASE
-    #     )
-
-    #     if decisions:
-    #         decision = decisions[-1].upper()  # <--- use last one
-    #         return {
-    #             "APPROVE": "approve",
-    #             "MINOR_ISSUES": "minor_issues",
-    #             "REQUEST_RECLEAN": "request_reclean",
-    #             "REQUEST_RETRAIN": "request_retrain",
-    #             "ABORT": "abort",
-    #         }[decision]
-
-    #     return "minor_issues"
 
     # ---------------------------
     # Main handler
@@ -290,13 +253,6 @@ class ExplanationAgent(BaseAgent):
         decision = self._extract_decision(final_evaluation)
 
         # Routing
-        # routing = {
-        #     "approve": "finalize",
-        #     "minor_issues": "consult_actuary",
-        #     "request_reclean": "reclean_data",
-        #     "request_retrain": "retrain_model",
-        #     "abort": "abort_workflow"
-        # }
         next_action = ROUTING_MAP_EXPLANATION.get(decision, "consult_actuary")
 
         print(f"[{self.name}] Decision → {decision}, Routing → {next_action}")

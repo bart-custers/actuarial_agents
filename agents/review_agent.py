@@ -45,14 +45,6 @@ class ReviewingAgent(BaseAgent):
         )
         if m:
             return DECISION_MAP_REVIEW.get(m.group(1).upper(), "abort")
-            # decision = m.group(1).upper()
-            # return {
-            #     "APPROVE": "approve",
-            #     "APPROVE_WITH_NOTES": "approve_with_notes",
-            #     "REQUEST_RECLEAN": "request_reclean",
-            #     "REQUEST_RETRAIN": "request_retrain",
-            #     "ABORT": "abort",
-            # }[decision]
 
         # Tolerant match anywhere
         m2 = re.search(
@@ -62,14 +54,6 @@ class ReviewingAgent(BaseAgent):
         )
         if m2:
             return DECISION_MAP_REVIEW.get(m2.group(1).upper(), "abort")
-            # decision = m2.group(1).upper()
-            # return {
-            #     "APPROVE": "approve",
-            #     "APPROVE_WITH_NOTES": "approve_with_notes",
-            #     "REQUEST_RECLEAN": "request_reclean",
-            #     "REQUEST_RETRAIN": "request_retrain",
-            #     "ABORT": "abort",
-            # }[decision]
 
         # Fallback
         return "abort"
@@ -212,13 +196,6 @@ class ReviewingAgent(BaseAgent):
         decision = self._extract_decision(review_output)
 
         # Routing
-        # routing = {
-        #     "approve": "proceed",
-        #     "approve_with_notes": "proceed",
-        #     "request_reclean": "reclean_data",
-        #     "request_retrain": "retrain_model",
-        #     "abort": "abort_workflow"
-        # }
         next_action = ROUTING_MAP_REVIEW.get(decision, "abort_workflow")
 
         print(f"[{self.name}] Decision → {decision}, Routing → {next_action}")
@@ -255,11 +232,6 @@ class ReviewingAgent(BaseAgent):
         generate_review_report_txt(report_path, phase, model_metrics, analysis, consistency_summary, consistency_check, impact_analysis_output,
                                review_output, final_report)
         
-        # Uncertainty values
-        # if metadata["phase_before_review"] == "dataprep":
-        #     prefix = "unc_review_dataprep"
-        # elif metadata["phase_before_review"] == "modelling":
-        #     prefix = "unc_review_model"
         prefix = "unc_review_dataprep" if metadata["phase_before_review"] == "dataprep" else "unc_review_model"
 
         # Store metadata
