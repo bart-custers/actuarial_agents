@@ -7,6 +7,7 @@ from utils.general_utils import save_json_safe, extract_analysis, generate_expla
 from utils.fairness_module import group_fairness
 from utils.message_types import Message
 from utils.prompt_library import PROMPTS
+from utils.decision_mapping import DECISION_MAP_EXPLANATION, ROUTING_MAP_EXPLANATION
 from agents.base_agent import BaseAgent
 from utils.tcav_module import run_tcav_analysis
 
@@ -68,6 +69,12 @@ class ExplanationAgent(BaseAgent):
         -------
         str (normalized issue severity score)
         """
+        SCORE_MAP = {
+            "NO_ISSUES": "no issues",
+            "MINOR_ISSUES": "minor issues",
+            "SEVERE_ISSUES": "severe issues",
+        }
+
         text = llm_text
 
         # Prefer explicit "Decision:" on its own line
@@ -77,8 +84,9 @@ class ExplanationAgent(BaseAgent):
             flags=re.IGNORECASE | re.MULTILINE
         )
         if m:
-            decision = m.group(1).upper()
-            return {"NO_ISSUES": "no issues", "MINOR_ISSUES": "minor issues", "SEVERE_ISSUES": "severe issues"}[decision]
+            SCORE_MAP.get(m.group(1).upper(), "none")
+            # decision = m.group(1).upper()
+            # return {"NO_ISSUES": "no issues", "MINOR_ISSUES": "minor issues", "SEVERE_ISSUES": "severe issues"}[decision]
 
         # Tolerant match anywhere
         m2 = re.search(
@@ -87,8 +95,9 @@ class ExplanationAgent(BaseAgent):
             flags=re.IGNORECASE
         )
         if m2:
-            decision = m2.group(1).upper()
-            return {"NO_ISSUES": "no issues", "MINOR_ISSUES": "minor issues", "SEVERE_ISSUES": "severe issues"}[decision]
+            SCORE_MAP.get(m2.group(1).upper(), "none")
+            # decision = m2.group(1).upper()
+            # return {"NO_ISSUES": "no issues", "MINOR_ISSUES": "minor issues", "SEVERE_ISSUES": "severe issues"}[decision]
 
         # Fallback
         return "none"
@@ -121,14 +130,15 @@ class ExplanationAgent(BaseAgent):
             flags=re.IGNORECASE | re.MULTILINE
         )
         if m:
-            decision = m.group(1).upper()
-            return {
-                "APPROVE": "approve",
-                "MINOR_ISSUES": "minor_issues",
-                "REQUEST_RECLEAN": "request_reclean",
-                "REQUEST_RETRAIN": "request_retrain",
-                "ABORT": "abort",
-            }[decision]
+            return DECISION_MAP_EXPLANATION.get(m.group(1).upper(), "minor_issues")
+            # decision = m.group(1).upper()
+            # return {
+            #     "APPROVE": "approve",
+            #     "MINOR_ISSUES": "minor_issues",
+            #     "REQUEST_RECLEAN": "request_reclean",
+            #     "REQUEST_RETRAIN": "request_retrain",
+            #     "ABORT": "abort",
+            # }[decision]
 
         # Tolerant match anywhere
         m2 = re.search(
@@ -137,14 +147,15 @@ class ExplanationAgent(BaseAgent):
             flags=re.IGNORECASE
         )
         if m2:
-            decision = m2.group(1).upper()
-            return {
-                "APPROVE": "approve",
-                "MINOR_ISSUES": "minor_issues",
-                "REQUEST_RECLEAN": "request_reclean",
-                "REQUEST_RETRAIN": "request_retrain",
-                "ABORT": "abort",
-            }[decision]
+            return DECISION_MAP_EXPLANATION.get(m2.group(1).upper(), "minor_issues")
+            # decision = m2.group(1).upper()
+            # return {
+            #     "APPROVE": "approve",
+            #     "MINOR_ISSUES": "minor_issues",
+            #     "REQUEST_RECLEAN": "request_reclean",
+            #     "REQUEST_RETRAIN": "request_retrain",
+            #     "ABORT": "abort",
+            # }[decision]
 
         # Fallback
         return "minor_issues"
@@ -182,33 +193,22 @@ class ExplanationAgent(BaseAgent):
         # --------------------        
         print(f"[{self.name}] Invoke layer 1...belief revision")
 
-        PHASES = {
-        "dataprep": ["explanation"],
-        "modelling": ["evaluation"],
-        "reviewing": ["judgement"]
+        PHASE_KEYS = {
+            "dataprep": "explanation",
+            "modelling": "evaluation",
+            "reviewing": "judgement",
         }
 
         reasoning_state = {}
 
-        for phase, keys in PHASES.items():
-            # Extract metadata items for the phase
-            items = [metadata.get(key, {}) for key in keys]
-
-            # Build the phase prompt using the standard template
+        for phase, key in PHASE_KEYS.items():
             summary_prompt = PROMPTS["summary_prompt"].format(
-                item1=items[0] if len(items) > 0 else None,
-                item2=items[1] if len(items) > 1 else None,
-                item3=items[2] if len(items) > 2 else None,
+                item1=metadata.get(key, {}),
+                item2=None,
+                item3=None,
             )
-
-            # Query the LLM
             reasoning_state[phase] = self.llm(summary_prompt)
         
-        # belief_dir = "data/memory"
-        # os.makedirs(belief_dir, exist_ok=True)
-        # meta_path = os.path.join(belief_dir, f"{self.name}_belief_state.json")
-        # save_json_safe(reasoning_state, meta_path)
-
         print(reasoning_state)
 
         # Now assess the belief
@@ -233,10 +233,10 @@ class ExplanationAgent(BaseAgent):
             "modelling1": [metadata.get("plan_modelling", "")],
             "modelling2": [metadata.get("evaluation", "")],
             "modelling3": [metadata.get("impact_analysis", "")],
-            "reviewing": [metadata.get("layer1_out", "")],
-            "reviewing": [metadata.get("analysis", "")],
-            "reviewing": [metadata.get("consistency_check", "")],
-            "reviewing": [metadata.get("judgement", "")]
+            "reviewing1": [metadata.get("layer1_out", "")],
+            "reviewing2": [metadata.get("analysis", "")],
+            "reviewing3": [metadata.get("consistency_check", "")],
+            "reviewing4": [metadata.get("judgement", "")]
         }
 
         # run TCAV analysis
@@ -290,14 +290,14 @@ class ExplanationAgent(BaseAgent):
         decision = self._extract_decision(final_evaluation)
 
         # Routing
-        routing = {
-            "approve": "finalize",
-            "minor_issues": "consult_actuary",
-            "request_reclean": "reclean_data",
-            "request_retrain": "retrain_model",
-            "abort": "abort_workflow"
-        }
-        next_action = routing.get(decision, "consult_actuary")
+        # routing = {
+        #     "approve": "finalize",
+        #     "minor_issues": "consult_actuary",
+        #     "request_reclean": "reclean_data",
+        #     "request_retrain": "retrain_model",
+        #     "abort": "abort_workflow"
+        # }
+        next_action = ROUTING_MAP_EXPLANATION.get(decision, "consult_actuary")
 
         print(f"[{self.name}] Decision → {decision}, Routing → {next_action}")
 
@@ -371,7 +371,7 @@ class ExplanationAgent(BaseAgent):
             sender=self.name,
             recipient="hub",
             type="response",
-            content="Generated explanations. Decision: {decision}.",
+            content=f"Generated explanations. Decision: {decision}.",
             metadata=metadata,
         )
 

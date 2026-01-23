@@ -5,6 +5,7 @@ from utils.general_utils import save_json_safe, extract_analysis, generate_revie
 from utils.message_types import Message
 from utils.prompt_library import PROMPTS
 from agents.base_agent import BaseAgent
+from utils.decision_mapping import DECISION_MAP_REVIEW, ROUTING_MAP_REVIEW
 from utils.consistency import compare_dataprep_consistency_snapshots, summarize_dataprep_snapshot_comparison, compare_modelling_consistency_snapshots, summarize_modelling_snapshot_comparison
 
 
@@ -43,14 +44,15 @@ class ReviewingAgent(BaseAgent):
             flags=re.IGNORECASE | re.MULTILINE
         )
         if m:
-            decision = m.group(1).upper()
-            return {
-                "APPROVE": "approve",
-                "APPROVE_WITH_NOTES": "approve_with_notes",
-                "REQUEST_RECLEAN": "request_reclean",
-                "REQUEST_RETRAIN": "request_retrain",
-                "ABORT": "abort",
-            }[decision]
+            return DECISION_MAP_REVIEW.get(m.group(1).upper(), "abort")
+            # decision = m.group(1).upper()
+            # return {
+            #     "APPROVE": "approve",
+            #     "APPROVE_WITH_NOTES": "approve_with_notes",
+            #     "REQUEST_RECLEAN": "request_reclean",
+            #     "REQUEST_RETRAIN": "request_retrain",
+            #     "ABORT": "abort",
+            # }[decision]
 
         # Tolerant match anywhere
         m2 = re.search(
@@ -59,14 +61,15 @@ class ReviewingAgent(BaseAgent):
             flags=re.IGNORECASE
         )
         if m2:
-            decision = m2.group(1).upper()
-            return {
-                "APPROVE": "approve",
-                "APPROVE_WITH_NOTES": "approve_with_notes",
-                "REQUEST_RECLEAN": "request_reclean",
-                "REQUEST_RETRAIN": "request_retrain",
-                "ABORT": "abort",
-            }[decision]
+            return DECISION_MAP_REVIEW.get(m2.group(1).upper(), "abort")
+            # decision = m2.group(1).upper()
+            # return {
+            #     "APPROVE": "approve",
+            #     "APPROVE_WITH_NOTES": "approve_with_notes",
+            #     "REQUEST_RECLEAN": "request_reclean",
+            #     "REQUEST_RETRAIN": "request_retrain",
+            #     "ABORT": "abort",
+            # }[decision]
 
         # Fallback
         return "abort"
@@ -185,12 +188,11 @@ class ReviewingAgent(BaseAgent):
             print(f"[{self.name}] No impact analysis - skip layer 4...")
             impact_analysis_output = "No impact analysis for dataprep"
             unc_reviewing_layer4 = 1
-            impact_text = "No impact analysis for dataprep"
+            impact_text = impact_analysis_output
         elif phase == "modelling":
             print(f"[{self.name}] Invoke layer 4...impact analysis")
             impact_analysis_input = metadata.get("impact_analysis", "unknown")
-            layer4_prompt = PROMPTS["review_layer4"].format(
-            impact_analysis_input=impact_analysis_input)
+            layer4_prompt = PROMPTS["review_layer4"].format(impact_analysis_input=impact_analysis_input)
             impact_analysis_output, unc_reviewing_layer4 = self.llm(layer4_prompt, return_uncertainty=True)
             impact_text = extract_analysis(impact_analysis_output)
 
@@ -210,14 +212,14 @@ class ReviewingAgent(BaseAgent):
         decision = self._extract_decision(review_output)
 
         # Routing
-        routing = {
-            "approve": "proceed",
-            "approve_with_notes": "proceed",
-            "request_reclean": "reclean_data",
-            "request_retrain": "retrain_model",
-            "abort": "abort_workflow"
-        }
-        next_action = routing.get(decision, "abort_workflow")
+        # routing = {
+        #     "approve": "proceed",
+        #     "approve_with_notes": "proceed",
+        #     "request_reclean": "reclean_data",
+        #     "request_retrain": "retrain_model",
+        #     "abort": "abort_workflow"
+        # }
+        next_action = ROUTING_MAP_REVIEW.get(decision, "abort_workflow")
 
         print(f"[{self.name}] Decision → {decision}, Routing → {next_action}")
 
@@ -254,10 +256,11 @@ class ReviewingAgent(BaseAgent):
                                review_output, final_report)
         
         # Uncertainty values
-        if metadata["phase_before_review"] == "dataprep":
-            prefix = "unc_review_dataprep"
-        elif metadata["phase_before_review"] == "modelling":
-            prefix = "unc_review_model"
+        # if metadata["phase_before_review"] == "dataprep":
+        #     prefix = "unc_review_dataprep"
+        # elif metadata["phase_before_review"] == "modelling":
+        #     prefix = "unc_review_model"
+        prefix = "unc_review_dataprep" if metadata["phase_before_review"] == "dataprep" else "unc_review_model"
 
         # Store metadata
         metadata = {
