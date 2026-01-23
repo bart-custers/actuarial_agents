@@ -8,17 +8,40 @@ from itertools import product
 from pathlib import Path
 
 class WorkflowAudit:
+    """
+    Audit logger for workflow execution events.
+
+    Records each action or phase with timestamps, optional messages, responses,
+    and uncertainty estimates. Can finalize and export the log as a CSV.
+    """
     def __init__(self, log_dir="data/audit"):
+        """
+        Initialize the audit logger.
+
+        Args:
+            log_dir (str): Directory to store audit logs. Will be created if missing.
+        """
         os.makedirs(log_dir, exist_ok=True)
         self.log_dir = log_dir
         self.records = []
-        self.start_time = time.time()
+        self.start_time = time.time() # Track workflow runtime
 
     def record_event(self, phase, iteration, action, metadata=None, sent=None, received=None, uncertainty_posterior=None):
-        """Record an audit event. Optionally include the sent message and received response.
+        """
+        Record a workflow event.
 
-        sent / received should be JSON-serializable or will be converted using
-        make_json_compatible.
+        Args:
+            phase (str): Current phase of the workflow.
+            iteration (int): Iteration number (if applicable).
+            action (str): Description of the action performed.
+            metadata (dict, optional): Additional metadata, e.g., status info.
+            sent (any, optional): Message/data sent (will be JSON-compatible).
+            received (any, optional): Response received (will be JSON-compatible).
+            uncertainty_posterior (any, optional): Optional uncertainty estimate.
+
+        Notes:
+            sent, received, and uncertainty_posterior are converted to
+            JSON-serializable formats if needed.
         """
         entry = {
             "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
@@ -33,6 +56,12 @@ class WorkflowAudit:
         self.records.append(entry)
 
     def finalize(self):
+        """
+        Save audit log to CSV and report total runtime.
+
+        Returns:
+            pd.DataFrame: DataFrame containing all logged events.
+        """
         df = pd.DataFrame(self.records)
         df.to_csv(os.path.join(self.log_dir, "audit_log.csv"), index=False)
         runtime = time.time() - self.start_time
@@ -42,6 +71,13 @@ class WorkflowAudit:
 
 
 class UncertaintyGraphBN:
+    """
+    Bayesian network representing workflow uncertainty.
+
+    Each workflow phase (data prep, modeling, review, explanation) is a node.
+    The network allows propagating uncertainties from individual agents or steps
+    to an overall workflow-level uncertainty.
+    """
     def __init__(self):
         # --------------------------------------------------
         # Define BN structure (success view, AND-gates)
@@ -54,6 +90,7 @@ class UncertaintyGraphBN:
             "ExplainOK->WorkflowOK"
         )
 
+        # Mapping workflow phases to BN nodes
         self.node_map = {
             "dataprep": "DataOK",
             "review_dataprep": "ReviewDataOK",
@@ -62,6 +99,7 @@ class UncertaintyGraphBN:
             "explanation": "ExplainOK",
         }
 
+        # Prefix mapping for uncertainty metadata
         self.phase_to_node = {
             "unc_dataprep": "DataOK",
             "unc_review_dataprep": "ReviewDataOK",
@@ -76,6 +114,9 @@ class UncertaintyGraphBN:
     # Default CPTs (neutral priors)
     # --------------------------------------------------
     def _init_default_cpts(self):
+        """
+        Initialize default Conditional Probability Tables (CPTs) with neutral priors.
+        """
         # Root node
         self.bn.cpt("DataOK")[:] = [0.01, 0.99]
 
@@ -119,6 +160,15 @@ class UncertaintyGraphBN:
     # --------------------------------------------------   
     @staticmethod
     def aggregate_layers(layers):
+        """
+        Compute average uncertainty across multiple layers.
+
+        Args:
+            layers (list[float]): List of uncertainty values (0-1).
+
+        Returns:
+            float: Mean uncertainty; 0 if no valid layers.
+        """
         clean = [u for u in layers if u is not None]
         if not clean:
             return 0.0
@@ -128,6 +178,13 @@ class UncertaintyGraphBN:
     # Inject agent uncertainty into CPTs
     # --------------------------------------------------
     def update_from_metadata(self, metadata, active_phase=None):
+        """
+        Update BN CPTs using agent-reported uncertainties.
+
+        Args:
+            metadata (dict): Mapping of phase uncertainty keys to values.
+            active_phase (str, optional): Only update nodes for this phase.
+        """
         phase_to_prefix = {
             "dataprep": ["unc_dataprep"],
             "review_dataprep": ["unc_review_dataprep"],
@@ -162,6 +219,12 @@ class UncertaintyGraphBN:
     # Inference
     # --------------------------------------------------
     def infer(self):
+        """
+        Perform probabilistic inference on the BN.
+
+        Returns:
+            dict: Posterior probabilities of all nodes being 'OK'.
+        """
         ie = gum.LazyPropagation(self.bn)
         ie.makeInference()
         results = {}

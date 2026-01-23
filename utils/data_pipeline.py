@@ -6,19 +6,45 @@ from sklearn.model_selection import train_test_split
 
 class DataPipeline:
     """
-    Executes a predefined insurance data cleaning and preprocessing routine.
+    Predefined insurance data preprocessing pipeline.
+
+    Performs deterministic preprocessing including:
+    - Defining features and target
+    - Splitting train/test sets
+    - Scaling numeric features and encoding categorical features
+    - Returning prepared datasets with metadata
     """
 
     def __init__(self):
+        """
+        Initialize the DataPipeline instance.
+
+        Attributes:
+            actions_log (list[str]): Logs each preprocessing step for traceability.
+            feature_names (list[str]): Names of features after preprocessing.
+            preprocessor (ColumnTransformer): Fitted sklearn preprocessor.
+        """
         self.actions_log = []
         self.feature_names = None
         self.preprocessor = None
 
     def process(self, data: pd.DataFrame):
         """
-        Perform deterministic data preprocessing.
+        Perform deterministic preprocessing on the dataset.
+
+        Steps:
+        1. Define numerical and categorical features.
+        2. Create target variable (ClaimNb / Exposure) with upper clipping.
+        3. Split into train/test sets.
+        4. Apply scaling to numerical features and one-hot encoding to categorical features.
+        5. Extract transformed feature names for downstream modeling.
+
+        Args:
+            data (pd.DataFrame): Raw insurance dataset.
+
         Returns:
-            dict with cleaned DataFrames and metadata
+            dict: Contains preprocessed train/test data, exposures, target,
+                  feature names, and action log.
         """
         # --- Step 1: Define features ---
         exposure = data['Exposure']

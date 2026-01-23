@@ -5,8 +5,18 @@ from typing import List, Dict, Any
 
 # Create consistency snapshots
 def dataprep_consistency_snapshot(df: pd.DataFrame, target: str = None) -> Dict[str, Any]:
-    """Create a dataset 'consistency snapshot' capturing structure, distributions,
-    missingness, variable types, etc., for long-term drift monitoring.
+    """
+    Create a 'consistency snapshot' of a dataset for drift monitoring.
+
+    Captures dataset structure, memory usage, missingness, variable types,
+    and distributions of numeric, categorical, and target variables.
+
+    Args:
+        df (pd.DataFrame): Dataset to snapshot.
+        target (str, optional): Name of target column to track distribution.
+
+    Returns:
+        dict: Snapshot containing metadata and distributions for monitoring.
     """
     snapshot = {}
 
@@ -51,7 +61,18 @@ def dataprep_consistency_snapshot(df: pd.DataFrame, target: str = None) -> Dict[
 
 # Compare dataprep snapshots
 def compare_dataprep_consistency_snapshots(current: Dict[str, Any],history: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """Compares current snapshot to all historical snapshots."""
+    """
+    Compare current dataprep snapshot to historical snapshots for drift detection.
+
+    Checks row/column counts, missing values, data types, and target distribution.
+
+    Args:
+        current (dict): Current dataset snapshot.
+        history (list[dict]): List of previous snapshots.
+
+    Returns:
+        dict: Structured comparison including detected drifts.
+    """
     if not history:
         return {
             "status": "no_history",
@@ -125,7 +146,15 @@ def compare_dataprep_consistency_snapshots(current: Dict[str, Any],history: List
 
 # Summarize comparison for LLM input
 def summarize_dataprep_snapshot_comparison(comp: Dict[str, Any]) -> str:
-    """Turn comparison dictionary into a human-readable LLM-friendly summary."""
+    """
+    Summarize a dataprep snapshot comparison in human-readable text for LLM input.
+
+    Args:
+        comp (dict): Output from compare_dataprep_consistency_snapshots.
+
+    Returns:
+        str: Readable summary highlighting drift or issues.
+    """
     if comp.get("status") == "no_history":
         return "No historical dataprep snapshots exist."
 
@@ -165,8 +194,17 @@ def summarize_dataprep_snapshot_comparison(comp: Dict[str, Any]) -> str:
 # Compare modelling snapshots
 def compare_modelling_consistency_snapshots(current: Dict[str, Any], history: List[Dict[str, Any]]) -> Dict[str, Any]:
     """
-    Compare current model metrics snapshot to historical records.
-    Returns a structured drift analysis.
+    Compare current model metrics snapshot to historical snapshots.
+
+    Checks scalar metrics (RMSE, MAE, R2, Poisson Deviance, Gini score) and
+    feature importance drift.
+
+    Args:
+        current (dict): Current modelling snapshot.
+        history (list[dict]): Historical snapshots.
+
+    Returns:
+        dict: Structured comparison including detected drifts.
     """
     if not history:
         return {
@@ -232,6 +270,15 @@ def compare_modelling_consistency_snapshots(current: Dict[str, Any], history: Li
 
 # Summarize comparison for LLM input
 def summarize_modelling_snapshot_comparison(comp: Dict[str, Any]) -> str:
+    """
+    Summarize a modelling snapshot comparison in human-readable text for LLM input.
+
+    Args:
+        comp (dict): Output from compare_modelling_consistency_snapshots.
+
+    Returns:
+        str: Readable summary highlighting metric and feature drifts.
+    """
     if comp.get("status") == "no_history":
         return "No historical model metric snapshots exist."
 

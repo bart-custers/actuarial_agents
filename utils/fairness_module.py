@@ -6,6 +6,30 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 def group_fairness(df, pred_col='Prediction', true_col='ClaimNb', storage_dir='storage_dir'):  
+    """
+    Evaluate group fairness of predicted insurance claim frequencies.
+
+    Computes the mean difference between predicted and actual claim frequencies
+    across demographic or risk-based groups (age and population density), 
+    saves CSV summaries, and generates plots for visualization.
+
+    Steps:
+    1. Bin predicted frequencies into quantiles.
+    2. Categorize drivers into age groups (young/middle/old).
+    3. Categorize locations into population density groups (low/high).
+    4. Aggregate mean predicted vs. actual claims per group and compute differences.
+    5. Save summary tables as CSV files.
+    6. Plot differences per predicted bin for each group and save images.
+
+    Args:
+        df (pd.DataFrame): Dataframe containing predictions and actual claims.
+        pred_col (str): Column name for predicted claim frequency.
+        true_col (str): Column name for actual claim counts.
+        storage_dir (str): Directory path to save CSV tables and plots.
+
+    Returns:
+        tuple[pd.DataFrame, pd.DataFrame]: Pivot tables for age and density group differences.
+    """
     df = df.copy()
     
     # Create bins based on predicted frequency

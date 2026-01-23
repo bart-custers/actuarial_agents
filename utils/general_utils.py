@@ -4,7 +4,22 @@ import numpy as np
 import pandas as pd
 
 def make_json_compatible(obj):
-    """Recursively convert objects to JSON-serializable formats."""
+    """
+    Recursively convert objects to JSON-serializable formats.
+
+    Supports:
+    - Pandas DataFrames → list of records
+    - Pandas Series → list
+    - NumPy scalar types → Python native scalars
+    - Lists and dictionaries → recursively processed
+    - Other objects are returned as-is
+
+    Args:
+        obj: Any Python object.
+
+    Returns:
+        JSON-serializable version of the object.
+    """
     if isinstance(obj, pd.DataFrame):
         return obj.to_dict(orient="records")
     elif isinstance(obj, pd.Series):
@@ -19,7 +34,16 @@ def make_json_compatible(obj):
         return obj
 
 def save_json_safe(data, path):
-    """Convenience wrapper that saves a JSON-safe version of any Python object."""
+    """
+    Save any Python object as a JSON file after making it JSON-compatible.
+
+    Args:
+        data: Python object (DataFrame, dict, list, etc.).
+        path (str): File path to save JSON.
+
+    Returns:
+        str: Path to the saved JSON file.
+    """
     safe_data = make_json_compatible(data)
     with open(path, "w") as f:
         json.dump(safe_data, f, indent=2)
@@ -106,8 +130,13 @@ def generate_explanation_report_txt(report_path,
 
 def extract_analysis(text: str) -> str:
     """
-    Extract the ANALYSIS: section from a larger string.
-    Returns the extracted text, or the original text if no match is found.
+    Extract the 'ANALYSIS:' section from a larger text.
+
+    Args:
+        text (str): Input text potentially containing multiple sections.
+
+    Returns:
+        str: Extracted analysis text, or the original text if no ANALYSIS section is found.
     """
     if '[/INST]' in text:
         text = text.split('[/INST]', 1)[1]
