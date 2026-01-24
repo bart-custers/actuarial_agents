@@ -35,7 +35,7 @@ class LLMWrapper:
         hf_token=None,
     ):
         """
-        backend: one of ["llama7b", "llama31_8b", "mistral3_14b", "mock"]
+        backend: one of ["llama7b", "llama31_8b", "qwen25_7b", "mock"]
         """
 
         self.backend = backend
@@ -195,7 +195,7 @@ class LLMWrapper:
         model = AutoModelForCausalLM.from_pretrained(
             model_name,
             device_map="auto",
-            load_in_4bit=True,
+            #load_in_4bit=True,
             torch_dtype="auto",
             token=self.hf_token,
             cache_dir=model_path,
