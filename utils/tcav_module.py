@@ -24,14 +24,10 @@ class LLMLayerExtractor:
     """
     def __init__(self, llm_wrapper=None, model_name=None, device=None):
         """
-        Parameters
-        ----------
-        llm_wrapper : object, optional
-            Wrapper exposing hidden state extraction methods.
-        model_name : str, optional
-            Name of a HuggingFace model (if using transformers directly).
-        device : str, optional
-            Torch device ("cuda" or "cpu").
+        Args:
+            llm_wrapper (object, optional): Wrapper exposing hidden state extraction methods.
+            model_name (str, optional): Name of a HuggingFace model (if using transformers directly).
+            device (str, optional): Torch device ("cuda" or "cpu").
         """
         self.llm_wrapper = llm_wrapper
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
@@ -44,19 +40,14 @@ class LLMLayerExtractor:
         """
         Extract mean pooled hidden embeddings for a given layer.
 
-        Parameters
-        ----------
-        texts : list of str
-            Input texts.
-        layer : int
-            Layer index to extract.
-        batch_size : int
-            Batch size for embedding extraction.
+        Args:
+            texts (list of str): Input texts.
+            layer (int): Layer index to extract.
+            batch_size (int): Batch size for embedding extraction.
 
-        Returns
-        -------
-        np.ndarray
-            Array of shape (n_texts, hidden_dim).
+        Returns:
+            np.ndarray
+                Array of shape (n_texts, hidden_dim).
         """
         out = []
 
@@ -99,23 +90,15 @@ def train_cav(concept_embs: np.ndarray, random_embs: np.ndarray,
     """
     Train a Concept Activation Vector (CAV) using a linear SVM.
 
-    Parameters
-    ----------
-    concept_embs : np.ndarray
-        Embeddings representing the target concept.
-    random_embs : np.ndarray
-        Random or negative embeddings.
-    C : float
-        Regularization strength.
-    max_iter : int
-        Maximum number of SVM iterations.
+    Args:
+        concept_embs (np.ndarray): Embeddings representing the target concept.
+        random_embs (np.ndarray): Random or negative embeddings.
+        C (float): Regularization strength.
+        max_iter (int): Maximum number of SVM iterations.
 
-    Returns
-    -------
-    cav : np.ndarray
-        Normalized concept direction vector.
-    meta : dict
-        Metadata including model parameters.
+    Returns:
+        cav (np.ndarray): Normalized concept direction vector.
+        meta (dict): Metadata including model parameters.
     """
     X = np.vstack([concept_embs, random_embs])
     y = np.hstack([np.ones(len(concept_embs)), np.zeros(len(random_embs))])

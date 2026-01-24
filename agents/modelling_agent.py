@@ -36,13 +36,11 @@ class ModellingAgent(BaseAgent):
             Decision: USE_GLM
             Decision: USE_GBM
 
-        Parameters
-        ----------
-        llm_text : str
+        Args:
+            llm_text (str): LLM-generated text containing a model selection decision.
 
-        Returns
-        -------
-        str (model choice)
+        Returns:
+            str (model choice)
         """
         text = llm_text
         # 1) Prefer explicit Decision: line (the prompt already asks for this)
@@ -66,15 +64,11 @@ class ModellingAgent(BaseAgent):
         ```python ... ``` or ``` ... ``` and returns its contents without
         the surrounding backticks.
 
-        Parameters
-        ----------
-        text : str
-            Raw text output from an LLM.
+        Args:
+            text (str): Raw text output from an LLM.
 
-        Returns
-        -------
-        str | None
-            The extracted Python source code if a code block is found.
+        Returns:
+            str | None: The extracted Python source code if a code block is found.
         """
         match = re.search(r"```python(.*?)```", text, re.DOTALL)
         return match.group(1) if match else None
@@ -90,31 +84,23 @@ class ModellingAgent(BaseAgent):
             - 'preds_test': test set predictions
             - 'model': trained model object
 
-        Parameters
-        ----------
-        X_train : array-like or pd.DataFrame
-            Training feature matrix.
-        y_train : array-like
-            Training target values.
-        exposure_train : array-like
-            Exposure values corresponding to the training data.
-        X_test : array-like or pd.DataFrame
-            Test feature matrix.
-        model_code : str
-            Raw LLM output containing a Python code block that performs model training and prediction.
+        Args:
+            X_train (array-like or pd.DataFrame): Training feature matrix.
+            y_train (array-like): Training target values.
+            exposure_train (array-like): Exposure values corresponding to the training data.
+            X_test (array-like or pd.DataFrame): Test feature matrix.
+            model_code (str): Raw LLM output containing a Python code block that performs model training and prediction.
 
-        Returns
-        -------
-        tuple[np.ndarray, np.ndarray, object]
-            - Training predictions
-            - Test predictions
-            - Trained model object
+        Returns:
+            tuple[np.ndarray, np.ndarray, object]
+                - Training predictions
+                - Test predictions
+                - Trained model object
 
-        Raises
-        ------
-        ValueError, if no Python code block is found in the LLM output.
-        ValueError, if unsafe operations are detected in the generated code.
-        ValueError, if execution fails or the expected output contract is violated.
+        Raises:
+            ValueError, if no Python code block is found in the LLM output.
+            ValueError, if unsafe operations are detected in the generated code.
+            ValueError, if execution fails or the expected output contract is violated.
         """
         code = self.extract_code_block(model_code)
         if code is None:
@@ -177,18 +163,14 @@ class ModellingAgent(BaseAgent):
             - train_predictions_*.csv
             - test_predictions_*.csv
 
-        Parameters
-        ----------
-        folder : str, default="data/final"
-            Directory containing stored prediction files.
+        Args:
+            folder (str, default="data/final"): Directory containing stored prediction files.
 
-        Returns
-        -------
-        tuple[np.ndarray, np.ndarray]
-            - Latest training predictions
-            - Latest test predictions
+        Returns:
+            tuple[np.ndarray, np.ndarray]
+                - Latest training predictions
+                - Latest test predictions
         """
-        # Find all prediction files
         train_files = glob.glob(os.path.join(folder, "train_predictions_*.csv"))
         test_files  = glob.glob(os.path.join(folder, "test_predictions_*.csv"))
 

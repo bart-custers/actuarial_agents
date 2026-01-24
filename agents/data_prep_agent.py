@@ -33,20 +33,17 @@ class DataPrepAgent(BaseAgent):
         ```python ... ``` or ``` ... ``` and returns its contents without
         the surrounding backticks.
 
-        Parameters
-        ----------
-        text : str
-            Raw text output from an LLM.
+        Args:
+            text : str
+                Raw text output from an LLM.
 
-        Returns
-        -------
-        str | None
-            The extracted Python source code if a code block is found.
+        Returns:
+            str | None
+                The extracted Python source code if a code block is found.
 
-        Notes
-        -----
-        - Matching is case-insensitive and supports optional 'python' tags.
-        - Only the first matching code block is returned.
+        Notes:
+            - Matching is case-insensitive and supports optional 'python' tags.
+            - Only the first matching code block is returned.
         """
         match = re.search(r"```(?:python)?\s*(.*?)```", text, re.DOTALL | re.IGNORECASE)
         return match.group(1) if match else None
@@ -60,22 +57,18 @@ class DataPrepAgent(BaseAgent):
         The code is executed in a restricted namespace with limited built-ins
         and explicit safety checks to reduce the risk of unsafe operations.
 
-        Parameters
-        ----------
-        df : pd.DataFrame
-        suggestion_text : str (raw LLM code)
+        Args:
+            df (pd.DataFrame): Input DataFrame to be cleaned.
+            suggestion_text (str): Raw LLM code containing a Python code block.
 
-        Returns
-        -------
-        pd.DataFrame
-            The cleaned DataFrame produced by the adaptive pipeline.
+        Returns:
+            pd.DataFrame: The cleaned DataFrame produced by the adaptive pipeline.
 
-        Raises
-        ------
-        ValueError, if no Python code block is found in the LLM output.
-        ValueError, if forbidden operations or unsafe tokens are detected.
-        ValueError, if the adaptive code fails to execute or violates the expected contract.
-        ValueError, if the `clean` method does not return a pandas DataFrame.
+        Raises:
+            ValueError, if no Python code block is found in the LLM output.
+            ValueError, if forbidden operations or unsafe tokens are detected.
+            ValueError, if the adaptive code fails to execute or violates the expected contract.
+            ValueError, if the `clean` method does not return a pandas DataFrame.
         """
 
         code = self.extract_code_block(suggestion_text)
@@ -148,24 +141,20 @@ class DataPrepAgent(BaseAgent):
         This comparison is used to validate whether the adaptive pipeline
         produced a usable result and to provide summary statistics for LLM verification.
 
-        Parameters
-        ----------
-        det : pd.DataFrame
-            Output of the deterministic (baseline) data-cleaning pipeline.
-        adapt : pd.DataFrame | None
-            Output of the adaptive pipeline, or None if the adaptive pipeline failed.
+        Args:
+            det (pd.DataFrame): Output of the deterministic (baseline) data-cleaning pipeline.
+            adapt (pd.DataFrame | None): Output of the adaptive pipeline, or None if the adaptive pipeline failed.
 
-        Returns
-        -------
-        dict
-            A summary dictionary containing:
-            - status : str
-                One of {'adaptive_failed', 'deterministic_empty',
-                        'adaptive_empty', 'adaptive_succeeded'}
-            - n_rows_det, n_rows_adapt : int
-            - n_cols_det, n_cols_adapt : int
-            - feature_overlap : int
-            - shape_det, shape_adapt : tuple
+        Returns:
+            dict
+                A summary dictionary containing:
+                - status : str
+                    One of {'adaptive_failed', 'deterministic_empty',
+                            'adaptive_empty', 'adaptive_succeeded'}
+                - n_rows_det, n_rows_adapt : int
+                - n_cols_det, n_cols_adapt : int
+                - feature_overlap : int
+                - shape_det, shape_adapt : tuple
         """
         if adapt is None:
             return {"status": "adaptive_failed"}
@@ -198,15 +187,11 @@ class DataPrepAgent(BaseAgent):
             Decision: USE_ADAPTIVE
             Decision: KEEP_DETERMINISTIC
 
-        Parameters
-        ----------
-        llm_text : str
-            LLM-generated verification and decision text.
+        Args:
+            llm_text (str): LLM-generated verification and decision text.
 
-        Returns
-        -------
-        str
-            Either 'adaptive' or 'deterministic'.
+        Returns:
+            str: Either 'adaptive' or 'deterministic'.
         """
         text = llm_text
 

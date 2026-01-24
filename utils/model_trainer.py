@@ -17,13 +17,10 @@ class ModelTrainer:
     """
     def __init__(self, model_type="glm", offset=None):
         """
-        Parameters
-        ----------
-        model_type : str
-            Model family to train: "glm" or "gbm".
-        offset : array-like or None
-            Optional exposure-based offset (e.g., log(Exposure)) for GLMs.
-            Included for extensibility and consistency, even if not always used.
+        Args:
+            model_type (str): Model family to train: "glm" or "gbm".
+            offset (array-like or None): Optional exposure-based offset (e.g., log(Exposure)) for GLMs.
+                Included for extensibility and consistency, even if not always used.
         """
         self.model_type = model_type
         self.offset = offset
@@ -33,14 +30,10 @@ class ModelTrainer:
         """
         Fit the selected model type on training data.
 
-        Parameters
-        ----------
-        X_train : array-like
-            Design matrix after preprocessing.
-        y_train : array-like
-            Target variable (e.g., claim frequency).
-        exposure_train : array-like
-            Exposure values, used as sample weights for GBM.
+        Args:
+            X_train (array-like): Design matrix after preprocessing.
+            y_train (array-like): Target variable (e.g., claim frequency).
+            exposure_train (array-like): Exposure values, used as sample weights for GBM.
         """
         if self.model_type == "glm":
             self.model = PoissonRegressor(alpha=1e-6, max_iter=500)
@@ -79,15 +72,11 @@ class ModelTrainer:
         """
         Generate predictions using the trained model.
 
-        Parameters
-        ----------
-        X : array-like
-            Feature matrix.
+        Args:
+            X (array-like): Feature matrix.
 
-        Returns
-        -------
-        np.ndarray
-            Model predictions.
+        Returns:
+            np.ndarray: Model predictions.
         """
         if self.model is None:
             raise ValueError("Model not trained yet.")
@@ -97,10 +86,8 @@ class ModelTrainer:
         """
         Persist the trained model to disk.
 
-        Parameters
-        ----------
-        path : str
-            File path where the model will be saved.
+        Args:
+            path (str): File path where the model will be saved.
         """
         if self.model:
             joblib.dump(self.model, path)
