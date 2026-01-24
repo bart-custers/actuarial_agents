@@ -8,19 +8,40 @@ from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.model_selection import GridSearchCV
 
 class ModelTrainer:
+    """
+    Train and manage actuarial frequency models using a unified interface.
+
+    Currently supports:
+    - Poisson GLM (for transparent, baseline models)
+    - Gradient Boosting with Poisson loss (for non-linear extensions)
+    """
     def __init__(self, model_type="glm", offset=None):
         """
+        Parameters
+        ----------
         model_type : str
-            "glm" (Poisson GLM) or "gbm"
+            Model family to train: "glm" or "gbm".
         offset : array-like or None
-            Optional offset (e.g., log(Exposure)) for GLM
+            Optional exposure-based offset (e.g., log(Exposure)) for GLMs.
+            Included for extensibility and consistency, even if not always used.
         """
         self.model_type = model_type
         self.offset = offset
         self.model = None
 
     def train(self, X_train, y_train, exposure_train):
-        """Fit model according to selected type."""
+        """
+        Fit the selected model type on training data.
+
+        Parameters
+        ----------
+        X_train : array-like
+            Design matrix after preprocessing.
+        y_train : array-like
+            Target variable (e.g., claim frequency).
+        exposure_train : array-like
+            Exposure values, used as sample weights for GBM.
+        """
         if self.model_type == "glm":
             self.model = PoissonRegressor(alpha=1e-6, max_iter=500)
             self.model.fit(X_train, y_train)
@@ -55,13 +76,32 @@ class ModelTrainer:
             )
 
     def predict(self, X):
-        """Return predictions from trained model."""
+        """
+        Generate predictions using the trained model.
+
+        Parameters
+        ----------
+        X : array-like
+            Feature matrix.
+
+        Returns
+        -------
+        np.ndarray
+            Model predictions.
+        """
         if self.model is None:
             raise ValueError("Model not trained yet.")
         return self.model.predict(X)
 
     def save(self, path):
-        """Save the trained model."""
+        """
+        Persist the trained model to disk.
+
+        Parameters
+        ----------
+        path : str
+            File path where the model will be saved.
+        """
         if self.model:
             joblib.dump(self.model, path)
         else:

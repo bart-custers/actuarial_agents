@@ -11,20 +11,38 @@ from sklearn.metrics import (
 )
 
 class ModelEvaluation:
+    """
+    Unified evaluation module for insurance pricing / frequency models.
+
+    Supports:
+    - Standard regression metrics
+    - Poisson-specific metrics
+    - Gini coefficient
+    - Calibration (lift) plots
+    - Feature-level prediction comparisons
+    """
     def __init__(self, model=None, model_type="glm", offset=None):
         """
-        model_type : str
-            "glm" (Poisson GLM), "gbm", or other future models
-        model : trained model object
-        offset : array-like or None
-            Optional offset (e.g., log(Exposure)) for GLM
+        Args:
+            model: Trained model object.
+            model_type (str): Model family identifier ("glm", "gbm", etc.).
+            offset: Optional offset (e.g. log(Exposure)) for GLM models.
         """
         self.model = model
         self.model_type = model_type.lower()
         self.offset = offset
     
     def gini_coefficient(y_true, y_pred):
-        """Compute standard (non-normalized) Gini."""
+        """
+        Compute the (non-normalized) Gini coefficient.
+
+        Args:
+            y_true (array-like): Observed outcomes.
+            y_pred (array-like): Predicted values.
+
+        Returns:
+            float: Gini coefficient.
+        """
         # Sort by predictions descending
         order = np.argsort(-y_pred)
         y_true_sorted = y_true[order]
@@ -38,24 +56,16 @@ class ModelEvaluation:
     
     def calibration_plot(self, y_true, y_pred, exposure, model_type="model"):
         """
-        Creates a calibration/lift plot comparing actual vs predicted claim rates
-        across prediction deciles.
+        Create and save a calibration (lift) plot by predicted deciles.
 
-        Parameters
-        ----------
-        y_true : array-like
-            Observed claim counts.
-        y_pred : array-like
-            Model-predicted claim counts.
-        exposure : array-like
-            Exposure values for each observation.
-        model_label : str
-            Used for plot title and filename.
+        Args:
+            y_true (array-like): Observed claim counts.
+            y_pred (array-like): Predicted claim counts.
+            exposure (array-like): Exposure per observation.
+            model_type (str): Used for plot naming.
 
-        Returns
-        -------
-        decile_summary : pd.DataFrame
-            Table containing decile-level aggregated metrics.
+        Returns:
+            pd.DataFrame: Decile-level summary statistics.
         """
 
         # --- Compute rates ---
@@ -121,6 +131,14 @@ class ModelEvaluation:
         preds_previous,
         set_name,
         model_type):
+        """
+        Compare predictions of two models across feature values.
+
+        Useful for model change monitoring and governance.
+
+        Returns:
+            pd.DataFrame: Table of largest prediction deviations.
+        """
 
         X = pd.DataFrame(X_matrix, columns=feature_names)
         X["_pred_cur"] = preds_current
@@ -225,6 +243,12 @@ class ModelEvaluation:
         y_true,
         set_name,
         model_type):
+        """
+        Compare predicted vs actual outcomes across feature values.
+
+        Returns:
+            pd.DataFrame: Largest deviations per feature.
+        """
 
         X = pd.DataFrame(X_matrix, columns=feature_names)
         X["_pred_cur"] = preds_current
@@ -312,7 +336,12 @@ class ModelEvaluation:
         return deviation_table
 
     def evaluate(self, y_true, y_pred, feature_names=None, exposure=None):
-        """Compute evaluation metrics and plots."""
+        """
+        Compute core evaluation metrics and calibration diagnostics.
+
+        Returns:
+            dict: Metrics, feature importance, and calibration table.
+        """
         metrics = {}
 
         # Core error metrics
@@ -363,6 +392,15 @@ class ModelEvaluation:
         preds_train_current, preds_train_previous,
         preds_test_current, preds_test_previous,
         feature_names):
+        """
+        Compare predictions from two model versions (current vs previous)
+        at the feature level, separately for train and test sets.
+
+        Returns:
+            dict with:
+                - train_preds_comparison (pd.DataFrame)
+                - test_preds_comparison (pd.DataFrame)
+        """  
 
         # Checks
         if not isinstance(X_train, pd.DataFrame):
@@ -392,6 +430,15 @@ class ModelEvaluation:
         preds_train_current, y_train,
         preds_test_current, y_test,
         feature_names):
+        """
+        Compare model predictions against actual observed outcomes
+        at the feature level, for both train and test sets.
+
+        Returns:
+            dict with:
+                - train_act_vs_exp (pd.DataFrame)
+                - test_act_vs_exp (pd.DataFrame)
+        """
 
         # Checks
         if not isinstance(X_train, pd.DataFrame):

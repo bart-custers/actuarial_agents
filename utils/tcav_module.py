@@ -11,9 +11,28 @@ try:
 except:
     raise ImportError("scikit-learn required for LinearSVC (pip install scikit-learn)")
 
-# Layer extractor
+# ============================================================
+# LLM LAYER EMBEDDING EXTRACTION
+# ============================================================
 class LLMLayerExtractor:
+    """
+    Utility class for extracting hidden layer embeddings from an LLM.
+
+    Supports:
+    - Custom LLM wrappers exposing hidden states
+    - HuggingFace-style transformer models (if configured)
+    """
     def __init__(self, llm_wrapper=None, model_name=None, device=None):
+        """
+        Parameters
+        ----------
+        llm_wrapper : object, optional
+            Wrapper exposing hidden state extraction methods.
+        model_name : str, optional
+            Name of a HuggingFace model (if using transformers directly).
+        device : str, optional
+            Torch device ("cuda" or "cpu").
+        """
         self.llm_wrapper = llm_wrapper
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -22,6 +41,23 @@ class LLMLayerExtractor:
             yield items[i:i+batch_size]
 
     def get_hidden_embeddings(self, texts: List[str], layer: int, batch_size: int = 8) -> np.ndarray:
+        """
+        Extract mean pooled hidden embeddings for a given layer.
+
+        Parameters
+        ----------
+        texts : list of str
+            Input texts.
+        layer : int
+            Layer index to extract.
+        batch_size : int
+            Batch size for embedding extraction.
+
+        Returns
+        -------
+        np.ndarray
+            Array of shape (n_texts, hidden_dim).
+        """
         out = []
 
         if self.llm_wrapper is not None:
@@ -55,9 +91,32 @@ class LLMLayerExtractor:
 
         raise RuntimeError("No hidden state extraction available.")
 
-# Train CAV
+# ============================================================
+# CONCEPT ACTIVATION VECTORS (CAVs)
+# ============================================================
 def train_cav(concept_embs: np.ndarray, random_embs: np.ndarray,
               C=0.1, max_iter=50000) -> Tuple[np.ndarray, dict]:
+    """
+    Train a Concept Activation Vector (CAV) using a linear SVM.
+
+    Parameters
+    ----------
+    concept_embs : np.ndarray
+        Embeddings representing the target concept.
+    random_embs : np.ndarray
+        Random or negative embeddings.
+    C : float
+        Regularization strength.
+    max_iter : int
+        Maximum number of SVM iterations.
+
+    Returns
+    -------
+    cav : np.ndarray
+        Normalized concept direction vector.
+    meta : dict
+        Metadata including model parameters.
+    """
     X = np.vstack([concept_embs, random_embs])
     y = np.hstack([np.ones(len(concept_embs)), np.zeros(len(random_embs))])
     clf = LinearSVC(C=C, max_iter=max_iter)
@@ -93,11 +152,19 @@ def load_cav(path: str) -> Tuple[np.ndarray, dict]:
         clf = joblib.load(clf_path)
     return cav, {"meta": meta, "clf": clf}
 
-# TCAV analysis
+# ============================================================
+# TCAV COMPUTATION
+# ============================================================
 def directional_derivatives(embs: np.ndarray, cav: np.ndarray) -> np.ndarray:
+    """
+    Compute directional derivatives along a CAV.
+    """
     return embs.dot(cav)
 
 def summarize_dots(dots: np.ndarray) -> Dict[str, float]:
+    """
+    Summarize TCAV directional derivatives.
+    """
     return {
         "tcav_score": float((dots > 0).mean()),
         "mean_dot": float(np.mean(dots)),
@@ -109,19 +176,25 @@ def summarize_dots(dots: np.ndarray) -> Dict[str, float]:
     }
 
 def random_cavs_like(
-    cav: np.ndarray,
-    n: int = 20,
-    seed: int = 42
-) -> np.ndarray:
+        cav: np.ndarray,
+        n: int = 20,
+        seed: int = 42
+    ) -> np.ndarray:
+    """
+    Generate random unit vectors with the same dimensionality as a CAV.
+    """
     rng = np.random.default_rng(seed)
     r = rng.normal(size=(n, cav.shape[0]))
     return r / np.linalg.norm(r, axis=1, keepdims=True)
 
 def tcav_with_random_baseline(
-    embs: np.ndarray,
-    cav: np.ndarray,
-    n_random: int = 20
-) -> Dict[str, Any]:
+        embs: np.ndarray,
+        cav: np.ndarray,
+        n_random: int = 20
+    ) -> Dict[str, Any]:
+    """
+    Compute TCAV scores and compare them against random baselines.
+    """
 
     dots = directional_derivatives(embs, cav)
     main = summarize_dots(dots)
@@ -139,19 +212,28 @@ def tcav_with_random_baseline(
         "random_std": float(np.std(rand_scores)),
     }
 
-# TCAV Evaluator
+# ============================================================
+# TCAV EVALUATION PIPELINE
+# ============================================================
+
 class TCAVEvaluator:
+    """
+    High-level interface for running TCAV analyses on text sets.
+    """
     def __init__(self, extractor: LLMLayerExtractor):
         self.extractor = extractor
 
     def evaluate_texts(
-        self,
-        texts: List[str],
-        cav: np.ndarray,
-        layer: int,
-        batch_size: int = 8,
-        n_random: int = 20,
-    ) -> Dict[str, Any]:
+            self,
+            texts: List[str],
+            cav: np.ndarray,
+            layer: int,
+            batch_size: int = 8,
+            n_random: int = 20,
+        ) -> Dict[str, Any]:
+        """
+        Run TCAV for a single layer.
+        """
 
         if len(texts) < 2:
             raise ValueError("TCAV requires at least 2 texts.")
@@ -169,13 +251,16 @@ class TCAVEvaluator:
         )
 
     def tcav_across_layers(
-        self,
-        texts: List[str],
-        cav: np.ndarray,
-        layers: List[int],
-        batch_size: int = 8,
-        n_random: int = 20,
-    ) -> Dict[int, Dict[str, Any]]:
+            self,
+            texts: List[str],
+            cav: np.ndarray,
+            layers: List[int],
+            batch_size: int = 8,
+            n_random: int = 20,
+        ) -> Dict[int, Dict[str, Any]]:
+        """
+        Run TCAV across multiple layers.
+        """
 
         results = {}
         for layer in layers:
@@ -187,8 +272,11 @@ class TCAVEvaluator:
             )
         return results
     
-# Utils
+# ============================================================
+# UTILS
+# ============================================================
 def flatten_agent_outputs(agent_outputs: Dict[str, List[str]]) -> List[str]:
+    """Flatten multi-agent text outputs into a clean text list."""
     texts = []
     for _, outputs in agent_outputs.items():
         for t in outputs:
@@ -197,10 +285,12 @@ def flatten_agent_outputs(agent_outputs: Dict[str, List[str]]) -> List[str]:
     return texts
 
 def read_lines(path: str) -> List[str]:
+    """Read lines from a text file."""
     with open(path, "r") as f:
         return [l.strip() for l in f if l.strip()]
 
 def save_json(path: str, obj):
+    """Save a JSON object to disk."""
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w") as f:
         json.dump(obj, f, indent=2)
