@@ -165,8 +165,6 @@ class ExplanationAgent(BaseAgent):
                 item3=None,
             )
             reasoning_state[phase] = self.llm(summary_prompt)
-        
-        print(reasoning_state)
 
         # Now assess the belief
         belief_prompt = PROMPTS["belief_prompt"].format(reasoning_summary = reasoning_state)
@@ -174,8 +172,8 @@ class ExplanationAgent(BaseAgent):
         belief_assessment_text = extract_analysis(belief_assessment)
         belief_score = self._extract_score(belief_assessment)
 
-        print(belief_prompt)
         print(belief_assessment)
+        print(belief_score)
 
         # --------------------
         # Layer 2: TCAV
@@ -212,6 +210,7 @@ class ExplanationAgent(BaseAgent):
         tcav_score = self._extract_score(tcav_assessment)
 
         print(tcav_assessment)
+        print(tcav_score)
         
         # --------------------
         # Layer 3: fairness assessment
@@ -227,6 +226,7 @@ class ExplanationAgent(BaseAgent):
         fairness_score = self._extract_score(fairness_assessment)
 
         print(fairness_assessment)
+        print(fairness_score)
 
         # --------------------
         # Layer 4: decision
