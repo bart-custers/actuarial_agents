@@ -155,7 +155,7 @@ class ModellingAgent(BaseAgent):
         return preds_train, preds_test, model
 
     @staticmethod
-    def load_latest_predictions(folder="data/final"):
+    def load_latest_predictions(folder="data/preds"):
         """
         Load the most recent train and test prediction files from disk, based on timestamped filenames.
 
@@ -164,7 +164,7 @@ class ModellingAgent(BaseAgent):
             - test_predictions_*.csv
 
         Args:
-            folder (str, default="data/final"): Directory containing stored prediction files.
+            folder (str, default="data/preds"): Directory containing stored prediction files.
 
         Returns:
             tuple[np.ndarray, np.ndarray]
@@ -354,7 +354,7 @@ class ModellingAgent(BaseAgent):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
         # Store model
-        storage_dir = "data/final"
+        storage_dir = "data/preds"
         os.makedirs(storage_dir, exist_ok=True)
 
         model_path = os.path.join(storage_dir, f"{model_choice}_{timestamp}.joblib")

@@ -20,7 +20,7 @@ class ExplanationAgent(BaseAgent):
         self.hub = hub
     
     @staticmethod
-    def load_latest_prediction_df(folder="data/final"):
+    def load_latest_prediction_df(folder="data/preds"):
         """
         Load the most recent prediction DataFrame from a directory.
         The function searches for CSV files following the naming convention `df_predictions_*.csv`.
@@ -279,7 +279,7 @@ class ExplanationAgent(BaseAgent):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
         # Store review report
-        report_path = f"data/audit/explanation_report_{timestamp}.txt"
+        report_path = f"data/evaluation/explanation_report_{timestamp}.txt"
         generate_explanation_report_txt(report_path, final_report, belief_assessment_text, tcav_assessment_text, fairness_assessment_text, final_evaluation_text)
 
         # Store metadata

@@ -224,7 +224,7 @@ class ReviewingAgent(BaseAgent):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
         # Store review report
-        report_path = f"data/audit/review_report_{timestamp}.txt"
+        report_path = f"data/evaluation/review_report_{timestamp}.txt"
         if phase == "dataprep":
             model_metrics = None
         generate_review_report_txt(report_path, phase, model_metrics, analysis, consistency_summary, consistency_check, impact_analysis_output,
