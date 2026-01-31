@@ -1,0 +1,220 @@
+{
+  "timestamp": "20260131_205431",
+  "status": "success",
+  "used_pipeline": "deterministic",
+  "plan_dataprep": "**Restatement of the assignment:**\nPrepare the given insurance claims dataset for claim frequency modeling by identifying key actions to take.\n\n**Top 6 actions to prepare the dataset:**\n* **1.** Explore and visualize the distribution of numeric variables (e.g., \"IDpol\", \"ClaimNb\", \"Exposure\", etc.) to identify potential outliers and skewness.\n* **2.** Check for correlations between numeric variables to identify potential multicollinearity issues.\n* **3.** Handle missing values in categorical variables (\"Area\", \"VehBrand\", \"VehGas\", \"Region\") by either imputing them or removing them if they are not crucial for the analysis.\n* **4.** One-hot encode categorical variables to enable their use in machine learning models.\n* **5.** Scale numeric variables using techniques such as standardization or normalization to ensure they are on the same scale.\n* **6.** Verify that the dataset does not contain any duplicate or identical rows that could affect model performance.\n\n**Immediate warnings:**\n* The dataset appears to be well-prepared with no missing values, but it's essential to verify this by checking the distribution of each variable.\n* There are no immediate warnings regarding skewed numeric columns or very many missing values, but it's still crucial to explore the data further to identify potential issues.",
+  "adaptive_suggestion": "```python\nimport pandas as pd\nimport numpy as np\n\nclass DataCleaning:\n    def __init__(self):\n        self.actions_log = []\n\n    def clean(self, data: pd.DataFrame):\n        # Clip outliers / right-censoring \n        self.actions_log.append(\"Clipping VehAge (<=20), DrivAge (<=90), BonusMalus (<=150), ClaimNb (<=5).\")\n        data['VehAge'] = data['VehAge'].clip(upper=20)\n        data['DrivAge'] = data['DrivAge'].clip(upper=90)\n        data['BonusMalus'] = data['BonusMalus'].clip(upper=150)\n        data['ClaimNb'] = data['ClaimNb'].clip(upper=5)\n\n        # Check for correlations between numeric variables\n        corr_matrix = data[num_vars].corr()\n        corr_matrix = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(bool))\n        self.actions_log.append(\"Checked correlations between numeric variables.\")\n        \n        # Handle missing values in categorical variables by removing them\n        for col in cat_vars:\n            if data[col].isnull().any():\n                self.actions_log.append(f\"Removed missing values from {col}.\")\n                data = data.dropna(subset=[col])\n        \n        # One-hot encode categorical variables\n        self.actions_log.append(\"One-hot encoded categorical variables.\")\n        data = pd.get_dummies(data, columns=cat_vars, drop_first=True)\n\n        # Scale numeric variables using standardization\n        self.actions_log.append(\"Scaled numeric variables using standardization.\")\n        from sklearn.preprocessing import StandardScaler\n        scaler = StandardScaler()\n        data[num_vars] = scaler.fit_transform(data[num_vars])\n\n        # Verify that the dataset does not contain any duplicate or identical rows\n        self.actions_log.append(\"Verified dataset for duplicates.\")\n        if data.duplicated().any():\n            self.actions_log.append(\"Removed duplicate rows.\")\n            data = data.drop_duplicates()\n\n        return data\n```",
+  "comparison": {
+    "status": "adaptive_failed"
+  },
+  "verification": "Forced decision due to status=adaptive_failed",
+  "explanation": "To summarize the verified data preparation and reasoning based on the context \"Forced decision due to status=adaptive_failed,\" I'll break it down into steps.\n\n### Step 1: Identify the Key Context\nThe key context here is \"Forced decision due to status=adaptive_failed.\" This implies that the decision-making process was terminated or forced due to a specific status, which is \"adaptive_failed.\"\n\n### Step 2: Determine the Status \"adaptive_failed\"\n- **Definition**: The term \"adaptive_failed\" suggests a failure in the adaptive process. In the context of decision-making, especially in actuarial or machine learning models, \"adaptive\" typically refers to an adaptive model or algorithm that adjusts its parameters based on new data.\n- **Possible Causes**: The failure of an adaptive process could be due to various reasons such as data quality issues, model drift, overfitting, or underfitting.\n\n### Step 3: Analyze the Implications of \"adaptive_failed\"\n- **Model Performance**: A forced decision due to \"adaptive_failed\" status implies that the model's ability to adapt to new data or changing conditions has been compromised. This could lead to inaccurate predictions or decisions.\n- **Data Quality**: The failure of the adaptive process might indicate issues with the data being fed into the model, such as missing values, outliers, or inconsistent data types.\n- **Model Relevance**: The forced decision might suggest that the model's parameters are no longer relevant or are outdated, requiring a retraining or reevaluation of the model.\n\n### Step 4: Determine Stability and Differences\n- **Stability**: The forced decision due to \"adaptive_failed\" status suggests instability in the model's performance or adaptability.\n- **Differences**: This scenario differs from a typical decision-making process where the model continues to learn and adapt. The forced decision indicates a need for immediate intervention to address the model's failure.\n\n### Step 5: Final Rationale\nBased on the analysis, the final rationale for the forced decision due to \"adaptive_failed\" status is that the model's ability to adapt to new data or changing conditions has been compromised, likely due to data quality issues or model drift. This requires immediate attention to rectify the model's parameters or retrain the model to ensure accurate and reliable decision-making.\n\n**Data Preparation Recommendations:**\n\n1. **Data Quality Check**: Review and clean the data to ensure it's free from errors, missing values, and inconsistencies.\n2. **Model Reevaluation**: Assess the model's parameters and consider retraining or updating the model to reflect current conditions.\n3. **Monitoring**: Implement continuous monitoring to detect early signs of model drift or failure, allowing for proactive adjustments.\n\nBy following these steps and recommendations, you can address the \"adaptive_failed\" status and ensure the model's adaptability and decision-making accuracy.",
+  "consistency_snapshot": {
+    "n_rows": 678013,
+    "n_columns": 12,
+    "memory_MB": 151.7564,
+    "dtypes": {
+      "IDpol": "float64",
+      "ClaimNb": "int64",
+      "Exposure": "float64",
+      "Area": "int8",
+      "VehPower": "int64",
+      "VehAge": "int64",
+      "DrivAge": "int64",
+      "BonusMalus": "int64",
+      "VehBrand": "object",
+      "VehGas": "object",
+      "Density": "int64",
+      "Region": "object"
+    },
+    "missing_counts": {
+      "IDpol": 0,
+      "ClaimNb": 0,
+      "Exposure": 0,
+      "Area": 0,
+      "VehPower": 0,
+      "VehAge": 0,
+      "DrivAge": 0,
+      "BonusMalus": 0,
+      "VehBrand": 0,
+      "VehGas": 0,
+      "Density": 0,
+      "Region": 0
+    },
+    "missing_pct": {
+      "IDpol": 0.0,
+      "ClaimNb": 0.0,
+      "Exposure": 0.0,
+      "Area": 0.0,
+      "VehPower": 0.0,
+      "VehAge": 0.0,
+      "DrivAge": 0.0,
+      "BonusMalus": 0.0,
+      "VehBrand": 0.0,
+      "VehGas": 0.0,
+      "Density": 0.0,
+      "Region": 0.0
+    },
+    "numeric_summary": {
+      "IDpol": {
+        "count": 678013.0,
+        "mean": 2621856.9211,
+        "std": 1641782.7527,
+        "min": 1.0,
+        "25%": 1157951.0,
+        "50%": 2272152.0,
+        "75%": 4046274.0,
+        "max": 6114330.0
+      },
+      "ClaimNb": {
+        "count": 678013.0,
+        "mean": 0.0532,
+        "std": 0.2382,
+        "min": 0.0,
+        "25%": 0.0,
+        "50%": 0.0,
+        "75%": 0.0,
+        "max": 5.0
+      },
+      "Exposure": {
+        "count": 678013.0,
+        "mean": 0.5288,
+        "std": 0.3644,
+        "min": 0.0027,
+        "25%": 0.18,
+        "50%": 0.49,
+        "75%": 0.99,
+        "max": 2.01
+      },
+      "Area": {
+        "count": 678013.0,
+        "mean": 3.2897,
+        "std": 1.3827,
+        "min": 1.0,
+        "25%": 2.0,
+        "50%": 3.0,
+        "75%": 4.0,
+        "max": 6.0
+      },
+      "VehPower": {
+        "count": 678013.0,
+        "mean": 6.4546,
+        "std": 2.0509,
+        "min": 4.0,
+        "25%": 5.0,
+        "50%": 6.0,
+        "75%": 7.0,
+        "max": 15.0
+      },
+      "VehAge": {
+        "count": 678013.0,
+        "mean": 6.9761,
+        "std": 5.399,
+        "min": 0.0,
+        "25%": 2.0,
+        "50%": 6.0,
+        "75%": 11.0,
+        "max": 20.0
+      },
+      "DrivAge": {
+        "count": 678013.0,
+        "mean": 45.4969,
+        "std": 14.1299,
+        "min": 18.0,
+        "25%": 34.0,
+        "50%": 44.0,
+        "75%": 55.0,
+        "max": 90.0
+      },
+      "BonusMalus": {
+        "count": 678013.0,
+        "mean": 59.7572,
+        "std": 15.6079,
+        "min": 50.0,
+        "25%": 50.0,
+        "50%": 50.0,
+        "75%": 64.0,
+        "max": 150.0
+      },
+      "Density": {
+        "count": 678013.0,
+        "mean": 1792.4224,
+        "std": 3958.6466,
+        "min": 1.0,
+        "25%": 92.0,
+        "50%": 393.0,
+        "75%": 1658.0,
+        "max": 27000.0
+      }
+    },
+    "categorical_summary": {
+      "VehBrand": {
+        "B12": 0.2449,
+        "B1": 0.24,
+        "B2": 0.2358,
+        "B3": 0.0788,
+        "B5": 0.0513,
+        "B6": 0.0421,
+        "B4": 0.0371,
+        "B10": 0.0261,
+        "B11": 0.02,
+        "B13": 0.018,
+        "B14": 0.006
+      },
+      "VehGas": {
+        "Regular": 0.5101,
+        "Diesel": 0.4899
+      },
+      "Region": {
+        "R24": 0.2369,
+        "R82": 0.125,
+        "R93": 0.117,
+        "R11": 0.1029,
+        "R53": 0.0621,
+        "R52": 0.0572,
+        "R91": 0.0528,
+        "R72": 0.0462,
+        "R31": 0.0402,
+        "R54": 0.0281,
+        "R73": 0.0253,
+        "R41": 0.0192,
+        "R25": 0.0161,
+        "R26": 0.0155,
+        "R23": 0.013,
+        "R22": 0.0118,
+        "R83": 0.0078,
+        "R74": 0.0067,
+        "R94": 0.0067,
+        "R21": 0.0045,
+        "R42": 0.0032,
+        "R43": 0.002
+      }
+    },
+    "target_distribution": {
+      "0": 0.9498,
+      "1": 0.0475,
+      "2": 0.0026,
+      "3": 0.0001,
+      "5": 0.0,
+      "4": 0.0
+    },
+    "target_mean": 0.053192195429881135,
+    "target_variance": 0.056740328301545774
+  },
+  "unc_dataprep_layer1": 0.25279455950134877,
+  "unc_dataprep_layer2": 0.06197654977436384,
+  "unc_dataprep_layer3": 0,
+  "unc_dataprep_layer4": 0.27903891787984636,
+  "processed_paths": {
+    "X_train": "data/processed/freMTPL2freq_X_train.csv",
+    "X_test": "data/processed/freMTPL2freq_X_test.csv",
+    "y_train": "data/processed/freMTPL2freq_y_train.csv",
+    "y_test": "data/processed/freMTPL2freq_y_test.csv",
+    "exposure_train": "data/processed/freMTPL2freq_exposure_train.csv",
+    "exposure_test": "data/processed/freMTPL2freq_exposure_test.csv"
+  },
+  "artifacts": {
+    "preprocessor": "data/artifacts/preprocessor.pkl",
+    "features": "data/artifacts/feature_names.pkl"
+  }
+}
