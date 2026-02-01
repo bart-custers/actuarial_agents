@@ -245,7 +245,8 @@ class ModellingAgent(BaseAgent):
             )
         plan, unc_modelling_layer1 = self.llm(layer1_prompt, return_uncertainty=True)
 
-        model_choice = self._extract_model_choice(plan)
+        #model_choice = self._extract_model_choice(plan)
+        model_choice = "gbm"
         print(f"[modelling] LLM selected model type: {model_choice}")
 
         # --------------------
