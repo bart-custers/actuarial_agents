@@ -27,14 +27,11 @@ PROMPTS = {
     - The code MUST run without errors when executed
 
     Context:
-    Earlier reasoning summary (do NOT repeat):
-    {summary1}
+    Earlier reasoning summary (do NOT repeat): {summary1}
 
-    Dataset summary:
-    {info_dict}
+    Dataset summary: {info_dict}
 
-    Existing pipeline (example to follow and adapt):
-    {pipeline_code}
+    Reference example: (example to follow and adapt): {pipeline_code}
 
     ### REQUIRED OUTPUT CONTRACT (follow strictly)
 
