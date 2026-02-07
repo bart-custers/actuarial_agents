@@ -1,0 +1,3442 @@
+{
+  "timestamp": "20260207_191912",
+  "status": "success",
+  "plan_modelling": "1. The modelling goal is to predict the claim frequency for insurance policies based on various vehicle and policyholder features.\n2. This modelling task is indeed about regression, where the target variable is likely the claim count or exposure.\n3. Decision: USE_GLM\n4. Justification:\n   - Actuarial Reasoning:\n     * Claim frequency data often exhibit overdispersion, which GLMs can handle through the use of appropriate variance functions.\n     * GLMs provide interpretable coefficients, which are crucial for understanding risk factors in insurance.\n   - Machine Learning Reasoning:\n     * GLMs are computationally efficient, especially with large datasets like this one.\n     * They can incorporate both continuous and categorical variables directly without the need for complex feature engineering.\n5. Risks or Pitfalls:\n   - Overfitting if too many parameters are included.\n   - Underestimation of variance if overdispersion is not properly accounted for.\nDecision: USE_GLM",
+  "model_type_used": "glm",
+  "model_code": "```python\nimport joblib\nfrom sklearn.linear_model import PoissonRegressor\n\nclass GLMTrainer:\n    def __init__(self):\n        self.model = PoissonRegressor(alpha=1e-6, max_iter=500)\n\n    def train(self, X, y, exposure=None):\n        if exposure is not None:\n            self.model.fit(X, y, sample_weight=exposure)\n        else:\n            self.model.fit(X, y)\n\n    def predict(self, X):\n        return self.model.predict(X)\n\n    def save(self, path):\n        \"\"\"Save the trained model.\"\"\"\n        if self.model:\n            joblib.dump(self.model, path)\n        else:\n            raise ValueError(\"No trained model to save.\")\n\ntrainer = GLMTrainer()\ntrainer.train(X_train, y_train, exposure_train)\npreds_train = trainer.predict(X_train)\npreds_test = trainer.predict(X_test)\nmodel = trainer.model\nresult = {\"preds_train\": preds_train, \"preds_test\": preds_test, \"model\": model}\n```",
+  "model_used": "llm_adaptive",
+  "model_reason": "llm pipeline succeeded",
+  "model_metrics": {
+    "RMSE": 0.0,
+    "MAE": 0.0,
+    "R2": 1.0,
+    "Poisson_Deviance": null,
+    "Gini_score": null,
+    "Feature_Importance": [
+      {
+        "Feature": "VehPower",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "VehAge",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "DrivAge",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "BonusMalus",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Density",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Area_B_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Area_B_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Area_C_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Area_C_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Area_D_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Area_D_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Area_E_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Area_E_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Area_F_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Area_F_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "VehBrand_B10_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "VehBrand_B10_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "VehBrand_B11_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "VehBrand_B11_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "VehBrand_B12_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "VehBrand_B12_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "VehBrand_B13_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "VehBrand_B13_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "VehBrand_B14_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "VehBrand_B14_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "VehBrand_B2_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "VehBrand_B2_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "VehBrand_B3_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "VehBrand_B3_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "VehBrand_B4_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "VehBrand_B4_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "VehBrand_B5_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "VehBrand_B5_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "VehBrand_B6_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "VehBrand_B6_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "VehGas_Regular_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "VehGas_Regular_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R21_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R21_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R22_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R22_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R23_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R23_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R24_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R24_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R25_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R25_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R26_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R26_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R31_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R31_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R41_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R41_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R42_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R42_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R43_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R43_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R52_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R52_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R53_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R53_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R54_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R54_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R72_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R72_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R73_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R73_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R74_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R74_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R82_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R82_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R83_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R83_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R91_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R91_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R93_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R93_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R94_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R94_True",
+        "Coefficient": 0.0
+      }
+    ],
+    "Calibration_table": []
+  },
+  "act_vs_exp": {
+    "train_act_vs_exp": [
+      {
+        "Feature": "VehPower",
+        "Value": -1.1970855138552443,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehPower",
+        "Value": -0.7092668774739205,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehPower",
+        "Value": -0.2214482410925963,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehPower",
+        "Value": 0.2663703952887277,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehPower",
+        "Value": 0.7541890316700518,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehAge",
+        "Value": -1.2445426447565977,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehAge",
+        "Value": -1.0679086932784136,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehAge",
+        "Value": -0.8912747418002296,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehAge",
+        "Value": -0.7146407903220456,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehAge",
+        "Value": -0.5380068388438616,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "DrivAge",
+        "Value": -1.9450085261167251,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "DrivAge",
+        "Value": -1.874276696691502,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "DrivAge",
+        "Value": -1.8035448672662788,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "DrivAge",
+        "Value": -1.7328130378410558,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "DrivAge",
+        "Value": -1.6620812084158323,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "BonusMalus",
+        "Value": -0.6242327411474736,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "BonusMalus",
+        "Value": -0.5602842464251182,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "BonusMalus",
+        "Value": -0.4963357517027627,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "BonusMalus",
+        "Value": -0.4323872569804072,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "BonusMalus",
+        "Value": -0.3684387622580518,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Density",
+        "Value": -0.4522461157699092,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Density",
+        "Value": -0.4519938470735826,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Density",
+        "Value": -0.4517415783772561,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Density",
+        "Value": -0.4514893096809296,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Density",
+        "Value": -0.4512370409846031,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Area_B_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Area_B_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Area_B_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Area_B_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Area_C_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Area_C_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Area_C_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Area_C_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Area_D_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Area_D_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Area_D_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Area_D_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Area_E_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Area_E_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Area_E_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Area_E_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Area_F_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Area_F_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Area_F_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Area_F_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B10_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B10_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B10_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B10_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B11_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B11_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B11_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B11_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B12_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B12_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B12_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B12_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B13_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B13_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B13_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B13_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B14_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B14_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B14_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B14_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B2_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B2_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B2_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B2_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B3_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B3_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B3_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B3_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B4_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B4_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B4_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B4_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B5_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B5_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B5_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B5_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B6_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B6_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B6_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B6_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehGas_Regular_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehGas_Regular_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehGas_Regular_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehGas_Regular_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R21_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R21_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R21_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R21_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R22_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R22_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R22_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R22_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R23_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R23_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R23_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R23_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R24_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R24_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R24_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R24_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R25_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R25_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R25_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R25_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R26_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R26_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R26_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R26_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R31_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R31_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R31_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R31_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R41_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R41_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R41_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R41_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R42_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R42_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R42_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R42_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R43_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R43_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R43_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R43_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R52_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R52_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R52_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R52_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R53_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R53_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R53_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R53_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R54_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R54_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R54_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R54_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R72_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R72_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R72_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R72_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R73_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R73_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R73_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R73_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R74_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R74_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R74_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R74_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R82_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R82_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R82_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R82_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R83_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R83_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R83_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R83_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R91_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R91_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R91_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R91_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R93_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R93_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R93_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R93_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R94_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R94_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R94_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R94_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      }
+    ],
+    "test_act_vs_exp": [
+      {
+        "Feature": "VehPower",
+        "Value": -1.1970855138552443,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehPower",
+        "Value": -0.7092668774739205,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehPower",
+        "Value": -0.2214482410925963,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehPower",
+        "Value": 0.2663703952887277,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehPower",
+        "Value": 0.7541890316700518,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehAge",
+        "Value": -1.2445426447565977,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehAge",
+        "Value": -1.0679086932784136,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehAge",
+        "Value": -0.8912747418002296,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehAge",
+        "Value": -0.7146407903220456,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehAge",
+        "Value": -0.5380068388438616,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "DrivAge",
+        "Value": -1.9450085261167251,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "DrivAge",
+        "Value": -1.874276696691502,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "DrivAge",
+        "Value": -1.8035448672662788,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "DrivAge",
+        "Value": -1.7328130378410558,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "DrivAge",
+        "Value": -1.6620812084158323,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "BonusMalus",
+        "Value": -0.6242327411474736,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "BonusMalus",
+        "Value": -0.5602842464251182,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "BonusMalus",
+        "Value": -0.4963357517027627,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "BonusMalus",
+        "Value": -0.4323872569804072,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "BonusMalus",
+        "Value": -0.3684387622580518,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Density",
+        "Value": -0.4519938470735826,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Density",
+        "Value": -0.4517415783772561,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Density",
+        "Value": -0.4514893096809296,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Density",
+        "Value": -0.4512370409846031,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Density",
+        "Value": -0.4509847722882765,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Area_B_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Area_B_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Area_B_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Area_B_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Area_C_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Area_C_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Area_C_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Area_C_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Area_D_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Area_D_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Area_D_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Area_D_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Area_E_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Area_E_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Area_E_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Area_E_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Area_F_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Area_F_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Area_F_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Area_F_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B10_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B10_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B10_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B10_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B11_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B11_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B11_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B11_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B12_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B12_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B12_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B12_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B13_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B13_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B13_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B13_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B14_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B14_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B14_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B14_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B2_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B2_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B2_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B2_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B3_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B3_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B3_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B3_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B4_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B4_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B4_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B4_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B5_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B5_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B5_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B5_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B6_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B6_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B6_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehBrand_B6_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehGas_Regular_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehGas_Regular_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehGas_Regular_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "VehGas_Regular_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R21_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R21_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R21_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R21_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R22_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R22_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R22_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R22_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R23_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R23_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R23_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R23_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R24_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R24_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R24_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R24_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R25_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R25_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R25_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R25_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R26_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R26_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R26_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R26_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R31_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R31_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R31_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R31_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R41_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R41_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R41_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R41_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R42_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R42_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R42_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R42_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R43_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R43_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R43_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R43_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R52_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R52_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R52_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R52_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R53_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R53_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R53_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R53_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R54_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R54_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R54_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R54_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R72_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R72_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R72_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R72_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R73_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R73_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R73_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R73_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R74_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R74_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R74_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R74_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R82_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R82_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R82_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R82_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R83_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R83_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R83_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R83_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R91_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R91_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R91_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R91_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R93_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R93_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R93_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R93_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R94_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R94_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R94_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      },
+      {
+        "Feature": "Region_R94_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0,
+        "Actual": 0.0,
+        "Diff": 0.0,
+        "AbsDiff": 0.0
+      }
+    ]
+  },
+  "evaluation": "- **Model Goodness-of-Fit and Calibration Quality**: \n  - The evaluation results show perfect fit with RMSE (Root Mean Square Error) and MAE (Mean Absolute Error) both at 0.0, indicating no deviation between predicted and actual values. The R2 score is 1.0, suggesting that the model explains all the variability of the response data around its mean.\n  - However, it's important to note that these metrics alone do not fully capture the model\u2019s performance, especially without considering the Poisson deviance and Gini score, which are typically used for evaluating models in count data and classification tasks respectively.\n\n- **Overfitting or Underfitting**:\n  - Given the perfect scores on training and test sets, there is a strong indication of overfitting. The model appears to have learned the noise in the training data rather than the underlying patterns, as evidenced by the identical predictions for all features across both train and test datasets.\n  - This uniform prediction of 0.0 for all features suggests the model might be overly simplistic or not capturing the complexity of the data adequately.\n\n- **Influential Variables**:\n  - No specific variables stand out as particularly influential based on the provided comparison data. All feature values have identical predicted and actual values, indicating that the model treats all features identically and uniformly.\n  - This lack of differentiation implies that the model may not be sensitive to variations in different features, which could be a sign of an oversimplified model structure.\n\n- **Comparison of Actual vs Predicted Values**:\n  - The comparison tables for both train and test sets show identical values across all features, with zero differences between actual and predicted values. This suggests that the model consistently predicts 0.0 for all feature values, regardless of their true values.\n  - This uniformity indicates that the model lacks the ability to distinguish between different levels of the features, leading to a flat and non-informative prediction across the board.\n\nIn conclusion, while the model appears to fit the training data perfectly, it likely suffers from severe overfitting and does not generalize well to new data. The model's uniform predictions suggest it may be too simplistic and fails to capture the variability in the data.",
+  "impact_analysis": "- The table shows a comparison between the previous model's predictions (Prev_Pred) and the current model's predictions (Cur_Pred) for both training and test data.\n- For the training data, significant differences are observed across various features, particularly for \"BonusMalus,\" where the absolute differences range from 0.088275 to 1.345916.\n- Notably, the feature \"BonusMalus\" exhibits large discrepancies, with the largest absolute difference of 1.345916, indicating a substantial improvement or deterioration in the new model's ability to predict this feature.\n- In the test data, similar patterns are observed, with large absolute differences for \"BonusMalus\" ranging from 0.075797 to 0.922267.\n- The feature \"Area_B_True\" also shows notable changes, with an absolute difference of 0.089448 in the test data.\n- Overall, the new model shows improvements in predicting \"BonusMalus\" but introduces some discrepancies in other features like \"VehBrand_B14_False\" and \"VehBrand_B14_True.\"\n- The consistency in differences between training and test data suggests that the model's performance is not just due to overfitting but reflects true improvements or issues.\n- Further investigation into the \"BonusMalus\" feature is warranted to understand the underlying reasons for the large differences and to optimize the model accordingly.\n- It is crucial to balance these improvements against potential overfitting risks by validating the model using cross-validation techniques and checking for consistent performance across different datasets.",
+  "consistency_snapshot": {
+    "RMSE": 0.0,
+    "MAE": 0.0,
+    "R2": 1.0,
+    "Poisson_Deviance": null,
+    "Gini_score": null,
+    "Feature_Importance": [
+      {
+        "Feature": "VehPower",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "VehAge",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "DrivAge",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "BonusMalus",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Density",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Area_B_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Area_B_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Area_C_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Area_C_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Area_D_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Area_D_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Area_E_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Area_E_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Area_F_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Area_F_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "VehBrand_B10_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "VehBrand_B10_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "VehBrand_B11_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "VehBrand_B11_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "VehBrand_B12_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "VehBrand_B12_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "VehBrand_B13_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "VehBrand_B13_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "VehBrand_B14_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "VehBrand_B14_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "VehBrand_B2_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "VehBrand_B2_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "VehBrand_B3_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "VehBrand_B3_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "VehBrand_B4_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "VehBrand_B4_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "VehBrand_B5_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "VehBrand_B5_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "VehBrand_B6_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "VehBrand_B6_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "VehGas_Regular_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "VehGas_Regular_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R21_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R21_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R22_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R22_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R23_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R23_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R24_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R24_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R25_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R25_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R26_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R26_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R31_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R31_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R41_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R41_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R42_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R42_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R43_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R43_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R52_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R52_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R53_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R53_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R54_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R54_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R72_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R72_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R73_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R73_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R74_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R74_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R82_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R82_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R83_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R83_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R91_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R91_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R93_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R93_True",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R94_False",
+        "Coefficient": 0.0
+      },
+      {
+        "Feature": "Region_R94_True",
+        "Coefficient": 0.0
+      }
+    ],
+    "Calibration_table": []
+  },
+  "model_predictions_path": "data/preds",
+  "unc_modelling_layer1": 0.1788392080180219,
+  "unc_modelling_layer2": 0.0,
+  "unc_modelling_layer3": 0.23565271427645518,
+  "unc_modelling_layer4": 0.24354715459210063
+}
