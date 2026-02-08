@@ -319,8 +319,9 @@ class ModellingAgent(BaseAgent):
 
         # Perform impact analysis
         preds_train_previous, preds_test_previous = self.load_latest_predictions()
-        impact_analysis_tables = evaluator.evaluate_predicted(X_train, X_test, model_train_predictions, preds_train_previous,
-        model_test_predictions, preds_test_previous, feature_names)
+        #impact_analysis_tables = evaluator.evaluate_predicted(X_train, X_test, model_train_predictions, preds_train_previous,
+        #model_test_predictions, preds_test_previous, feature_names)
+        impact_analysis_tables = {}
 
         # --------------------
         # Layer 3: model assessment (LLM)
