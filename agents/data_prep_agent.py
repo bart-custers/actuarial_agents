@@ -219,7 +219,7 @@ class DataPrepAgent(BaseAgent):
         # --------------------
         # Load dataset
         # --------------------
-        dataset_path = message.metadata.get("dataset_path", "data/raw/T5_missing_column.csv")
+        dataset_path = message.metadata.get("dataset_path", "data/raw/T6_data_increase.csv")
         try:
             df = pd.read_csv(dataset_path)
         except Exception as e:
