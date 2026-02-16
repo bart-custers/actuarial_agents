@@ -1,0 +1,220 @@
+{
+  "timestamp": "20260216_193254",
+  "status": "success",
+  "used_pipeline": "deterministic",
+  "plan_dataprep": "**Re-statement of the assignment:**\nPrepare the provided insurance claims dataset for claim frequency modeling by identifying key actions to transform, impute, and engineer the data.\n\n**Top 6 actions to prepare the dataset:**\n* **1.** **Check and handle missing values**: Given that all categorical variables have 0% missing values, focus on the numerical variables.\n* **2.** **Check for and address skewed numeric columns**: Evaluate the distribution of variables like \"Exposure\", \"VehAge\", and \"DrivAge\" for skewness and consider log-transformation if necessary.\n* **3.** **Engineer new variables**: Create interaction terms or polynomial features for variables like \"VehPower\" and \"Density\" to capture non-linear relationships.\n* **4.** **One-hot encoding for categorical variables**: Convert categorical variables like \"Area\", \"VehBrand\", \"VehGas\", and \"Region\" into dummy variables for inclusion in the model.\n* **5.** **Standardize numerical variables**: Scale numerical variables to have zero mean and unit variance to prevent feature dominance.\n* **6.** **Data splitting**: Split the dataset into training and testing sets to evaluate the model's performance.\n\n**Immediate warnings:**\n* All categorical variables have 0% missing values, but it's essential to verify this during data inspection.\n* The dataset has a large number of rows (658,013), which may pose challenges for model computation and storage.",
+  "adaptive_suggestion": "```python\nimport pandas as pd\nimport numpy as np\n\nclass DataCleaning:\n    def __init__(self):\n        self.actions_log = []\n\n    def clean(self, data: pd.DataFrame):\n        # Clip outliers / right-censoring \n        self.actions_log.append(\"Clipping VehAge (<=20), DrivAge (<=90), BonusMalus (<=150), ClaimNb (<=5).\")\n        data['VehAge'] = data['VehAge'].clip(upper=20)\n        data['DrivAge'] = data['DrivAge'].clip(upper=90)\n        data['BonusMalus'] = data['BonusMalus'].clip(upper=150)\n        data['ClaimNb'] = data['ClaimNb'].clip(upper=5)\n\n        # Check and handle missing values\n        self.actions_log.append(\"Missing values found in numeric variables. Filling with median values.\")\n        for col in data['num_vars']:\n            if data[col].isnull().any():\n                data[col] = data[col].fillna(data[col].median())\n\n        # Check for and address skewed numeric columns\n        self.actions_log.append(\"Evaluating skewness of numeric variables.\")\n        for col in data['num_vars']:\n            if data[col].skew() > 1:\n                self.actions_log.append(f\"Log-transforming {col} due to skewness.\")\n                data[col] = np.log(data[col])\n\n        # Engineer new variables\n        self.actions_log.append(\"Creating interaction terms for VehPower and Density.\")\n        data['VehPower_Density'] = data['VehPower'] * data['Density']\n\n        # One-hot encoding for categorical variables\n        self.actions_log.append(\"One-hot encoding categorical variables.\")\n        data = pd.get_dummies(data, columns=['Area', 'VehBrand', 'VehGas', 'Region'])\n\n        # Standardize numerical variables\n        self.actions_log.append(\"Standardizing numerical variables.\")\n        from sklearn.preprocessing import StandardScaler\n        scaler = StandardScaler()\n        data[['Exposure', 'VehPower', 'VehAge', 'DrivAge', 'BonusMalus', 'Density']] = scaler.fit_transform(data[['Exposure', 'VehPower', 'VehAge', 'DrivAge', 'BonusMalus', 'Density']])\n\n        # Data splitting\n        self.actions_log.append(\"Splitting data into training and testing sets.\")\n        from sklearn.model_selection import train_test_split\n        X = data.drop('IDpol', axis=1)\n        y = data['IDpol']\n        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)\n\n        return X_train, X_test, y_train, y_test\n```",
+  "comparison": {
+    "status": "adaptive_failed"
+  },
+  "verification": "Forced decision due to status=adaptive_failed",
+  "explanation": "To summarize the verified data preparation and reasoning for the context \"Forced decision due to status=adaptive_failed,\" I'll break down the process into steps.\n\n**Step 1: Data Extraction**\n\n* Extract the relevant data related to the \"status=adaptive_failed\" condition from the insurance claims dataset.\n* This may involve selecting specific columns such as claim ID, claim date, status, and reason for failure.\n\n**Step 2: Data Cleaning**\n\n* Remove any missing or duplicate values from the extracted data.\n* Ensure that the data is in a consistent format, such as converting date fields to a standard date format.\n\n**Step 3: Data Analysis**\n\n* Calculate the frequency and percentage of claims that were forced to a decision due to the \"adaptive_failed\" status.\n* Analyze the distribution of claims by policy type, age, and other relevant factors to identify any patterns or correlations.\n\n**Step 4: Stability Check**\n\n* Verify that the data is stable and consistent over time, i.e., the proportion of claims forced to a decision due to \"adaptive_failed\" status remains relatively constant.\n* Check for any anomalies or outliers that may affect the analysis.\n\n**Step 5: Differences**\n\n* Compare the results from the analysis to identify any differences in the frequency of \"adaptive_failed\" status across different policy types, age groups, or other relevant factors.\n* Determine if there are any significant differences that may indicate underlying issues with the adaptive process.\n\n**Step 6: Final Rationale**\n\n* Based on the analysis and stability check, determine the final rationale for the \"adaptive_failed\" status.\n* Consider the following possible explanations:\n\t+ Systematic issues with the adaptive process.\n\t+ Poor data quality or inconsistencies.\n\t+ Inadequate training or testing of the adaptive model.\n\t+ Changes in market or business conditions.\n\n**Rationale**\n\nThe \"adaptive_failed\" status is likely due to a combination of factors, including:\n\n* Systematic issues with the adaptive process, such as flawed algorithmic design or inadequate testing.\n* Poor data quality or inconsistencies, which may have affected the model's performance.\n* Inadequate training or testing of the adaptive model, which may have led to a lack of robustness.\n* Changes in market or business conditions, which may have impacted the model's effectiveness.\n\n**Recommendations**\n\nBased on the analysis and rationale, recommendations may include:\n\n* Re-training or re-testing the adaptive model with improved data quality and testing procedures.\n* Investigating and addressing any systematic issues with the adaptive process.\n* Implementing data quality checks and monitoring to prevent similar issues in the future.\n* Reviewing and updating the business rules and decision-making processes to ensure they are aligned with changing market and business conditions.\n\nBy following these steps and considering the stability, differences, and final rationale, we can gain a deeper understanding of the \"adaptive_failed\" status and make informed decisions to improve the insurance claims process.",
+  "consistency_snapshot": {
+    "n_rows": 658013,
+    "n_columns": 12,
+    "memory_MB": 147.2801,
+    "dtypes": {
+      "IDpol": "float64",
+      "ClaimNb": "int64",
+      "Exposure": "float64",
+      "Area": "int8",
+      "VehPower": "int64",
+      "VehAge": "int64",
+      "DrivAge": "int64",
+      "BonusMalus": "int64",
+      "VehBrand": "object",
+      "VehGas": "object",
+      "Density": "int64",
+      "Region": "object"
+    },
+    "missing_counts": {
+      "IDpol": 0,
+      "ClaimNb": 0,
+      "Exposure": 0,
+      "Area": 0,
+      "VehPower": 0,
+      "VehAge": 0,
+      "DrivAge": 0,
+      "BonusMalus": 0,
+      "VehBrand": 0,
+      "VehGas": 0,
+      "Density": 0,
+      "Region": 0
+    },
+    "missing_pct": {
+      "IDpol": 0.0,
+      "ClaimNb": 0.0,
+      "Exposure": 0.0,
+      "Area": 0.0,
+      "VehPower": 0.0,
+      "VehAge": 0.0,
+      "DrivAge": 0.0,
+      "BonusMalus": 0.0,
+      "VehBrand": 0.0,
+      "VehGas": 0.0,
+      "Density": 0.0,
+      "Region": 0.0
+    },
+    "numeric_summary": {
+      "IDpol": {
+        "count": 658013.0,
+        "mean": 2621912.4684,
+        "std": 1642204.2175,
+        "min": 1.0,
+        "25%": 1157724.0,
+        "50%": 2272158.0,
+        "75%": 4046355.0,
+        "max": 6114330.0
+      },
+      "ClaimNb": {
+        "count": 658013.0,
+        "mean": 0.0532,
+        "std": 0.2382,
+        "min": 0.0,
+        "25%": 0.0,
+        "50%": 0.0,
+        "75%": 0.0,
+        "max": 5.0
+      },
+      "Exposure": {
+        "count": 658013.0,
+        "mean": 0.5287,
+        "std": 0.3644,
+        "min": 0.0027,
+        "25%": 0.18,
+        "50%": 0.49,
+        "75%": 0.99,
+        "max": 2.01
+      },
+      "Area": {
+        "count": 658013.0,
+        "mean": 3.2895,
+        "std": 1.3829,
+        "min": 1.0,
+        "25%": 2.0,
+        "50%": 3.0,
+        "75%": 4.0,
+        "max": 6.0
+      },
+      "VehPower": {
+        "count": 658013.0,
+        "mean": 6.4546,
+        "std": 2.0509,
+        "min": 4.0,
+        "25%": 5.0,
+        "50%": 6.0,
+        "75%": 7.0,
+        "max": 15.0
+      },
+      "VehAge": {
+        "count": 658013.0,
+        "mean": 6.9755,
+        "std": 5.3987,
+        "min": 0.0,
+        "25%": 2.0,
+        "50%": 6.0,
+        "75%": 11.0,
+        "max": 20.0
+      },
+      "DrivAge": {
+        "count": 658013.0,
+        "mean": 45.4967,
+        "std": 14.1293,
+        "min": 18.0,
+        "25%": 34.0,
+        "50%": 44.0,
+        "75%": 55.0,
+        "max": 90.0
+      },
+      "BonusMalus": {
+        "count": 658013.0,
+        "mean": 59.757,
+        "std": 15.6084,
+        "min": 50.0,
+        "25%": 50.0,
+        "50%": 50.0,
+        "75%": 64.0,
+        "max": 150.0
+      },
+      "Density": {
+        "count": 658013.0,
+        "mean": 1792.0851,
+        "std": 3956.6863,
+        "min": 1.0,
+        "25%": 92.0,
+        "50%": 393.0,
+        "75%": 1658.0,
+        "max": 27000.0
+      }
+    },
+    "categorical_summary": {
+      "VehBrand": {
+        "B12": 0.2449,
+        "B1": 0.24,
+        "B2": 0.2356,
+        "B3": 0.0788,
+        "B5": 0.0513,
+        "B6": 0.042,
+        "B4": 0.0372,
+        "B10": 0.0261,
+        "B11": 0.02,
+        "B13": 0.018,
+        "B14": 0.006
+      },
+      "VehGas": {
+        "Regular": 0.5102,
+        "Diesel": 0.4898
+      },
+      "Region": {
+        "R24": 0.2369,
+        "R82": 0.1251,
+        "R93": 0.1171,
+        "R11": 0.103,
+        "R53": 0.0621,
+        "R52": 0.0572,
+        "R91": 0.0528,
+        "R72": 0.0462,
+        "R31": 0.0402,
+        "R54": 0.0281,
+        "R73": 0.0253,
+        "R41": 0.0191,
+        "R25": 0.0161,
+        "R26": 0.0154,
+        "R23": 0.0129,
+        "R22": 0.0118,
+        "R83": 0.0078,
+        "R74": 0.0067,
+        "R94": 0.0067,
+        "R21": 0.0045,
+        "R42": 0.0032,
+        "R43": 0.002
+      }
+    },
+    "target_distribution": {
+      "0": 0.9498,
+      "1": 0.0474,
+      "2": 0.0026,
+      "3": 0.0001,
+      "5": 0.0,
+      "4": 0.0
+    },
+    "target_mean": 0.05317676094545244,
+    "target_variance": 0.05675016862518529
+  },
+  "unc_dataprep_layer1": 0.28537924054096164,
+  "unc_dataprep_layer2": 0.06254018051236998,
+  "unc_dataprep_layer3": 0,
+  "unc_dataprep_layer4": 0.22406081687321333,
+  "processed_paths": {
+    "X_train": "data/processed/T3_missing_rows_X_train.csv",
+    "X_test": "data/processed/T3_missing_rows_X_test.csv",
+    "y_train": "data/processed/T3_missing_rows_y_train.csv",
+    "y_test": "data/processed/T3_missing_rows_y_test.csv",
+    "exposure_train": "data/processed/T3_missing_rows_exposure_train.csv",
+    "exposure_test": "data/processed/T3_missing_rows_exposure_test.csv"
+  },
+  "artifacts": {
+    "preprocessor": "data/artifacts/preprocessor.pkl",
+    "features": "data/artifacts/feature_names.pkl"
+  }
+}
