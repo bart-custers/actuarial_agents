@@ -193,7 +193,7 @@ class ModellingAgent(BaseAgent):
         latest_test_preds  = pd.read_csv(latest_test_file).iloc[:, 0].values.ravel()
         latest_X_test = pd.read_csv(X_test_files)
 
-        return latest_train_preds, latest_test_preds, latest_X_test 
+        return latest_test_preds, latest_X_test 
 
     # -------------------------------
     # Main handler
