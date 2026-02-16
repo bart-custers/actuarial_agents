@@ -173,8 +173,8 @@ class ModellingAgent(BaseAgent):
         """
         train_files = glob.glob(os.path.join(folder, "train_predictions_*.csv"))
         test_files  = glob.glob(os.path.join(folder, "test_predictions_*.csv"))
-        X_train_files = glob.glob(os.path.join(folder, "X_train_*.csv"))
-        X_test_files = glob.glob(os.path.join(folder, "X_test_*.csv"))
+        #X_train_files = glob.glob(os.path.join(folder, "X_train_*.csv"))
+        #X_test_files = glob.glob(os.path.join(folder, "X_test_*.csv"))
 
         # Check that files exist
         if not train_files or not test_files:
@@ -183,14 +183,14 @@ class ModellingAgent(BaseAgent):
         # Sort files by date descending (latest first)
         train_files.sort(reverse=True)
         test_files.sort(reverse=True)
-        X_train_files.sort(reverse=True)
-        X_test_files.sort(reverse=True)
+        #X_train_files.sort(reverse=True)
+        #X_test_files.sort(reverse=True)
 
         # Take the latest file
         latest_train_file = train_files[0]
         latest_test_file  = test_files[0]
-        X_train_files = X_train_files[0]
-        X_test_files = X_test_files[0]
+        #X_train_files = X_train_files[0]
+        #X_test_files = X_test_files[0]
 
         latest_train_preds = pd.read_csv(latest_train_file).iloc[:, 0].values.ravel()
         latest_test_preds  = pd.read_csv(latest_test_file).iloc[:, 0].values.ravel()
