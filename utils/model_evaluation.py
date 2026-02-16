@@ -123,56 +123,252 @@ class ModelEvaluation:
 
         return decile_summary                
 
+    # def prediction_comparison_features(
+    #     self,
+    #     X_matrix,
+    #     feature_names,
+    #     preds_current,
+    #     preds_previous,
+    #     set_name,
+    #     model_type):
+    #     """
+    #     Compare predictions of two models across feature values.
+
+    #     Useful for model change monitoring and governance.
+
+    #     Returns:
+    #         pd.DataFrame: Table of largest prediction deviations.
+    #     """
+
+    #     X = pd.DataFrame(X_matrix, columns=feature_names)
+    #     X["_pred_cur"] = preds_current
+    #     X["_pred_prev"] = preds_previous
+
+    #     rows = []
+
+    #     for feature in feature_names:
+    #         try:
+    #             grouped = (
+    #                 X.groupby(feature)[["_pred_cur", "_pred_prev"]]
+    #                 .mean()
+    #                 .reset_index()
+    #             )
+    #         except Exception:
+    #             continue
+
+    #         grouped["diff"] = grouped["_pred_cur"] - grouped["_pred_prev"]
+    #         grouped["abs_diff"] = grouped["diff"].abs()
+
+    #         top_rows = grouped.nlargest(5, "abs_diff")
+
+    #         for _, r in top_rows.iterrows():
+    #             rows.append({
+    #                 "Feature": feature,
+    #                 "Value": r[feature],
+    #                 "Prev_Pred": r["_pred_prev"],
+    #                 "Cur_Pred": r["_pred_cur"],
+    #                 "Diff": r["diff"],
+    #                 "AbsDiff": r["abs_diff"],
+    #             })
+
+    #     deviation_table = pd.DataFrame(rows).sort_values("AbsDiff", ascending=False)
+
+    #     n_features = len(feature_names)
+    #     n_cols = 3
+    #     n_rows = int(np.ceil(n_features / n_cols))
+
+    #     fig, axes = plt.subplots(n_rows, n_cols, figsize=(6 * n_cols, 5 * n_rows))
+    #     axes = axes.flatten()
+
+    #     for i, feature in enumerate(feature_names):
+
+    #         ax = axes[i]
+
+    #         try:
+    #             grouped = (
+    #                 X.groupby(feature)[["_pred_cur", "_pred_prev"]]
+    #                 .mean()
+    #                 .reset_index()
+    #                 .sort_values(feature)
+    #             )
+    #         except Exception:
+    #             continue
+
+    #         ax.plot(
+    #             grouped[feature], grouped["_pred_cur"],
+    #             linestyle="--", marker="o", label="Current Model"
+    #         )
+    #         ax.plot(
+    #             grouped[feature], grouped["_pred_prev"],
+    #             linestyle="-", marker="s", label="Previous Model"
+    #         )
+
+    #         ax.fill_between(
+    #             grouped[feature],
+    #             grouped["_pred_cur"],
+    #             grouped["_pred_prev"],
+    #             alpha=0.3,
+    #             color="salmon"
+    #         )
+
+    #         ax.set_title(f"{set_name.capitalize()} Predictions by {feature}")
+    #         ax.set_xlabel(feature)
+    #         ax.set_ylabel("Mean Prediction")
+    #         ax.grid(True)
+    #         ax.legend()
+
+    #     # Remove any unused axes
+    #     for j in range(i + 1, n_rows * n_cols):
+    #         fig.delaxes(axes[j])
+
+    #     plt.tight_layout()
+
+    #     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    #     results_dir = "data/evaluation"
+    #     os.makedirs(results_dir, exist_ok=True)
+    #     plot_path = os.path.join(
+    #         results_dir, f"prediction_comparison_{model_type}_{set_name}_{timestamp}.png"
+    #     )
+
+    #     plt.savefig(plot_path)
+    #     plt.close(fig)
+
+    #     return deviation_table
+
     def prediction_comparison_features(
         self,
-        X_matrix,
+        X_current,
         feature_names,
         preds_current,
+        X_previous,
         preds_previous,
         set_name,
-        model_type):
+        model_type
+    ):
         """
-        Compare predictions of two models across feature values.
+        Unified run-level evaluation and comparison.
 
-        Useful for model change monitoring and governance.
+        Steps:
+            1) Aggregate predictions per feature level (both runs)
+            2) Compare aggregated outputs
+            3) Detect structural (shape) differences
+            4) Detect prediction drift
+            5) Detect sample size drift
+            6) Save governance artifacts
 
         Returns:
-            pd.DataFrame: Table of largest prediction deviations.
+            {
+                "detailed_comparison": pd.DataFrame,
+                "feature_structure_summary": pd.DataFrame
+            }
         """
 
-        X = pd.DataFrame(X_matrix, columns=feature_names)
-        X["_pred_cur"] = preds_current
-        X["_pred_prev"] = preds_previous
+        # Helper: Aggregate one run
+        def aggregate_run(X, preds, run_label):
 
-        rows = []
+            if not isinstance(X, pd.DataFrame):
+                X = pd.DataFrame(X, columns=feature_names)
 
-        for feature in feature_names:
-            try:
+            if len(preds) != len(X):
+                raise ValueError(f"Prediction length mismatch in {run_label}")
+
+            X = X.copy()
+            X["_pred"] = preds
+
+            rows = []
+
+            for feature in feature_names:
+
+                if feature not in X.columns:
+                    continue
+
+                col = X[feature]
+
+                # Auto-bin numeric high-cardinality features
+                if pd.api.types.is_numeric_dtype(col) and col.nunique() > 20:
+                    try:
+                        X["_bin"] = pd.qcut(col, q=10, duplicates="drop")
+                        group_key = "_bin"
+                    except Exception:
+                        continue
+                else:
+                    group_key = feature
+
                 grouped = (
-                    X.groupby(feature)[["_pred_cur", "_pred_prev"]]
-                    .mean()
+                    X.groupby(group_key)["_pred"]
+                    .agg(["mean", "std", "count"])
                     .reset_index()
                 )
-            except Exception:
-                continue
 
-            grouped["diff"] = grouped["_pred_cur"] - grouped["_pred_prev"]
-            grouped["abs_diff"] = grouped["diff"].abs()
+                for _, r in grouped.iterrows():
+                    rows.append({
+                        "Run": run_label,
+                        "Set": set_name,
+                        "Feature": feature,
+                        "Value": r[group_key],
+                        "MeanPrediction": r["mean"],
+                        "StdPrediction": r["std"],
+                        "Count": r["count"]
+                    })
 
-            top_rows = grouped.nlargest(5, "abs_diff")
+            return pd.DataFrame(rows)
 
-            for _, r in top_rows.iterrows():
-                rows.append({
-                    "Feature": feature,
-                    "Value": r[feature],
-                    "Prev_Pred": r["_pred_prev"],
-                    "Cur_Pred": r["_pred_cur"],
-                    "Diff": r["diff"],
-                    "AbsDiff": r["abs_diff"],
-                })
+        # Aggregate both runs
+        current_df = aggregate_run(X_current, preds_current, "Current")
+        previous_df = aggregate_run(X_previous, preds_previous, "Previous")
 
-        deviation_table = pd.DataFrame(rows).sort_values("AbsDiff", ascending=False)
+        # Compare (outer merge captures shape differences)
+        merged = pd.merge(
+            current_df,
+            previous_df,
+            on=["Feature", "Value", "Set"],
+            suffixes=("_cur", "_prev"),
+            how="outer",
+            indicator=True
+        )
 
+        # Structural differences
+        merged["StructureChange"] = merged["_merge"].map({
+            "left_only": "New_in_Current",
+            "right_only": "Removed_in_Current",
+            "both": "Present_in_Both"
+        })
+
+        # Prediction drift (only if both present)
+        merged["Diff"] = np.where(
+            merged["StructureChange"] == "Present_in_Both",
+            merged["MeanPrediction_cur"] - merged["MeanPrediction_prev"],
+            np.nan
+        )
+
+        merged["AbsDiff"] = merged["Diff"].abs()
+
+        # Sample size drift
+        merged["CountChange"] = (
+            merged["Count_cur"] - merged["Count_prev"]
+        )
+
+        merged["RelativeCountChange"] = np.where(
+            merged["Count_prev"] > 0,
+            merged["CountChange"] / merged["Count_prev"],
+            np.nan
+        )
+
+        # Feature-level structural summary
+        feature_summary = (
+            merged.groupby("Feature")["StructureChange"]
+            .value_counts()
+            .unstack(fill_value=0)
+            .reset_index()
+        )
+
+        # Sorting for governance clarity
+        merged = merged.sort_values(
+            by=["StructureChange", "AbsDiff"],
+            ascending=[True, False]
+        )
+
+        # Plotting
         n_features = len(feature_names)
         n_cols = 3
         n_rows = int(np.ceil(n_features / n_cols))
@@ -184,29 +380,34 @@ class ModelEvaluation:
 
             ax = axes[i]
 
-            try:
-                grouped = (
-                    X.groupby(feature)[["_pred_cur", "_pred_prev"]]
-                    .mean()
-                    .reset_index()
-                    .sort_values(feature)
-                )
-            except Exception:
+            df_feat = merged[
+                (merged["Feature"] == feature) &
+                (merged["StructureChange"] == "Present_in_Both")
+            ]
+
+            if df_feat.empty:
+                ax.set_title(f"{feature} (No common levels)")
+                ax.axis("off")
                 continue
 
+            df_feat = df_feat.sort_values("Value")
+
             ax.plot(
-                grouped[feature], grouped["_pred_cur"],
+                df_feat["Value"].astype(str),
+                df_feat["MeanPrediction_cur"],
                 linestyle="--", marker="o", label="Current Model"
             )
+
             ax.plot(
-                grouped[feature], grouped["_pred_prev"],
+                df_feat["Value"].astype(str),
+                df_feat["MeanPrediction_prev"],
                 linestyle="-", marker="s", label="Previous Model"
             )
 
             ax.fill_between(
-                grouped[feature],
-                grouped["_pred_cur"],
-                grouped["_pred_prev"],
+                df_feat["Value"].astype(str),
+                df_feat["MeanPrediction_cur"],
+                df_feat["MeanPrediction_prev"],
                 alpha=0.3,
                 color="salmon"
             )
@@ -214,10 +415,11 @@ class ModelEvaluation:
             ax.set_title(f"{set_name.capitalize()} Predictions by {feature}")
             ax.set_xlabel(feature)
             ax.set_ylabel("Mean Prediction")
+            ax.tick_params(axis="x", rotation=45)
             ax.grid(True)
             ax.legend()
 
-        # Remove any unused axes
+        # Remove unused axes
         for j in range(i + 1, n_rows * n_cols):
             fig.delaxes(axes[j])
 
@@ -233,7 +435,12 @@ class ModelEvaluation:
         plt.savefig(plot_path)
         plt.close(fig)
 
-        return deviation_table
+        # Return structured output
+        return {
+            "detailed_comparison": merged,
+            "feature_structure_summary": feature_summary
+        }
+
     
     def actual_vs_predicted_features(
         self,
@@ -386,9 +593,9 @@ class ModelEvaluation:
         metrics["Calibration_table"] = self.calibration_plot(y_true, y_pred, exposure, self.model_type)
 
         return metrics
-
+    
     def evaluate_predicted(self,
-        X_train, X_test,
+        X_train, X_test, X_train_previous, X_test_previous,
         preds_train_current, preds_train_previous,
         preds_test_current, preds_test_previous,
         feature_names):
@@ -411,13 +618,13 @@ class ModelEvaluation:
         # Create tables with comparisons of predictions per feature
         train_preds_comparison = self.prediction_comparison_features(
             X_train, feature_names,
-            preds_train_current, preds_train_previous,
+            preds_train_current, X_train_previous, preds_train_previous,
             set_name="train",
             model_type=self.model_type)
 
         test_preds_comparison = self.prediction_comparison_features(
             X_test, feature_names,
-            preds_test_current, preds_test_previous,
+            preds_test_current, X_test_previous, preds_test_previous,
             set_name="test",
             model_type=self.model_type)
 
