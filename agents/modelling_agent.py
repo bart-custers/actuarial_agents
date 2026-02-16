@@ -157,39 +157,35 @@ class ModellingAgent(BaseAgent):
     @staticmethod
     def load_latest_predictions(folder="data/preds"):
         """
-        Load the most recent train and test prediction files from disk, based on timestamped filenames.
+        Load the most recent test prediction files from disk, based on timestamped filenames.
 
         The function searches for CSV files named:
-            - train_predictions_*.csv
             - test_predictions_*.csv
+            - freMTPL2freq_X_test*.csv
 
         Args:
             folder (str, default="data/preds"): Directory containing stored prediction files.
 
         Returns:
             tuple[np.ndarray, np.ndarray]
-                - Latest training predictions
                 - Latest test predictions
+                - Corresponding X_test DataFrame
         """
-        train_files = glob.glob(os.path.join(folder, "train_predictions_*.csv"))
         test_files  = glob.glob(os.path.join(folder, "test_predictions_*.csv"))
         X_test_files = glob.glob(os.path.join(folder, "freMTPL2freq_X_test*.csv"))
 
         # Check that files exist
-        if not train_files or not test_files:
+        if not test_files or not X_test_files:
             raise FileNotFoundError(f"No prediction files found in folder: {folder}")
 
         # Sort files by date descending (latest first)
-        train_files.sort(reverse=True)
         test_files.sort(reverse=True)
         X_test_files.sort(reverse=True)
 
         # Take the latest file
-        latest_train_file = train_files[0]
         latest_test_file  = test_files[0]
         X_test_files = X_test_files[0]
 
-        latest_train_preds = pd.read_csv(latest_train_file).iloc[:, 0].values.ravel()
         latest_test_preds  = pd.read_csv(latest_test_file).iloc[:, 0].values.ravel()
         latest_X_test = pd.read_csv(X_test_files)
 
@@ -326,8 +322,6 @@ class ModellingAgent(BaseAgent):
         impact_analysis_tables = evaluator.evaluate_predicted(X_test, X_test_previous,
         model_test_predictions, preds_test_previous, feature_names)
 
-        print(impact_analysis_tables)
-
         # --------------------
         # Layer 3: model assessment (LLM)
         # --------------------
@@ -351,8 +345,6 @@ class ModellingAgent(BaseAgent):
 
         impact_analysis, unc_modelling_layer4 = self.llm(layer4_prompt, return_uncertainty=True)
         impact_analysis_text = extract_analysis(impact_analysis)
-
-        print(impact_analysis_text)
 
         # --------------------
         # Save metadata

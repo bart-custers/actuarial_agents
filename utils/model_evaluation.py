@@ -123,118 +123,6 @@ class ModelEvaluation:
 
         return decile_summary                
 
-    # def prediction_comparison_features(
-    #     self,
-    #     X_matrix,
-    #     feature_names,
-    #     preds_current,
-    #     preds_previous,
-    #     set_name,
-    #     model_type):
-    #     """
-    #     Compare predictions of two models across feature values.
-
-    #     Useful for model change monitoring and governance.
-
-    #     Returns:
-    #         pd.DataFrame: Table of largest prediction deviations.
-    #     """
-
-    #     X = pd.DataFrame(X_matrix, columns=feature_names)
-    #     X["_pred_cur"] = preds_current
-    #     X["_pred_prev"] = preds_previous
-
-    #     rows = []
-
-    #     for feature in feature_names:
-    #         try:
-    #             grouped = (
-    #                 X.groupby(feature)[["_pred_cur", "_pred_prev"]]
-    #                 .mean()
-    #                 .reset_index()
-    #             )
-    #         except Exception:
-    #             continue
-
-    #         grouped["diff"] = grouped["_pred_cur"] - grouped["_pred_prev"]
-    #         grouped["abs_diff"] = grouped["diff"].abs()
-
-    #         top_rows = grouped.nlargest(5, "abs_diff")
-
-    #         for _, r in top_rows.iterrows():
-    #             rows.append({
-    #                 "Feature": feature,
-    #                 "Value": r[feature],
-    #                 "Prev_Pred": r["_pred_prev"],
-    #                 "Cur_Pred": r["_pred_cur"],
-    #                 "Diff": r["diff"],
-    #                 "AbsDiff": r["abs_diff"],
-    #             })
-
-    #     deviation_table = pd.DataFrame(rows).sort_values("AbsDiff", ascending=False)
-
-    #     n_features = len(feature_names)
-    #     n_cols = 3
-    #     n_rows = int(np.ceil(n_features / n_cols))
-
-    #     fig, axes = plt.subplots(n_rows, n_cols, figsize=(6 * n_cols, 5 * n_rows))
-    #     axes = axes.flatten()
-
-    #     for i, feature in enumerate(feature_names):
-
-    #         ax = axes[i]
-
-    #         try:
-    #             grouped = (
-    #                 X.groupby(feature)[["_pred_cur", "_pred_prev"]]
-    #                 .mean()
-    #                 .reset_index()
-    #                 .sort_values(feature)
-    #             )
-    #         except Exception:
-    #             continue
-
-    #         ax.plot(
-    #             grouped[feature], grouped["_pred_cur"],
-    #             linestyle="--", marker="o", label="Current Model"
-    #         )
-    #         ax.plot(
-    #             grouped[feature], grouped["_pred_prev"],
-    #             linestyle="-", marker="s", label="Previous Model"
-    #         )
-
-    #         ax.fill_between(
-    #             grouped[feature],
-    #             grouped["_pred_cur"],
-    #             grouped["_pred_prev"],
-    #             alpha=0.3,
-    #             color="salmon"
-    #         )
-
-    #         ax.set_title(f"{set_name.capitalize()} Predictions by {feature}")
-    #         ax.set_xlabel(feature)
-    #         ax.set_ylabel("Mean Prediction")
-    #         ax.grid(True)
-    #         ax.legend()
-
-    #     # Remove any unused axes
-    #     for j in range(i + 1, n_rows * n_cols):
-    #         fig.delaxes(axes[j])
-
-    #     plt.tight_layout()
-
-    #     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    #     results_dir = "data/evaluation"
-    #     os.makedirs(results_dir, exist_ok=True)
-    #     plot_path = os.path.join(
-    #         results_dir, f"prediction_comparison_{model_type}_{set_name}_{timestamp}.png"
-    #     )
-
-    #     plt.savefig(plot_path)
-    #     plt.close(fig)
-
-    #     return deviation_table
-
     def prediction_comparison_features(
         self,
         X_current,
@@ -633,18 +521,8 @@ class ModelEvaluation:
                 - test_preds_comparison (pd.DataFrame)
         """  
 
-        # Checks
-        # if not isinstance(X_train, pd.DataFrame):
-        #     X_train = pd.DataFrame(X_train, columns=feature_names)
         if not isinstance(X_test, pd.DataFrame):
             X_test = pd.DataFrame(X_test, columns=feature_names)
-
-        # Create tables with comparisons of predictions per feature
-        # train_preds_comparison = self.prediction_comparison_features(
-        #     X_train, feature_names,
-        #     preds_train_current, X_train_previous, preds_train_previous,
-        #     set_name="train",
-        #     model_type=self.model_type)
 
         test_preds_comparison = self.prediction_comparison_features(
             X_test, feature_names,
