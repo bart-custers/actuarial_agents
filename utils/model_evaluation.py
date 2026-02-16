@@ -269,6 +269,8 @@ class ModelEvaluation:
             if not isinstance(X, pd.DataFrame):
                 X = pd.DataFrame(X, columns=feature_names)
 
+            print(len(preds), len(X))
+
             if len(preds) != len(X):
                 raise ValueError(f"Prediction length mismatch in {run_label}")
 
@@ -595,8 +597,7 @@ class ModelEvaluation:
         return metrics
     
     def evaluate_predicted(self,
-        X_train, X_test, X_train_previous, X_test_previous,
-        preds_train_current, preds_train_previous,
+        X_test, X_test_previous,
         preds_test_current, preds_test_previous,
         feature_names):
         """
@@ -616,11 +617,11 @@ class ModelEvaluation:
             X_test = pd.DataFrame(X_test, columns=feature_names)
 
         # Create tables with comparisons of predictions per feature
-        train_preds_comparison = self.prediction_comparison_features(
-            X_train, feature_names,
-            preds_train_current, X_train_previous, preds_train_previous,
-            set_name="train",
-            model_type=self.model_type)
+        # train_preds_comparison = self.prediction_comparison_features(
+        #     X_train, feature_names,
+        #     preds_train_current, X_train_previous, preds_train_previous,
+        #     set_name="train",
+        #     model_type=self.model_type)
 
         test_preds_comparison = self.prediction_comparison_features(
             X_test, feature_names,
@@ -628,9 +629,7 @@ class ModelEvaluation:
             set_name="test",
             model_type=self.model_type)
 
-        return {
-            "train_preds_comparison": train_preds_comparison,
-            "test_preds_comparison": test_preds_comparison}
+        return {"test_preds_comparison": test_preds_comparison}
     
     def evaluate_act_vs_exp(self,
         X_train, X_test,

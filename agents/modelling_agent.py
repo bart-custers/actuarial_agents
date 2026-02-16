@@ -173,8 +173,7 @@ class ModellingAgent(BaseAgent):
         """
         train_files = glob.glob(os.path.join(folder, "train_predictions_*.csv"))
         test_files  = glob.glob(os.path.join(folder, "test_predictions_*.csv"))
-        #X_train_files = glob.glob(os.path.join(folder, "X_train_*.csv"))
-        #X_test_files = glob.glob(os.path.join(folder, "X_test_*.csv"))
+        X_test_files = glob.glob(os.path.join(folder, "freMTPL2freq_X_test*.csv"))
 
         # Check that files exist
         if not train_files or not test_files:
@@ -183,23 +182,18 @@ class ModellingAgent(BaseAgent):
         # Sort files by date descending (latest first)
         train_files.sort(reverse=True)
         test_files.sort(reverse=True)
-        #X_train_files.sort(reverse=True)
-        #X_test_files.sort(reverse=True)
+        X_test_files.sort(reverse=True)
 
         # Take the latest file
         latest_train_file = train_files[0]
         latest_test_file  = test_files[0]
-        #X_train_files = X_train_files[0]
-        #X_test_files = X_test_files[0]
+        X_test_files = X_test_files[0]
 
         latest_train_preds = pd.read_csv(latest_train_file).iloc[:, 0].values.ravel()
         latest_test_preds  = pd.read_csv(latest_test_file).iloc[:, 0].values.ravel()
-        #latest_X_train = pd.read_csv(X_train_files)
-        #latest_X_test = pd.read_csv(X_test_files)
-        latest_X_train = {}
-        latest_X_test = {}
+        latest_X_test = pd.read_csv(X_test_files)
 
-        return latest_train_preds, latest_test_preds, latest_X_train, latest_X_test 
+        return latest_train_preds, latest_test_preds, latest_X_test 
 
     # -------------------------------
     # Main handler
@@ -328,8 +322,8 @@ class ModellingAgent(BaseAgent):
         model_test_predictions, y_test, feature_names)
 
         # Perform impact analysis
-        preds_train_previous, preds_test_previous, X_train_previous, X_test_previous = self.load_latest_predictions()
-        impact_analysis_tables = evaluator.evaluate_predicted(X_train, X_test, X_train_previous, X_test_previous, model_train_predictions, preds_train_previous,
+        preds_test_previous, X_test_previous = self.load_latest_predictions()
+        impact_analysis_tables = evaluator.evaluate_predicted(X_test, X_test_previous,
         model_test_predictions, preds_test_previous, feature_names)
 
         print(impact_analysis_tables)
