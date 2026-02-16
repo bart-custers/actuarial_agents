@@ -269,7 +269,21 @@ class ModelEvaluation:
             if not isinstance(X, pd.DataFrame):
                 X = pd.DataFrame(X, columns=feature_names)
 
-            print(len(preds), len(X))
+            print(f"[DEBUG] Aggregating run '{run_label}' for set '{set_name}'")
+            print(f"[DEBUG] X columns: {X.columns.tolist()}")
+            print(f"[DEBUG] feature_names: {feature_names}")
+            print(f"[DEBUG] Predictions length: {len(preds)}, X length: {len(X)}")
+
+            # Determine which features exist in this DataFrame
+            valid_features = [f for f in feature_names if f in X.columns]
+            missing_features = [f for f in feature_names if f not in X.columns]
+            print(f"[DEBUG] Valid features: {valid_features}")
+            if missing_features:
+                print(f"[WARNING] Missing features in {run_label}: {missing_features}")
+
+            if len(valid_features) == 0:
+                print(f"[ERROR] No valid features found in {run_label}. Returning empty DataFrame.")
+                return pd.DataFrame()
 
             if len(preds) != len(X):
                 raise ValueError(f"Prediction length mismatch in {run_label}")
