@@ -611,8 +611,8 @@ class ModelEvaluation:
         """  
 
         # Checks
-        if not isinstance(X_train, pd.DataFrame):
-            X_train = pd.DataFrame(X_train, columns=feature_names)
+        # if not isinstance(X_train, pd.DataFrame):
+        #     X_train = pd.DataFrame(X_train, columns=feature_names)
         if not isinstance(X_test, pd.DataFrame):
             X_test = pd.DataFrame(X_test, columns=feature_names)
 
