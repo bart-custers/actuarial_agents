@@ -279,7 +279,14 @@ class ModelEvaluation:
 
             rows = []
 
-            for feature in feature_names:
+            X = pd.DataFrame(X) if not isinstance(X, pd.DataFrame) else X.copy()
+
+            # Keep only columns that exist in X
+            valid_features = [f for f in feature_names if f in X.columns]
+            if len(valid_features) == 0:
+                raise ValueError("None of the feature_names are present in X_previous/X_current")
+
+            for feature in valid_features:
 
                 if feature not in X.columns:
                     continue
@@ -595,7 +602,7 @@ class ModelEvaluation:
         metrics["Calibration_table"] = self.calibration_plot(y_true, y_pred, exposure, self.model_type)
 
         return metrics
-    
+
     def evaluate_predicted(self,
         X_test, X_test_previous,
         preds_test_current, preds_test_previous,
