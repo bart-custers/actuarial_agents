@@ -66,7 +66,7 @@ class CentralHub:
         # INITIAL STATE
         # ------------------------------------------------------------------
         #current_metadata = {"dataset_path": "data/raw/freMTPL2freq.csv"}
-        current_metadata = {"dataset_path": "data/raw/T8_extra_column.csv"}
+        current_metadata = {"dataset_path": "data/raw/T15_fairness_test.csv"}
         phase = "dataprep"
         iteration = 1
         continue_workflow = True
