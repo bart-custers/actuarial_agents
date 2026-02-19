@@ -1,0 +1,3884 @@
+{
+  "timestamp": "20260219_153739",
+  "status": "success",
+  "plan_modelling": "Based on the given dataset and task, I will proceed as follows:\n\n1. The modelling goal is to predict claim frequency for insurance claims based on the provided features.\n\n2. This modelling task is indeed about regression, with claim_count/exposure as the target variable, which is a common use case for predicting claim frequency.\n\n3. I propose using Generalized Linear Model (GLM) as the most appropriate modelling approach for this problem.\n\n4. Here's why:\n    * GLM is well-suited for binary and count responses, which aligns with the claim_count/exposure target variable.\n    * GLM can handle categorical variables, which is evident from the presence of many binary features in the dataset (e.g., Area_A_False, VehBrand_B1_False, etc.).\n    * GLM provides interpretable coefficients, making it easier to understand the relationship between each feature and the target variable.\n    * GLM is computationally efficient and can handle large datasets, which is a good fit for the provided dataset size.\n    * GLM can handle overdispersion, which is common in count data, by using a quasi-likelihood method.\n\n5. Risks or pitfalls of using GLM include:\n    * Linearity assumption: GLM assumes a linear relationship between the predictors and the target variable, which might not always hold true.\n    * Overdispersion: If not handled properly, overdispersion can lead to biased estimates.\n    * Multicollinearity: If there are highly correlated features, it can affect the stability of the model.\n\nDecision: USE_GLM",
+  "model_type_used": "glm",
+  "model_code": "```python\nfrom sklearn.linear_model import GeneralizedLinearRegressor\nfrom joblib import dump\n\nclass GLMTrainer:\n    def __init__(self):\n        self.model = GeneralizedLinearRegressor()\n\n    def train(self, X, y, exposure=None):\n        if exposure is not None:\n            self.model.fit(X, y, sample_weight=exposure)\n        else:\n            self.model.fit(X, y)\n\n    def predict(self, X):\n        return self.model.predict(X)\n\n    def save(self, path):\n        \"\"\"Save the trained model.\"\"\"\n        if self.model:\n            dump(self.model, path)\n        else:\n            raise ValueError(\"No trained model to save.\")\n\ntrainer = GLMTrainer()\ntrainer.train(X_train, y_train, exposure_train)\npreds_train = trainer.predict(X_train)\npreds_test = trainer.predict(X_test)\nmodel = trainer.model\nresult = {\"preds_train\": preds_train, \"preds_test\": preds_test, \"model\": model}\n```",
+  "model_used": "deterministic_fallback",
+  "model_reason": "Adaptive model training code failed: cannot import name 'GeneralizedLinearRegressor' from 'sklearn.linear_model' (/usr/local/lib/python3.12/dist-packages/sklearn/linear_model/__init__.py)",
+  "model_metrics": {
+    "RMSE": 0.8867900431238354,
+    "MAE": 0.23235866066448366,
+    "R2": 0.002189701046953818,
+    "Poisson_Deviance": 0.947765051709296,
+    "Gini_score": null,
+    "Feature_Importance": [
+      {
+        "Feature": "VehPower",
+        "Coefficient": 0.03756193944565642
+      },
+      {
+        "Feature": "VehAge",
+        "Coefficient": -0.20354584041376725
+      },
+      {
+        "Feature": "DrivAge",
+        "Coefficient": 0.10819785858772678
+      },
+      {
+        "Feature": "BonusMalus",
+        "Coefficient": 0.36224805340180893
+      },
+      {
+        "Feature": "Density",
+        "Coefficient": 0.008195579024703583
+      },
+      {
+        "Feature": "Area_A_False",
+        "Coefficient": 0.05457943446730933
+      },
+      {
+        "Feature": "Area_A_True",
+        "Coefficient": -0.05713738222974736
+      },
+      {
+        "Feature": "Area_B_False",
+        "Coefficient": 0.03349044879332055
+      },
+      {
+        "Feature": "Area_B_True",
+        "Coefficient": -0.03604839655575868
+      },
+      {
+        "Feature": "Area_C_False",
+        "Coefficient": 0.011217797442150085
+      },
+      {
+        "Feature": "Area_C_True",
+        "Coefficient": -0.01377574520458814
+      },
+      {
+        "Feature": "Area_D_False",
+        "Coefficient": -0.03569772596870592
+      },
+      {
+        "Feature": "Area_D_True",
+        "Coefficient": 0.03313977820626791
+      },
+      {
+        "Feature": "Area_E_False",
+        "Coefficient": -0.052828895132602194
+      },
+      {
+        "Feature": "Area_E_True",
+        "Coefficient": 0.05027094737016409
+      },
+      {
+        "Feature": "Area_F_False",
+        "Coefficient": -0.023550798413662276
+      },
+      {
+        "Feature": "Area_F_True",
+        "Coefficient": 0.020992850651224134
+      },
+      {
+        "Feature": "VehBrand_B1_False",
+        "Coefficient": -0.0016569864748610915
+      },
+      {
+        "Feature": "VehBrand_B1_True",
+        "Coefficient": -0.0009009612875771161
+      },
+      {
+        "Feature": "VehBrand_B10_False",
+        "Coefficient": 0.022621757139013775
+      },
+      {
+        "Feature": "VehBrand_B10_True",
+        "Coefficient": -0.025179704901451456
+      },
+      {
+        "Feature": "VehBrand_B11_False",
+        "Coefficient": -0.029614299405636486
+      },
+      {
+        "Feature": "VehBrand_B11_True",
+        "Coefficient": 0.027056351643198546
+      },
+      {
+        "Feature": "VehBrand_B12_False",
+        "Coefficient": -0.05161605058091373
+      },
+      {
+        "Feature": "VehBrand_B12_True",
+        "Coefficient": 0.049058102818475544
+      },
+      {
+        "Feature": "VehBrand_B13_False",
+        "Coefficient": -0.007509625122081295
+      },
+      {
+        "Feature": "VehBrand_B13_True",
+        "Coefficient": 0.00495167735964305
+      },
+      {
+        "Feature": "VehBrand_B14_False",
+        "Coefficient": 0.04552382322358344
+      },
+      {
+        "Feature": "VehBrand_B14_True",
+        "Coefficient": -0.04808177098602142
+      },
+      {
+        "Feature": "VehBrand_B2_False",
+        "Coefficient": 0.0019824331412784412
+      },
+      {
+        "Feature": "VehBrand_B2_True",
+        "Coefficient": -0.004540380903716545
+      },
+      {
+        "Feature": "VehBrand_B3_False",
+        "Coefficient": 0.002068770144355159
+      },
+      {
+        "Feature": "VehBrand_B3_True",
+        "Coefficient": -0.004626717906793131
+      },
+      {
+        "Feature": "VehBrand_B4_False",
+        "Coefficient": 0.015514152809357983
+      },
+      {
+        "Feature": "VehBrand_B4_True",
+        "Coefficient": -0.01807210057179614
+      },
+      {
+        "Feature": "VehBrand_B5_False",
+        "Coefficient": -0.03902359227789929
+      },
+      {
+        "Feature": "VehBrand_B5_True",
+        "Coefficient": 0.03646564451546117
+      },
+      {
+        "Feature": "VehBrand_B6_False",
+        "Coefficient": 0.016130139779422435
+      },
+      {
+        "Feature": "VehBrand_B6_True",
+        "Coefficient": -0.018688087541860382
+      },
+      {
+        "Feature": "VehGas_Diesel_False",
+        "Coefficient": 0.0052811829163163
+      },
+      {
+        "Feature": "VehGas_Diesel_True",
+        "Coefficient": -0.007839130678754316
+      },
+      {
+        "Feature": "VehGas_Regular_False",
+        "Coefficient": -0.007839130678754316
+      },
+      {
+        "Feature": "VehGas_Regular_True",
+        "Coefficient": 0.0052811829163162275
+      },
+      {
+        "Feature": "Region_R11_False",
+        "Coefficient": -0.014242670382331443
+      },
+      {
+        "Feature": "Region_R11_True",
+        "Coefficient": 0.011684722619893232
+      },
+      {
+        "Feature": "Region_R21_False",
+        "Coefficient": -0.008332438668103749
+      },
+      {
+        "Feature": "Region_R21_True",
+        "Coefficient": 0.005774490905665772
+      },
+      {
+        "Feature": "Region_R22_False",
+        "Coefficient": -0.03867648227396813
+      },
+      {
+        "Feature": "Region_R22_True",
+        "Coefficient": 0.03611853451153005
+      },
+      {
+        "Feature": "Region_R23_False",
+        "Coefficient": 0.021161237306163285
+      },
+      {
+        "Feature": "Region_R23_True",
+        "Coefficient": -0.02371918506860133
+      },
+      {
+        "Feature": "Region_R24_False",
+        "Coefficient": -0.05845429976919364
+      },
+      {
+        "Feature": "Region_R24_True",
+        "Coefficient": 0.05589635200675542
+      },
+      {
+        "Feature": "Region_R25_False",
+        "Coefficient": -0.029568343237110765
+      },
+      {
+        "Feature": "Region_R25_True",
+        "Coefficient": 0.027010395474672384
+      },
+      {
+        "Feature": "Region_R26_False",
+        "Coefficient": -0.0034360526148226114
+      },
+      {
+        "Feature": "Region_R26_True",
+        "Coefficient": 0.0008781048523844748
+      },
+      {
+        "Feature": "Region_R31_False",
+        "Coefficient": 0.03816404943966492
+      },
+      {
+        "Feature": "Region_R31_True",
+        "Coefficient": -0.04072199720210297
+      },
+      {
+        "Feature": "Region_R41_False",
+        "Coefficient": 0.12484417471884157
+      },
+      {
+        "Feature": "Region_R41_True",
+        "Coefficient": -0.12740212248127988
+      },
+      {
+        "Feature": "Region_R42_False",
+        "Coefficient": -0.005085485553912737
+      },
+      {
+        "Feature": "Region_R42_True",
+        "Coefficient": 0.002527537791474649
+      },
+      {
+        "Feature": "Region_R43_False",
+        "Coefficient": 0.018513555801847846
+      },
+      {
+        "Feature": "Region_R43_True",
+        "Coefficient": -0.021071503564285655
+      },
+      {
+        "Feature": "Region_R52_False",
+        "Coefficient": -0.01923367510386775
+      },
+      {
+        "Feature": "Region_R52_True",
+        "Coefficient": 0.016675727341429757
+      },
+      {
+        "Feature": "Region_R53_False",
+        "Coefficient": -0.06231321842658236
+      },
+      {
+        "Feature": "Region_R53_True",
+        "Coefficient": 0.05975527066414417
+      },
+      {
+        "Feature": "Region_R54_False",
+        "Coefficient": 0.0004599778835139469
+      },
+      {
+        "Feature": "Region_R54_True",
+        "Coefficient": -0.0030179256459521415
+      },
+      {
+        "Feature": "Region_R72_False",
+        "Coefficient": 0.0318182116570079
+      },
+      {
+        "Feature": "Region_R72_True",
+        "Coefficient": -0.03437615941944589
+      },
+      {
+        "Feature": "Region_R73_False",
+        "Coefficient": 0.053530785589513956
+      },
+      {
+        "Feature": "Region_R73_True",
+        "Coefficient": -0.05608873335195217
+      },
+      {
+        "Feature": "Region_R74_False",
+        "Coefficient": -0.08034646111234889
+      },
+      {
+        "Feature": "Region_R74_True",
+        "Coefficient": 0.07778851334991081
+      },
+      {
+        "Feature": "Region_R82_False",
+        "Coefficient": -0.06365836390633849
+      },
+      {
+        "Feature": "Region_R82_True",
+        "Coefficient": 0.06110041614390022
+      },
+      {
+        "Feature": "Region_R83_False",
+        "Coefficient": 0.09045227166611879
+      },
+      {
+        "Feature": "Region_R83_True",
+        "Coefficient": -0.09301021942855682
+      },
+      {
+        "Feature": "Region_R91_False",
+        "Coefficient": 0.00518845955233706
+      },
+      {
+        "Feature": "Region_R91_True",
+        "Coefficient": -0.007746407314775102
+      },
+      {
+        "Feature": "Region_R93_False",
+        "Coefficient": -0.013979715253301774
+      },
+      {
+        "Feature": "Region_R93_True",
+        "Coefficient": 0.011421767490863526
+      },
+      {
+        "Feature": "Region_R94_False",
+        "Coefficient": -0.04052242032432764
+      },
+      {
+        "Feature": "Region_R94_True",
+        "Coefficient": 0.037964472561889555
+      }
+    ],
+    "Calibration_table": [
+      {
+        "Decile": 0,
+        "ActualRate": 0.043520559955862514,
+        "PredictedRate": 0.05863912856392945,
+        "Exposure": 6679.76
+      },
+      {
+        "Decile": 1,
+        "ActualRate": 0.06004795727181024,
+        "PredictedRate": 0.07821099155860996,
+        "Exposure": 6490.25
+      },
+      {
+        "Decile": 2,
+        "ActualRate": 0.08607048125585275,
+        "PredictedRate": 0.09810319671179539,
+        "Exposure": 6063.16
+      },
+      {
+        "Decile": 3,
+        "ActualRate": 0.13408125189784517,
+        "PredictedRate": 0.1284564863857752,
+        "Exposure": 5056.15
+      },
+      {
+        "Decile": 4,
+        "ActualRate": 0.17314481396813017,
+        "PredictedRate": 0.17571647955243833,
+        "Exposure": 3952.04
+      },
+      {
+        "Decile": 5,
+        "ActualRate": 0.2929354201935277,
+        "PredictedRate": 0.24779704290974092,
+        "Exposure": 3054.71
+      },
+      {
+        "Decile": 6,
+        "ActualRate": 0.6220694814978908,
+        "PredictedRate": 0.37523063330998274,
+        "Exposure": 2213.7400000000002
+      },
+      {
+        "Decile": 7,
+        "ActualRate": 1.2665210696073552,
+        "PredictedRate": 0.6452354137695704,
+        "Exposure": 1327.35
+      },
+      {
+        "Decile": 8,
+        "ActualRate": 2.840382757117574,
+        "PredictedRate": 1.1901020887244804,
+        "Exposure": 699.41
+      },
+      {
+        "Decile": 9,
+        "ActualRate": 15.949766178322658,
+        "PredictedRate": 6.7921869771053816,
+        "Exposure": 294.86627739388797
+      }
+    ]
+  },
+  "act_vs_exp": {
+    "train_act_vs_exp": [
+      {
+        "Feature": "DrivAge",
+        "Value": -0.990769332249768,
+        "Cur_Pred": 0.03785354525127976,
+        "Actual": 10.0,
+        "Diff": -9.962146454748721,
+        "AbsDiff": 9.962146454748721
+      },
+      {
+        "Feature": "DrivAge",
+        "Value": -0.854048680490806,
+        "Cur_Pred": 0.03836103311578438,
+        "Actual": 10.0,
+        "Diff": -9.961638966884216,
+        "AbsDiff": 9.961638966884216
+      },
+      {
+        "Feature": "DrivAge",
+        "Value": 0.0006468000689458,
+        "Cur_Pred": 0.040198324654415904,
+        "Actual": 10.0,
+        "Diff": -9.959801675345584,
+        "AbsDiff": 9.959801675345584
+      },
+      {
+        "Feature": "DrivAge",
+        "Value": 0.3400383802788,
+        "Cur_Pred": 0.04114966110518971,
+        "Actual": 10.0,
+        "Diff": -9.95885033889481,
+        "AbsDiff": 9.95885033889481
+      },
+      {
+        "Feature": "DrivAge",
+        "Value": -0.5235962754384891,
+        "Cur_Pred": 0.041402279720156046,
+        "Actual": 10.0,
+        "Diff": -9.958597720279844,
+        "AbsDiff": 9.958597720279844
+      },
+      {
+        "Feature": "Density",
+        "Value": -0.2395836047666518,
+        "Cur_Pred": 0.11473538967957173,
+        "Actual": 3.4236111111111116,
+        "Diff": -3.30887572143154,
+        "AbsDiff": 3.30887572143154
+      },
+      {
+        "Feature": "Density",
+        "Value": 0.2498176661067992,
+        "Cur_Pred": 0.12711632384820903,
+        "Actual": 2.5925925925925926,
+        "Diff": -2.4654762687443834,
+        "AbsDiff": 2.4654762687443834
+      },
+      {
+        "Feature": "Density",
+        "Value": -0.3356979780670564,
+        "Cur_Pred": 0.09356621549936922,
+        "Actual": 2.380952380952381,
+        "Diff": -2.287386165453012,
+        "AbsDiff": 2.287386165453012
+      },
+      {
+        "Feature": "BonusMalus",
+        "Value": 4.500652673642198,
+        "Cur_Pred": 0.5323621891982339,
+        "Actual": 2.777777777777778,
+        "Diff": -2.245415588579544,
+        "AbsDiff": 2.245415588579544
+      },
+      {
+        "Feature": "Density",
+        "Value": -0.0264165563707414,
+        "Cur_Pred": 0.0853744691745505,
+        "Actual": 2.0,
+        "Diff": -1.9146255308254494,
+        "AbsDiff": 1.9146255308254494
+      },
+      {
+        "Feature": "Density",
+        "Value": 0.1670735337117002,
+        "Cur_Pred": 0.13297796243694346,
+        "Actual": 1.4314194577352473,
+        "Diff": -1.2984414952983039,
+        "AbsDiff": 1.2984414952983039
+      },
+      {
+        "Feature": "BonusMalus",
+        "Value": 5.39766899202499,
+        "Cur_Pred": 0.9393730393058628,
+        "Actual": 0.0,
+        "Diff": 0.9393730393058628,
+        "AbsDiff": 0.9393730393058628
+      },
+      {
+        "Feature": "BonusMalus",
+        "Value": 3.8599267319402033,
+        "Cur_Pred": 0.41916267300773113,
+        "Actual": 1.1255411255411256,
+        "Diff": -0.7063784525333945,
+        "AbsDiff": 0.7063784525333945
+      },
+      {
+        "Feature": "BonusMalus",
+        "Value": 3.1551281960680093,
+        "Cur_Pred": 0.37176338932875924,
+        "Actual": 1.0,
+        "Diff": -0.6282366106712407,
+        "AbsDiff": 0.6282366106712407
+      },
+      {
+        "Feature": "BonusMalus",
+        "Value": 5.718031962875987,
+        "Cur_Pred": 0.6156273064366402,
+        "Actual": 0.0,
+        "Diff": 0.6156273064366402,
+        "AbsDiff": 0.6156273064366402
+      },
+      {
+        "Feature": "VehAge",
+        "Value": -1.2920474551086096,
+        "Cur_Pred": 0.1331148973532384,
+        "Actual": 0.46733903903697177,
+        "Diff": -0.3342241416837334,
+        "AbsDiff": 0.3342241416837334
+      },
+      {
+        "Feature": "Region_R21_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.11008783765517817,
+        "Actual": 0.20870057974661468,
+        "Diff": -0.09861274209143651,
+        "AbsDiff": 0.09861274209143651
+      },
+      {
+        "Feature": "Region_R21_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.11008783765517817,
+        "Actual": 0.20870057974661468,
+        "Diff": -0.09861274209143651,
+        "AbsDiff": 0.09861274209143651
+      },
+      {
+        "Feature": "VehBrand_B12_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.12743149497531917,
+        "Actual": 0.22214713067480008,
+        "Diff": -0.09471563569948091,
+        "AbsDiff": 0.09471563569948091
+      },
+      {
+        "Feature": "VehBrand_B12_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.12743149497531917,
+        "Actual": 0.22214713067480008,
+        "Diff": -0.09471563569948091,
+        "AbsDiff": 0.09471563569948091
+      },
+      {
+        "Feature": "Region_R94_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.12467475508793338,
+        "Actual": 0.20428829753250433,
+        "Diff": -0.07961354244457094,
+        "AbsDiff": 0.07961354244457094
+      },
+      {
+        "Feature": "Region_R94_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.12467475508793338,
+        "Actual": 0.20428829753250433,
+        "Diff": -0.07961354244457094,
+        "AbsDiff": 0.07961354244457094
+      },
+      {
+        "Feature": "Area_F_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.13976624100405505,
+        "Actual": 0.21284802454181426,
+        "Diff": -0.07308178353775921,
+        "AbsDiff": 0.07308178353775921
+      },
+      {
+        "Feature": "Area_F_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.13976624100405505,
+        "Actual": 0.21284802454181426,
+        "Diff": -0.07308178353775921,
+        "AbsDiff": 0.07308178353775921
+      },
+      {
+        "Feature": "Region_R42_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.11234774352936903,
+        "Actual": 0.18296937389202675,
+        "Diff": -0.07062163036265771,
+        "AbsDiff": 0.07062163036265771
+      },
+      {
+        "Feature": "Region_R42_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.11234774352936903,
+        "Actual": 0.18296937389202675,
+        "Diff": -0.07062163036265771,
+        "AbsDiff": 0.07062163036265771
+      },
+      {
+        "Feature": "VehPower",
+        "Value": 1.242007668051376,
+        "Cur_Pred": 0.1013420384082294,
+        "Actual": 0.1696060395965313,
+        "Diff": -0.0682640011883019,
+        "AbsDiff": 0.0682640011883019
+      },
+      {
+        "Feature": "VehPower",
+        "Value": 1.7298263044327,
+        "Cur_Pred": 0.10889866110945755,
+        "Actual": 0.17657541008825345,
+        "Diff": -0.0676767489787959,
+        "AbsDiff": 0.0676767489787959
+      },
+      {
+        "Feature": "Region_R11_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.1302855698984793,
+        "Actual": 0.19557197085378616,
+        "Diff": -0.06528640095530686,
+        "AbsDiff": 0.06528640095530686
+      },
+      {
+        "Feature": "Region_R11_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.1302855698984793,
+        "Actual": 0.19557197085378616,
+        "Diff": -0.06528640095530686,
+        "AbsDiff": 0.06528640095530686
+      },
+      {
+        "Feature": "Region_R74_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.10369988365605384,
+        "Actual": 0.16887002877305235,
+        "Diff": -0.0651701451169985,
+        "AbsDiff": 0.0651701451169985
+      },
+      {
+        "Feature": "Region_R74_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.10369988365605384,
+        "Actual": 0.16887002877305235,
+        "Diff": -0.0651701451169985,
+        "AbsDiff": 0.0651701451169985
+      },
+      {
+        "Feature": "Region_R73_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.09344694334334583,
+        "Actual": 0.1568493476720153,
+        "Diff": -0.06340240432866948,
+        "AbsDiff": 0.06340240432866948
+      },
+      {
+        "Feature": "Region_R73_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.09344694334334583,
+        "Actual": 0.1568493476720153,
+        "Diff": -0.06340240432866948,
+        "AbsDiff": 0.06340240432866948
+      },
+      {
+        "Feature": "Region_R22_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.12072756241841398,
+        "Actual": 0.18364868480888674,
+        "Diff": -0.06292112239047276,
+        "AbsDiff": 0.06292112239047276
+      },
+      {
+        "Feature": "Region_R22_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.12072756241841398,
+        "Actual": 0.18364868480888674,
+        "Diff": -0.06292112239047276,
+        "AbsDiff": 0.06292112239047276
+      },
+      {
+        "Feature": "VehPower",
+        "Value": -0.7092668774739205,
+        "Cur_Pred": 0.10362801621411531,
+        "Actual": 0.16173271355856655,
+        "Diff": -0.05810469734445124,
+        "AbsDiff": 0.05810469734445124
+      },
+      {
+        "Feature": "VehGas_Regular_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.10550552042407209,
+        "Actual": 0.16238239670514013,
+        "Diff": -0.05687687628106804,
+        "AbsDiff": 0.05687687628106804
+      },
+      {
+        "Feature": "VehGas_Regular_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.10550552042407209,
+        "Actual": 0.16238239670514013,
+        "Diff": -0.05687687628106804,
+        "AbsDiff": 0.05687687628106804
+      },
+      {
+        "Feature": "VehGas_Diesel_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10550552042407209,
+        "Actual": 0.16238239670514013,
+        "Diff": -0.05687687628106804,
+        "AbsDiff": 0.05687687628106804
+      },
+      {
+        "Feature": "VehGas_Diesel_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10550552042407209,
+        "Actual": 0.16238239670514013,
+        "Diff": -0.05687687628106804,
+        "AbsDiff": 0.05687687628106804
+      },
+      {
+        "Feature": "Region_R41_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.07509672325080378,
+        "Actual": 0.12843675078801142,
+        "Diff": -0.05334002753720764,
+        "AbsDiff": 0.05334002753720764
+      },
+      {
+        "Feature": "Region_R41_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.07509672325080378,
+        "Actual": 0.12843675078801142,
+        "Diff": -0.05334002753720764,
+        "AbsDiff": 0.05334002753720764
+      },
+      {
+        "Feature": "Region_R91_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.10041864581030777,
+        "Actual": 0.14965219413835393,
+        "Diff": -0.04923354832804616,
+        "AbsDiff": 0.04923354832804616
+      },
+      {
+        "Feature": "Region_R91_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.10041864581030777,
+        "Actual": 0.14965219413835393,
+        "Diff": -0.04923354832804616,
+        "AbsDiff": 0.04923354832804616
+      },
+      {
+        "Feature": "VehBrand_B1_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.1063046716938205,
+        "Actual": 0.15313778050242907,
+        "Diff": -0.04683310880860857,
+        "AbsDiff": 0.04683310880860857
+      },
+      {
+        "Feature": "VehBrand_B1_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.1063046716938205,
+        "Actual": 0.15313778050242907,
+        "Diff": -0.04683310880860857,
+        "AbsDiff": 0.04683310880860857
+      },
+      {
+        "Feature": "Region_R26_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.1019257974333417,
+        "Actual": 0.14849196922333618,
+        "Diff": -0.04656617178999449,
+        "AbsDiff": 0.04656617178999449
+      },
+      {
+        "Feature": "Region_R26_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.1019257974333417,
+        "Actual": 0.14849196922333618,
+        "Diff": -0.04656617178999449,
+        "AbsDiff": 0.04656617178999449
+      },
+      {
+        "Feature": "VehBrand_B2_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.1063140087076119,
+        "Actual": 0.15249767915219872,
+        "Diff": -0.04618367044458682,
+        "AbsDiff": 0.04618367044458682
+      },
+      {
+        "Feature": "VehBrand_B2_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.1063140087076119,
+        "Actual": 0.15249767915219872,
+        "Diff": -0.04618367044458682,
+        "AbsDiff": 0.04618367044458682
+      },
+      {
+        "Feature": "Area_D_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.11075608768840058,
+        "Actual": 0.15609658361733902,
+        "Diff": -0.04534049592893845,
+        "AbsDiff": 0.04534049592893845
+      },
+      {
+        "Feature": "Area_D_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.11075608768840058,
+        "Actual": 0.15609658361733902,
+        "Diff": -0.04534049592893845,
+        "AbsDiff": 0.04534049592893845
+      },
+      {
+        "Feature": "Region_R43_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.10140236775149243,
+        "Actual": 0.14639993034272902,
+        "Diff": -0.04499756259123659,
+        "AbsDiff": 0.04499756259123659
+      },
+      {
+        "Feature": "Region_R43_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.10140236775149243,
+        "Actual": 0.14639993034272902,
+        "Diff": -0.04499756259123659,
+        "AbsDiff": 0.04499756259123659
+      },
+      {
+        "Feature": "Region_R24_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10627604879331001,
+        "Actual": 0.15094902854906486,
+        "Diff": -0.04467297975575485,
+        "AbsDiff": 0.04467297975575485
+      },
+      {
+        "Feature": "Region_R24_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10627604879331001,
+        "Actual": 0.15094902854906486,
+        "Diff": -0.04467297975575485,
+        "AbsDiff": 0.04467297975575485
+      },
+      {
+        "Feature": "Region_R82_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.11476774630761286,
+        "Actual": 0.15778392152570364,
+        "Diff": -0.043016175218090785,
+        "AbsDiff": 0.043016175218090785
+      },
+      {
+        "Feature": "Region_R82_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.11476774630761286,
+        "Actual": 0.15778392152570364,
+        "Diff": -0.043016175218090785,
+        "AbsDiff": 0.043016175218090785
+      },
+      {
+        "Feature": "VehPower",
+        "Value": -0.2214482410925963,
+        "Cur_Pred": 0.09905557411719247,
+        "Actual": 0.14119148564757528,
+        "Diff": -0.042135911530382805,
+        "AbsDiff": 0.042135911530382805
+      },
+      {
+        "Feature": "VehBrand_B3_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10337667965918214,
+        "Actual": 0.1453525244266164,
+        "Diff": -0.04197584476743425,
+        "AbsDiff": 0.04197584476743425
+      },
+      {
+        "Feature": "VehBrand_B3_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10337667965918214,
+        "Actual": 0.1453525244266164,
+        "Diff": -0.04197584476743425,
+        "AbsDiff": 0.04197584476743425
+      },
+      {
+        "Feature": "Area_A_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10676668596921973,
+        "Actual": 0.1486808000134249,
+        "Diff": -0.04191411404420517,
+        "AbsDiff": 0.04191411404420517
+      },
+      {
+        "Feature": "Area_A_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10676668596921973,
+        "Actual": 0.1486808000134249,
+        "Diff": -0.04191411404420517,
+        "AbsDiff": 0.04191411404420517
+      },
+      {
+        "Feature": "Area_C_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10614050843832575,
+        "Actual": 0.14777679197217253,
+        "Diff": -0.04163628353384678,
+        "AbsDiff": 0.04163628353384678
+      },
+      {
+        "Feature": "Area_C_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10614050843832575,
+        "Actual": 0.14777679197217253,
+        "Diff": -0.04163628353384678,
+        "AbsDiff": 0.04163628353384678
+      },
+      {
+        "Feature": "Region_R93_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.10793394983508854,
+        "Actual": 0.14930008805725054,
+        "Diff": -0.041366138222161994,
+        "AbsDiff": 0.041366138222161994
+      },
+      {
+        "Feature": "Region_R93_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.10793394983508854,
+        "Actual": 0.14930008805725054,
+        "Diff": -0.041366138222161994,
+        "AbsDiff": 0.041366138222161994
+      },
+      {
+        "Feature": "VehBrand_B10_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10356509954430483,
+        "Actual": 0.144910852282459,
+        "Diff": -0.041345752738154176,
+        "AbsDiff": 0.041345752738154176
+      },
+      {
+        "Feature": "VehBrand_B10_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10356509954430483,
+        "Actual": 0.144910852282459,
+        "Diff": -0.041345752738154176,
+        "AbsDiff": 0.041345752738154176
+      },
+      {
+        "Feature": "Region_R72_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.1036883482074519,
+        "Actual": 0.14499669890434727,
+        "Diff": -0.04130835069689537,
+        "AbsDiff": 0.04130835069689537
+      },
+      {
+        "Feature": "Region_R72_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.1036883482074519,
+        "Actual": 0.14499669890434727,
+        "Diff": -0.04130835069689537,
+        "AbsDiff": 0.04130835069689537
+      },
+      {
+        "Feature": "VehBrand_B6_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10353137920008597,
+        "Actual": 0.14482940634457037,
+        "Diff": -0.0412980271444844,
+        "AbsDiff": 0.0412980271444844
+      },
+      {
+        "Feature": "VehBrand_B6_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10353137920008597,
+        "Actual": 0.14482940634457037,
+        "Diff": -0.0412980271444844,
+        "AbsDiff": 0.0412980271444844
+      },
+      {
+        "Feature": "VehBrand_B5_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10316394355997435,
+        "Actual": 0.14445687153400374,
+        "Diff": -0.04129292797402939,
+        "AbsDiff": 0.04129292797402939
+      },
+      {
+        "Feature": "VehBrand_B5_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10316394355997435,
+        "Actual": 0.14445687153400374,
+        "Diff": -0.04129292797402939,
+        "AbsDiff": 0.04129292797402939
+      },
+      {
+        "Feature": "VehBrand_B4_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10344632862845449,
+        "Actual": 0.14472450850839944,
+        "Diff": -0.04127817987994495,
+        "AbsDiff": 0.04127817987994495
+      },
+      {
+        "Feature": "VehBrand_B4_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10344632862845449,
+        "Actual": 0.14472450850839944,
+        "Diff": -0.04127817987994495,
+        "AbsDiff": 0.04127817987994495
+      },
+      {
+        "Feature": "VehBrand_B11_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10315253017150271,
+        "Actual": 0.14442081622376288,
+        "Diff": -0.04126828605226017,
+        "AbsDiff": 0.04126828605226017
+      },
+      {
+        "Feature": "VehBrand_B11_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10315253017150271,
+        "Actual": 0.14442081622376288,
+        "Diff": -0.04126828605226017,
+        "AbsDiff": 0.04126828605226017
+      },
+      {
+        "Feature": "Region_R31_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10323293155427503,
+        "Actual": 0.1444694409495145,
+        "Diff": -0.04123650939523947,
+        "AbsDiff": 0.04123650939523947
+      },
+      {
+        "Feature": "Region_R31_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10323293155427503,
+        "Actual": 0.1444694409495145,
+        "Diff": -0.04123650939523947,
+        "AbsDiff": 0.04123650939523947
+      },
+      {
+        "Feature": "VehBrand_B13_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10333538855019102,
+        "Actual": 0.14453957042787766,
+        "Diff": -0.04120418187768664,
+        "AbsDiff": 0.04120418187768664
+      },
+      {
+        "Feature": "VehBrand_B13_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10333538855019102,
+        "Actual": 0.14453957042787766,
+        "Diff": -0.04120418187768664,
+        "AbsDiff": 0.04120418187768664
+      },
+      {
+        "Feature": "Region_R53_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10348437729169845,
+        "Actual": 0.1446104504801821,
+        "Diff": -0.041126073188483644,
+        "AbsDiff": 0.041126073188483644
+      },
+      {
+        "Feature": "Region_R53_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10348437729169845,
+        "Actual": 0.1446104504801821,
+        "Diff": -0.041126073188483644,
+        "AbsDiff": 0.041126073188483644
+      },
+      {
+        "Feature": "Area_B_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.1049886113084697,
+        "Actual": 0.14601563333159326,
+        "Diff": -0.041027022023123555,
+        "AbsDiff": 0.041027022023123555
+      },
+      {
+        "Feature": "Area_B_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.1049886113084697,
+        "Actual": 0.14601563333159326,
+        "Diff": -0.041027022023123555,
+        "AbsDiff": 0.041027022023123555
+      },
+      {
+        "Feature": "Region_R52_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10372438133109088,
+        "Actual": 0.14473967191916878,
+        "Diff": -0.0410152905880779,
+        "AbsDiff": 0.0410152905880779
+      },
+      {
+        "Feature": "Region_R52_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10372438133109088,
+        "Actual": 0.14473967191916878,
+        "Diff": -0.0410152905880779,
+        "AbsDiff": 0.0410152905880779
+      },
+      {
+        "Feature": "Region_R83_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.1033453952515094,
+        "Actual": 0.14427256237392272,
+        "Diff": -0.040927167122413316,
+        "AbsDiff": 0.040927167122413316
+      },
+      {
+        "Feature": "Region_R83_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.1033453952515094,
+        "Actual": 0.14427256237392272,
+        "Diff": -0.040927167122413316,
+        "AbsDiff": 0.040927167122413316
+      },
+      {
+        "Feature": "Region_R54_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10359991847927415,
+        "Actual": 0.14452086158518637,
+        "Diff": -0.040920943105912225,
+        "AbsDiff": 0.040920943105912225
+      },
+      {
+        "Feature": "Region_R54_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10359991847927415,
+        "Actual": 0.14452086158518637,
+        "Diff": -0.040920943105912225,
+        "AbsDiff": 0.040920943105912225
+      },
+      {
+        "Feature": "Region_R25_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.1032766764434183,
+        "Actual": 0.14419320155684653,
+        "Diff": -0.040916525113428234,
+        "AbsDiff": 0.040916525113428234
+      },
+      {
+        "Feature": "Region_R25_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.1032766764434183,
+        "Actual": 0.14419320155684653,
+        "Diff": -0.040916525113428234,
+        "AbsDiff": 0.040916525113428234
+      },
+      {
+        "Feature": "VehBrand_B14_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10335640747529416,
+        "Actual": 0.1442343274357988,
+        "Diff": -0.04087791996050465,
+        "AbsDiff": 0.04087791996050465
+      },
+      {
+        "Feature": "VehBrand_B14_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10335640747529416,
+        "Actual": 0.1442343274357988,
+        "Diff": -0.04087791996050465,
+        "AbsDiff": 0.04087791996050465
+      },
+      {
+        "Feature": "Region_R23_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10331540271423681,
+        "Actual": 0.14416772871218841,
+        "Diff": -0.040852325997951605,
+        "AbsDiff": 0.040852325997951605
+      },
+      {
+        "Feature": "Region_R23_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10331540271423681,
+        "Actual": 0.14416772871218841,
+        "Diff": -0.040852325997951605,
+        "AbsDiff": 0.040852325997951605
+      },
+      {
+        "Feature": "Area_E_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.12316685510734426,
+        "Actual": 0.16394147414698565,
+        "Diff": -0.040774619039641385,
+        "AbsDiff": 0.040774619039641385
+      },
+      {
+        "Feature": "Area_E_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.12316685510734426,
+        "Actual": 0.16394147414698565,
+        "Diff": -0.040774619039641385,
+        "AbsDiff": 0.040774619039641385
+      },
+      {
+        "Feature": "Region_R43_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10321382791331779,
+        "Actual": 0.14394619518705057,
+        "Diff": -0.04073236727373278,
+        "AbsDiff": 0.04073236727373278
+      },
+      {
+        "Feature": "Region_R43_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10321382791331779,
+        "Actual": 0.14394619518705057,
+        "Diff": -0.04073236727373278,
+        "AbsDiff": 0.04073236727373278
+      },
+      {
+        "Feature": "Area_E_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.09814638339692888,
+        "Actual": 0.1388783437689924,
+        "Diff": -0.04073196037206353,
+        "AbsDiff": 0.04073196037206353
+      },
+      {
+        "Feature": "Area_E_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.09814638339692888,
+        "Actual": 0.1388783437689924,
+        "Diff": -0.04073196037206353,
+        "AbsDiff": 0.04073196037206353
+      },
+      {
+        "Feature": "Region_R93_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10258516296689098,
+        "Actual": 0.1432429663198624,
+        "Diff": -0.040657803352971436,
+        "AbsDiff": 0.040657803352971436
+      },
+      {
+        "Feature": "Region_R93_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10258516296689098,
+        "Actual": 0.1432429663198624,
+        "Diff": -0.040657803352971436,
+        "AbsDiff": 0.040657803352971436
+      },
+      {
+        "Feature": "Region_R26_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10323057881008053,
+        "Actual": 0.14387935904863977,
+        "Diff": -0.04064878023855924,
+        "AbsDiff": 0.04064878023855924
+      },
+      {
+        "Feature": "Region_R26_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10323057881008053,
+        "Actual": 0.14387935904863977,
+        "Diff": -0.04064878023855924,
+        "AbsDiff": 0.04064878023855924
+      },
+      {
+        "Feature": "Region_R42_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10318072414459212,
+        "Actual": 0.14382448888863336,
+        "Diff": -0.040643764744041244,
+        "AbsDiff": 0.040643764744041244
+      },
+      {
+        "Feature": "Region_R42_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10318072414459212,
+        "Actual": 0.14382448888863336,
+        "Diff": -0.040643764744041244,
+        "AbsDiff": 0.040643764744041244
+      },
+      {
+        "Feature": "Region_R74_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.1032070524507357,
+        "Actual": 0.14378389573282208,
+        "Diff": -0.04057684328208637,
+        "AbsDiff": 0.04057684328208637
+      },
+      {
+        "Feature": "Region_R74_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.1032070524507357,
+        "Actual": 0.14378389573282208,
+        "Diff": -0.04057684328208637,
+        "AbsDiff": 0.04057684328208637
+      },
+      {
+        "Feature": "Region_R41_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10376067944861139,
+        "Actual": 0.14425463000581662,
+        "Diff": -0.04049395055720523,
+        "AbsDiff": 0.04049395055720523
+      },
+      {
+        "Feature": "Region_R41_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10376067944861139,
+        "Actual": 0.14425463000581662,
+        "Diff": -0.04049395055720523,
+        "AbsDiff": 0.04049395055720523
+      },
+      {
+        "Feature": "Region_R21_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10317958582232221,
+        "Actual": 0.14366144409908185,
+        "Diff": -0.04048185827675964,
+        "AbsDiff": 0.04048185827675964
+      },
+      {
+        "Feature": "Region_R21_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10317958582232221,
+        "Actual": 0.14366144409908185,
+        "Diff": -0.04048185827675964,
+        "AbsDiff": 0.04048185827675964
+      },
+      {
+        "Feature": "Region_R94_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10306499654569608,
+        "Actual": 0.14354237879531198,
+        "Diff": -0.040477382249615904,
+        "AbsDiff": 0.040477382249615904
+      },
+      {
+        "Feature": "Region_R94_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10306499654569608,
+        "Actual": 0.14354237879531198,
+        "Diff": -0.040477382249615904,
+        "AbsDiff": 0.040477382249615904
+      },
+      {
+        "Feature": "Region_R22_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10300129435758676,
+        "Actual": 0.1434772001056007,
+        "Diff": -0.040475905748013935,
+        "AbsDiff": 0.040475905748013935
+      },
+      {
+        "Feature": "Region_R22_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10300129435758676,
+        "Actual": 0.1434772001056007,
+        "Diff": -0.040475905748013935,
+        "AbsDiff": 0.040475905748013935
+      },
+      {
+        "Feature": "Region_R82_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10155982846795225,
+        "Actual": 0.14197544859519126,
+        "Diff": -0.04041562012723901,
+        "AbsDiff": 0.04041562012723901
+      },
+      {
+        "Feature": "Region_R82_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10155982846795225,
+        "Actual": 0.14197544859519126,
+        "Diff": -0.04041562012723901,
+        "AbsDiff": 0.04041562012723901
+      },
+      {
+        "Feature": "Region_R91_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.1033655073597662,
+        "Actual": 0.14363402831708116,
+        "Diff": -0.040268520957314966,
+        "AbsDiff": 0.040268520957314966
+      },
+      {
+        "Feature": "Region_R91_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.1033655073597662,
+        "Actual": 0.14363402831708116,
+        "Diff": -0.040268520957314966,
+        "AbsDiff": 0.040268520957314966
+      },
+      {
+        "Feature": "Region_R73_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10346297899741319,
+        "Actual": 0.14361715849392148,
+        "Diff": -0.04015417949650829,
+        "AbsDiff": 0.04015417949650829
+      },
+      {
+        "Feature": "Region_R73_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10346297899741319,
+        "Actual": 0.14361715849392148,
+        "Diff": -0.04015417949650829,
+        "AbsDiff": 0.04015417949650829
+      },
+      {
+        "Feature": "Area_F_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10221634413687652,
+        "Actual": 0.1420775507057217,
+        "Diff": -0.039861206568845176,
+        "AbsDiff": 0.039861206568845176
+      },
+      {
+        "Feature": "Area_F_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10221634413687652,
+        "Actual": 0.1420775507057217,
+        "Diff": -0.039861206568845176,
+        "AbsDiff": 0.039861206568845176
+      },
+      {
+        "Feature": "Area_D_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10104112868716944,
+        "Actual": 0.14045937240087242,
+        "Diff": -0.03941824371370298,
+        "AbsDiff": 0.03941824371370298
+      },
+      {
+        "Feature": "Area_D_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10104112868716944,
+        "Actual": 0.14045937240087242,
+        "Diff": -0.03941824371370298,
+        "AbsDiff": 0.03941824371370298
+      },
+      {
+        "Feature": "VehAge",
+        "Value": 0.5594993088577624,
+        "Cur_Pred": 0.0946512275462711,
+        "Actual": 0.13324388424920464,
+        "Diff": -0.038592656702933534,
+        "AbsDiff": 0.038592656702933534
+      },
+      {
+        "Feature": "Area_C_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.09579314305374181,
+        "Actual": 0.13426646645962728,
+        "Diff": -0.03847332340588547,
+        "AbsDiff": 0.03847332340588547
+      },
+      {
+        "Feature": "Area_C_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.09579314305374181,
+        "Actual": 0.13426646645962728,
+        "Diff": -0.03847332340588547,
+        "AbsDiff": 0.03847332340588547
+      },
+      {
+        "Feature": "Area_B_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.08900363047425965,
+        "Actual": 0.12745594513789077,
+        "Diff": -0.038452314663631124,
+        "AbsDiff": 0.038452314663631124
+      },
+      {
+        "Feature": "Area_B_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.08900363047425965,
+        "Actual": 0.12745594513789077,
+        "Diff": -0.038452314663631124,
+        "AbsDiff": 0.038452314663631124
+      },
+      {
+        "Feature": "Region_R11_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10010520525371648,
+        "Actual": 0.1380307588443819,
+        "Diff": -0.03792555359066542,
+        "AbsDiff": 0.03792555359066542
+      },
+      {
+        "Feature": "Region_R11_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10010520525371648,
+        "Actual": 0.1380307588443819,
+        "Diff": -0.03792555359066542,
+        "AbsDiff": 0.03792555359066542
+      },
+      {
+        "Feature": "VehPower",
+        "Value": -1.1970855138552443,
+        "Cur_Pred": 0.10545183985421035,
+        "Actual": 0.1430220835616098,
+        "Diff": -0.03757024370739946,
+        "AbsDiff": 0.03757024370739946
+      },
+      {
+        "Feature": "VehAge",
+        "Value": 0.3743446324611252,
+        "Cur_Pred": 0.09412122721544604,
+        "Actual": 0.13079784442407805,
+        "Diff": -0.03667661720863201,
+        "AbsDiff": 0.03667661720863201
+      },
+      {
+        "Feature": "Region_R52_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.09476575334733568,
+        "Actual": 0.13099373646751064,
+        "Diff": -0.03622798312017496,
+        "AbsDiff": 0.03622798312017496
+      },
+      {
+        "Feature": "Region_R52_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.09476575334733568,
+        "Actual": 0.13099373646751064,
+        "Diff": -0.03622798312017496,
+        "AbsDiff": 0.03622798312017496
+      },
+      {
+        "Feature": "VehAge",
+        "Value": 1.8555820436342227,
+        "Cur_Pred": 0.07329520102370911,
+        "Actual": 0.10917080556492535,
+        "Diff": -0.035875604541216244,
+        "AbsDiff": 0.035875604541216244
+      },
+      {
+        "Feature": "VehAge",
+        "Value": 0.9298086616510368,
+        "Cur_Pred": 0.08546979843673189,
+        "Actual": 0.1207457109570066,
+        "Diff": -0.03527591252027472,
+        "AbsDiff": 0.03527591252027472
+      },
+      {
+        "Feature": "Region_R53_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.09907131167690132,
+        "Actual": 0.13398981235707622,
+        "Diff": -0.034918500680174894,
+        "AbsDiff": 0.034918500680174894
+      },
+      {
+        "Feature": "Region_R53_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.09907131167690132,
+        "Actual": 0.13398981235707622,
+        "Diff": -0.034918500680174894,
+        "AbsDiff": 0.034918500680174894
+      },
+      {
+        "Feature": "Region_R54_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.08972766552057261,
+        "Actual": 0.12422677795359231,
+        "Diff": -0.0344991124330197,
+        "AbsDiff": 0.0344991124330197
+      },
+      {
+        "Feature": "Region_R54_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.08972766552057261,
+        "Actual": 0.12422677795359231,
+        "Diff": -0.0344991124330197,
+        "AbsDiff": 0.0344991124330197
+      },
+      {
+        "Feature": "Area_A_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.08358678876922769,
+        "Actual": 0.11785203403753826,
+        "Diff": -0.03426524526831057,
+        "AbsDiff": 0.03426524526831057
+      },
+      {
+        "Feature": "Area_A_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.08358678876922769,
+        "Actual": 0.11785203403753826,
+        "Diff": -0.03426524526831057,
+        "AbsDiff": 0.03426524526831057
+      },
+      {
+        "Feature": "Region_R23_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.09523446630712007,
+        "Actual": 0.12749339702203805,
+        "Diff": -0.03225893071491798,
+        "AbsDiff": 0.03225893071491798
+      },
+      {
+        "Feature": "Region_R23_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.09523446630712007,
+        "Actual": 0.12749339702203805,
+        "Diff": -0.03225893071491798,
+        "AbsDiff": 0.03225893071491798
+      },
+      {
+        "Feature": "VehBrand_B5_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.10407008608646556,
+        "Actual": 0.13457427620518106,
+        "Diff": -0.030504190118715496,
+        "AbsDiff": 0.030504190118715496
+      },
+      {
+        "Feature": "VehBrand_B5_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.10407008608646556,
+        "Actual": 0.13457427620518106,
+        "Diff": -0.030504190118715496,
+        "AbsDiff": 0.030504190118715496
+      },
+      {
+        "Feature": "Region_R25_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.09913816151685552,
+        "Actual": 0.12907993661702516,
+        "Diff": -0.02994177510016964,
+        "AbsDiff": 0.02994177510016964
+      },
+      {
+        "Feature": "Region_R25_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.09913816151685552,
+        "Actual": 0.12907993661702516,
+        "Diff": -0.02994177510016964,
+        "AbsDiff": 0.02994177510016964
+      },
+      {
+        "Feature": "Region_R72_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.09333078866571712,
+        "Actual": 0.1223370554998625,
+        "Diff": -0.02900626683414538,
+        "AbsDiff": 0.02900626683414538
+      },
+      {
+        "Feature": "Region_R72_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.09333078866571712,
+        "Actual": 0.1223370554998625,
+        "Diff": -0.02900626683414538,
+        "AbsDiff": 0.02900626683414538
+      },
+      {
+        "Feature": "Region_R31_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.10267156775104155,
+        "Actual": 0.13158871005549758,
+        "Diff": -0.028917142304456023,
+        "AbsDiff": 0.028917142304456023
+      },
+      {
+        "Feature": "Region_R31_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.10267156775104155,
+        "Actual": 0.13158871005549758,
+        "Diff": -0.028917142304456023,
+        "AbsDiff": 0.028917142304456023
+      },
+      {
+        "Feature": "VehBrand_B6_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.09593402494349078,
+        "Actual": 0.12404071801124678,
+        "Diff": -0.028106693067755997,
+        "AbsDiff": 0.028106693067755997
+      },
+      {
+        "Feature": "VehBrand_B6_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.09593402494349078,
+        "Actual": 0.12404071801124678,
+        "Diff": -0.028106693067755997,
+        "AbsDiff": 0.028106693067755997
+      },
+      {
+        "Feature": "Region_R24_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.09334286741248093,
+        "Actual": 0.12142648452856057,
+        "Diff": -0.028083617116079637,
+        "AbsDiff": 0.028083617116079637
+      },
+      {
+        "Feature": "Region_R24_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.09334286741248093,
+        "Actual": 0.12142648452856057,
+        "Diff": -0.028083617116079637,
+        "AbsDiff": 0.028083617116079637
+      },
+      {
+        "Feature": "VehBrand_B4_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.09707266382829728,
+        "Actual": 0.1238319129584574,
+        "Diff": -0.026759249130160118,
+        "AbsDiff": 0.026759249130160118
+      },
+      {
+        "Feature": "VehBrand_B4_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.09707266382829728,
+        "Actual": 0.1238319129584574,
+        "Diff": -0.026759249130160118,
+        "AbsDiff": 0.026759249130160118
+      },
+      {
+        "Feature": "VehBrand_B3_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.10126741992794396,
+        "Actual": 0.12758032084157642,
+        "Diff": -0.02631290091363246,
+        "AbsDiff": 0.02631290091363246
+      },
+      {
+        "Feature": "VehBrand_B3_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.10126741992794396,
+        "Actual": 0.12758032084157642,
+        "Diff": -0.02631290091363246,
+        "AbsDiff": 0.02631290091363246
+      },
+      {
+        "Feature": "VehGas_Regular_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10081965793614897,
+        "Actual": 0.12475263265212791,
+        "Diff": -0.02393297471597894,
+        "AbsDiff": 0.02393297471597894
+      },
+      {
+        "Feature": "VehGas_Regular_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10081965793614897,
+        "Actual": 0.12475263265212791,
+        "Diff": -0.02393297471597894,
+        "AbsDiff": 0.02393297471597894
+      },
+      {
+        "Feature": "VehGas_Diesel_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.10081965793614897,
+        "Actual": 0.12475263265212791,
+        "Diff": -0.02393297471597894,
+        "AbsDiff": 0.02393297471597894
+      },
+      {
+        "Feature": "VehGas_Diesel_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.10081965793614897,
+        "Actual": 0.12475263265212791,
+        "Diff": -0.02393297471597894,
+        "AbsDiff": 0.02393297471597894
+      },
+      {
+        "Feature": "VehBrand_B12_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.09536869943247288,
+        "Actual": 0.1186347990994149,
+        "Diff": -0.023266099666942028,
+        "AbsDiff": 0.023266099666942028
+      },
+      {
+        "Feature": "VehBrand_B12_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.09536869943247288,
+        "Actual": 0.1186347990994149,
+        "Diff": -0.023266099666942028,
+        "AbsDiff": 0.023266099666942028
+      },
+      {
+        "Feature": "VehBrand_B2_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.09316897854126008,
+        "Actual": 0.1162995244461819,
+        "Diff": -0.02313054590492182,
+        "AbsDiff": 0.02313054590492182
+      },
+      {
+        "Feature": "VehBrand_B2_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.09316897854126008,
+        "Actual": 0.1162995244461819,
+        "Diff": -0.02313054590492182,
+        "AbsDiff": 0.02313054590492182
+      },
+      {
+        "Feature": "VehBrand_B1_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.09340422990875412,
+        "Actual": 0.11483735471926623,
+        "Diff": -0.021433124810512114,
+        "AbsDiff": 0.021433124810512114
+      },
+      {
+        "Feature": "VehBrand_B1_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.09340422990875412,
+        "Actual": 0.11483735471926623,
+        "Diff": -0.021433124810512114,
+        "AbsDiff": 0.021433124810512114
+      },
+      {
+        "Feature": "VehBrand_B10_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.08997211311791384,
+        "Actual": 0.10813097506482482,
+        "Diff": -0.01815886194691098,
+        "AbsDiff": 0.01815886194691098
+      },
+      {
+        "Feature": "VehBrand_B10_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.08997211311791384,
+        "Actual": 0.10813097506482482,
+        "Diff": -0.01815886194691098,
+        "AbsDiff": 0.01815886194691098
+      },
+      {
+        "Feature": "VehBrand_B14_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.07891557783349792,
+        "Actual": 0.09681633419130385,
+        "Diff": -0.017900756357805928,
+        "AbsDiff": 0.017900756357805928
+      },
+      {
+        "Feature": "VehBrand_B14_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.07891557783349792,
+        "Actual": 0.09681633419130385,
+        "Diff": -0.017900756357805928,
+        "AbsDiff": 0.017900756357805928
+      },
+      {
+        "Feature": "Region_R83_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.08612518513539691,
+        "Actual": 0.10326445514654978,
+        "Diff": -0.01713927001115287,
+        "AbsDiff": 0.01713927001115287
+      },
+      {
+        "Feature": "Region_R83_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.08612518513539691,
+        "Actual": 0.10326445514654978,
+        "Diff": -0.01713927001115287,
+        "AbsDiff": 0.01713927001115287
+      },
+      {
+        "Feature": "VehBrand_B13_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0963918283684326,
+        "Actual": 0.11185567117381835,
+        "Diff": -0.01546384280538575,
+        "AbsDiff": 0.01546384280538575
+      },
+      {
+        "Feature": "VehBrand_B13_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0963918283684326,
+        "Actual": 0.11185567117381835,
+        "Diff": -0.01546384280538575,
+        "AbsDiff": 0.01546384280538575
+      },
+      {
+        "Feature": "VehBrand_B11_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.1060389841584303,
+        "Actual": 0.12095674657114314,
+        "Diff": -0.014917762412712837,
+        "AbsDiff": 0.014917762412712837
+      },
+      {
+        "Feature": "VehBrand_B11_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.1060389841584303,
+        "Actual": 0.12095674657114314,
+        "Diff": -0.014917762412712837,
+        "AbsDiff": 0.014917762412712837
+      }
+    ],
+    "test_act_vs_exp": [
+      {
+        "Feature": "DrivAge",
+        "Value": -1.5803746684917177,
+        "Cur_Pred": 0.041828464554949804,
+        "Actual": 10.0,
+        "Diff": -9.95817153544505,
+        "AbsDiff": 9.95817153544505
+      },
+      {
+        "Feature": "DrivAge",
+        "Value": -0.6182959842564831,
+        "Cur_Pred": 0.04384374630303102,
+        "Actual": 10.0,
+        "Diff": -9.95615625369697,
+        "AbsDiff": 9.95615625369697
+      },
+      {
+        "Feature": "DrivAge",
+        "Value": -0.2838124479291626,
+        "Cur_Pred": 0.04574567100519382,
+        "Actual": 10.0,
+        "Diff": -9.954254328994805,
+        "AbsDiff": 9.954254328994805
+      },
+      {
+        "Feature": "DrivAge",
+        "Value": -0.5035456701160252,
+        "Cur_Pred": 0.04716777109869171,
+        "Actual": 10.0,
+        "Diff": -9.952832228901308,
+        "AbsDiff": 9.952832228901308
+      },
+      {
+        "Feature": "DrivAge",
+        "Value": -0.4942607494557874,
+        "Cur_Pred": 0.04751135603528984,
+        "Actual": 10.0,
+        "Diff": -9.95248864396471,
+        "AbsDiff": 9.95248864396471
+      },
+      {
+        "Feature": "BonusMalus",
+        "Value": 3.219200790238209,
+        "Cur_Pred": 0.4139175196063517,
+        "Actual": 10.0,
+        "Diff": -9.586082480393648,
+        "AbsDiff": 9.586082480393648
+      },
+      {
+        "Feature": "Density",
+        "Value": -0.1321171401315538,
+        "Cur_Pred": 0.09641397238550192,
+        "Actual": 5.0,
+        "Diff": -4.903586027614498,
+        "AbsDiff": 4.903586027614498
+      },
+      {
+        "Feature": "Density",
+        "Value": -0.0236416007111497,
+        "Cur_Pred": 0.13930406117439828,
+        "Actual": 3.3333333333333335,
+        "Diff": -3.1940292721589354,
+        "AbsDiff": 3.1940292721589354
+      },
+      {
+        "Feature": "Density",
+        "Value": -0.0546706503593118,
+        "Cur_Pred": 0.09048265828222805,
+        "Actual": 2.769230769230769,
+        "Diff": -2.678748110948541,
+        "AbsDiff": 2.678748110948541
+      },
+      {
+        "Feature": "Density",
+        "Value": -0.360672579003382,
+        "Cur_Pred": 0.11658599855181935,
+        "Actual": 2.777777777777778,
+        "Diff": -2.661191779225959,
+        "AbsDiff": 2.661191779225959
+      },
+      {
+        "Feature": "Density",
+        "Value": -0.3447796511348112,
+        "Cur_Pred": 0.14505230108513897,
+        "Actual": 2.7777777777777777,
+        "Diff": -2.632725476692639,
+        "AbsDiff": 2.632725476692639
+      },
+      {
+        "Feature": "BonusMalus",
+        "Value": 2.386257066025616,
+        "Cur_Pred": 0.27482589193815143,
+        "Actual": 1.9341563786008231,
+        "Diff": -1.6593304866626717,
+        "AbsDiff": 1.6593304866626717
+      },
+      {
+        "Feature": "BonusMalus",
+        "Value": 5.653959368705787,
+        "Cur_Pred": 0.6168347687321803,
+        "Actual": 1.6666666666666667,
+        "Diff": -1.0498318979344865,
+        "AbsDiff": 1.0498318979344865
+      },
+      {
+        "Feature": "BonusMalus",
+        "Value": 5.39766899202499,
+        "Cur_Pred": 0.9112727669597728,
+        "Actual": 0.0,
+        "Diff": 0.9112727669597728,
+        "AbsDiff": 0.9112727669597728
+      },
+      {
+        "Feature": "BonusMalus",
+        "Value": 2.450329660195816,
+        "Cur_Pred": 0.28308886044964787,
+        "Actual": 1.0526315789473684,
+        "Diff": -0.7695427184977205,
+        "AbsDiff": 0.7695427184977205
+      },
+      {
+        "Feature": "VehAge",
+        "Value": -1.2920474551086096,
+        "Cur_Pred": 0.13290528068874777,
+        "Actual": 0.4296373815980603,
+        "Diff": -0.29673210090931257,
+        "AbsDiff": 0.29673210090931257
+      },
+      {
+        "Feature": "Region_R43_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.10407564345186913,
+        "Actual": 0.32122527187290617,
+        "Diff": -0.21714962842103702,
+        "AbsDiff": 0.21714962842103702
+      },
+      {
+        "Feature": "Region_R43_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.10407564345186913,
+        "Actual": 0.32122527187290617,
+        "Diff": -0.21714962842103702,
+        "AbsDiff": 0.21714962842103702
+      },
+      {
+        "Feature": "Region_R21_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.11552016162165372,
+        "Actual": 0.28745046277884334,
+        "Diff": -0.1719303011571896,
+        "AbsDiff": 0.1719303011571896
+      },
+      {
+        "Feature": "Region_R21_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.11552016162165372,
+        "Actual": 0.28745046277884334,
+        "Diff": -0.1719303011571896,
+        "AbsDiff": 0.1719303011571896
+      },
+      {
+        "Feature": "Region_R94_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.12078350004487229,
+        "Actual": 0.2531137793075386,
+        "Diff": -0.1323302792626663,
+        "AbsDiff": 0.1323302792626663
+      },
+      {
+        "Feature": "Region_R94_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.12078350004487229,
+        "Actual": 0.2531137793075386,
+        "Diff": -0.1323302792626663,
+        "AbsDiff": 0.1323302792626663
+      },
+      {
+        "Feature": "Region_R42_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.10951401509296181,
+        "Actual": 0.19703060583820034,
+        "Diff": -0.08751659074523853,
+        "AbsDiff": 0.08751659074523853
+      },
+      {
+        "Feature": "Region_R42_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.10951401509296181,
+        "Actual": 0.19703060583820034,
+        "Diff": -0.08751659074523853,
+        "AbsDiff": 0.08751659074523853
+      },
+      {
+        "Feature": "Region_R26_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.10277725982892695,
+        "Actual": 0.18487764697552853,
+        "Diff": -0.08210038714660157,
+        "AbsDiff": 0.08210038714660157
+      },
+      {
+        "Feature": "Region_R26_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.10277725982892695,
+        "Actual": 0.18487764697552853,
+        "Diff": -0.08210038714660157,
+        "AbsDiff": 0.08210038714660157
+      },
+      {
+        "Feature": "Region_R41_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.07557291332144131,
+        "Actual": 0.1575676032202217,
+        "Diff": -0.08199468989878039,
+        "AbsDiff": 0.08199468989878039
+      },
+      {
+        "Feature": "Region_R41_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.07557291332144131,
+        "Actual": 0.1575676032202217,
+        "Diff": -0.08199468989878039,
+        "AbsDiff": 0.08199468989878039
+      },
+      {
+        "Feature": "VehAge",
+        "Value": 1.6704273672375856,
+        "Cur_Pred": 0.075642491421721,
+        "Actual": 0.14919235548830267,
+        "Diff": -0.07354986406658168,
+        "AbsDiff": 0.07354986406658168
+      },
+      {
+        "Feature": "VehPower",
+        "Value": 1.242007668051376,
+        "Cur_Pred": 0.10323913788819107,
+        "Actual": 0.17628465691618564,
+        "Diff": -0.07304551902799457,
+        "AbsDiff": 0.07304551902799457
+      },
+      {
+        "Feature": "VehBrand_B12_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.12773005036189383,
+        "Actual": 0.19869541667327176,
+        "Diff": -0.07096536631137793,
+        "AbsDiff": 0.07096536631137793
+      },
+      {
+        "Feature": "VehBrand_B12_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.12773005036189383,
+        "Actual": 0.19869541667327176,
+        "Diff": -0.07096536631137793,
+        "AbsDiff": 0.07096536631137793
+      },
+      {
+        "Feature": "VehPower",
+        "Value": 4.168919486339321,
+        "Cur_Pred": 0.13913419409578026,
+        "Actual": 0.06829561237973411,
+        "Diff": 0.07083858171604615,
+        "AbsDiff": 0.07083858171604615
+      },
+      {
+        "Feature": "Region_R22_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.11885476336782771,
+        "Actual": 0.18637025955315942,
+        "Diff": -0.0675154961853317,
+        "AbsDiff": 0.0675154961853317
+      },
+      {
+        "Feature": "Region_R22_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.11885476336782771,
+        "Actual": 0.18637025955315942,
+        "Diff": -0.0675154961853317,
+        "AbsDiff": 0.0675154961853317
+      },
+      {
+        "Feature": "VehAge",
+        "Value": 0.0040352796678508,
+        "Cur_Pred": 0.10079726499805042,
+        "Actual": 0.16490324047668053,
+        "Diff": -0.06410597547863012,
+        "AbsDiff": 0.06410597547863012
+      },
+      {
+        "Feature": "Region_R11_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.1314485870877735,
+        "Actual": 0.19333130233486961,
+        "Diff": -0.061882715247096126,
+        "AbsDiff": 0.061882715247096126
+      },
+      {
+        "Feature": "Region_R11_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.1314485870877735,
+        "Actual": 0.19333130233486961,
+        "Diff": -0.061882715247096126,
+        "AbsDiff": 0.061882715247096126
+      },
+      {
+        "Feature": "Region_R72_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.09405972094725404,
+        "Actual": 0.15095020372470105,
+        "Diff": -0.056890482777447016,
+        "AbsDiff": 0.056890482777447016
+      },
+      {
+        "Feature": "Region_R72_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.09405972094725404,
+        "Actual": 0.15095020372470105,
+        "Diff": -0.056890482777447016,
+        "AbsDiff": 0.056890482777447016
+      },
+      {
+        "Feature": "VehPower",
+        "Value": 1.7298263044327,
+        "Cur_Pred": 0.10792694212215996,
+        "Actual": 0.1646920221371959,
+        "Diff": -0.056765080015035926,
+        "AbsDiff": 0.056765080015035926
+      },
+      {
+        "Feature": "VehPower",
+        "Value": -0.7092668774739205,
+        "Cur_Pred": 0.10390899731296399,
+        "Actual": 0.15993571758235056,
+        "Diff": -0.05602672026938657,
+        "AbsDiff": 0.05602672026938657
+      },
+      {
+        "Feature": "VehAge",
+        "Value": 1.4852726908409484,
+        "Cur_Pred": 0.08101272135005545,
+        "Actual": 0.13647470404103082,
+        "Diff": -0.05546198269097537,
+        "AbsDiff": 0.05546198269097537
+      },
+      {
+        "Feature": "VehGas_Diesel_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10559405627399165,
+        "Actual": 0.15836538921180504,
+        "Diff": -0.05277133293781339,
+        "AbsDiff": 0.05277133293781339
+      },
+      {
+        "Feature": "VehGas_Diesel_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10559405627399165,
+        "Actual": 0.15836538921180504,
+        "Diff": -0.05277133293781339,
+        "AbsDiff": 0.05277133293781339
+      },
+      {
+        "Feature": "VehGas_Regular_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.10559405627399165,
+        "Actual": 0.15836538921180504,
+        "Diff": -0.05277133293781339,
+        "AbsDiff": 0.05277133293781339
+      },
+      {
+        "Feature": "VehGas_Regular_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.10559405627399165,
+        "Actual": 0.15836538921180504,
+        "Diff": -0.05277133293781339,
+        "AbsDiff": 0.05277133293781339
+      },
+      {
+        "Feature": "Region_R25_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.09769180992887193,
+        "Actual": 0.14920359286484006,
+        "Diff": -0.05151178293596813,
+        "AbsDiff": 0.05151178293596813
+      },
+      {
+        "Feature": "Region_R25_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.09769180992887193,
+        "Actual": 0.14920359286484006,
+        "Diff": -0.05151178293596813,
+        "AbsDiff": 0.05151178293596813
+      },
+      {
+        "Feature": "VehBrand_B13_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.09567503888009526,
+        "Actual": 0.14647522208414968,
+        "Diff": -0.05080018320405441,
+        "AbsDiff": 0.05080018320405441
+      },
+      {
+        "Feature": "VehBrand_B13_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.09567503888009526,
+        "Actual": 0.14647522208414968,
+        "Diff": -0.05080018320405441,
+        "AbsDiff": 0.05080018320405441
+      },
+      {
+        "Feature": "Area_B_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.08912561914502758,
+        "Actual": 0.13690831966980738,
+        "Diff": -0.0477827005247798,
+        "AbsDiff": 0.0477827005247798
+      },
+      {
+        "Feature": "Area_B_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.08912561914502758,
+        "Actual": 0.13690831966980738,
+        "Diff": -0.0477827005247798,
+        "AbsDiff": 0.0477827005247798
+      },
+      {
+        "Feature": "VehPower",
+        "Value": 2.705463577195348,
+        "Cur_Pred": 0.11487233789595606,
+        "Actual": 0.06802893233367058,
+        "Diff": 0.04684340556228549,
+        "AbsDiff": 0.04684340556228549
+      },
+      {
+        "Feature": "Region_R52_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.09546647380588283,
+        "Actual": 0.1387468802402575,
+        "Diff": -0.04328040643437467,
+        "AbsDiff": 0.04328040643437467
+      },
+      {
+        "Feature": "Region_R52_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.09546647380588283,
+        "Actual": 0.1387468802402575,
+        "Diff": -0.04328040643437467,
+        "AbsDiff": 0.04328040643437467
+      },
+      {
+        "Feature": "VehAge",
+        "Value": 0.7446539852543996,
+        "Cur_Pred": 0.08822872296730842,
+        "Actual": 0.13092258583749877,
+        "Diff": -0.04269386287019035,
+        "AbsDiff": 0.04269386287019035
+      },
+      {
+        "Feature": "VehBrand_B1_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10655335178394623,
+        "Actual": 0.14865327939488565,
+        "Diff": -0.04209992761093942,
+        "AbsDiff": 0.04209992761093942
+      },
+      {
+        "Feature": "VehBrand_B1_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10655335178394623,
+        "Actual": 0.14865327939488565,
+        "Diff": -0.04209992761093942,
+        "AbsDiff": 0.04209992761093942
+      },
+      {
+        "Feature": "VehBrand_B2_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10652460829628144,
+        "Actual": 0.14845074456664448,
+        "Diff": -0.04192613627036304,
+        "AbsDiff": 0.04192613627036304
+      },
+      {
+        "Feature": "VehBrand_B2_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10652460829628144,
+        "Actual": 0.14845074456664448,
+        "Diff": -0.04192613627036304,
+        "AbsDiff": 0.04192613627036304
+      },
+      {
+        "Feature": "Region_R91_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.1000674310957068,
+        "Actual": 0.14157523713510403,
+        "Diff": -0.04150780603939723,
+        "AbsDiff": 0.04150780603939723
+      },
+      {
+        "Feature": "Region_R91_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.1000674310957068,
+        "Actual": 0.14157523713510403,
+        "Diff": -0.04150780603939723,
+        "AbsDiff": 0.04150780603939723
+      },
+      {
+        "Feature": "VehBrand_B11_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.10614016438304363,
+        "Actual": 0.1470199295407686,
+        "Diff": -0.04087976515772496,
+        "AbsDiff": 0.04087976515772496
+      },
+      {
+        "Feature": "VehBrand_B11_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.10614016438304363,
+        "Actual": 0.1470199295407686,
+        "Diff": -0.04087976515772496,
+        "AbsDiff": 0.04087976515772496
+      },
+      {
+        "Feature": "Area_C_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.09570692019002441,
+        "Actual": 0.13642600257841656,
+        "Diff": -0.04071908238839214,
+        "AbsDiff": 0.04071908238839214
+      },
+      {
+        "Feature": "Area_C_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.09570692019002441,
+        "Actual": 0.13642600257841656,
+        "Diff": -0.04071908238839214,
+        "AbsDiff": 0.04071908238839214
+      },
+      {
+        "Feature": "Area_D_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10097419431883925,
+        "Actual": 0.141418592634946,
+        "Diff": -0.040444398316106744,
+        "AbsDiff": 0.040444398316106744
+      },
+      {
+        "Feature": "Area_D_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10097419431883925,
+        "Actual": 0.141418592634946,
+        "Diff": -0.040444398316106744,
+        "AbsDiff": 0.040444398316106744
+      },
+      {
+        "Feature": "Area_E_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.12237467327669004,
+        "Actual": 0.1628012544655413,
+        "Diff": -0.04042658118885127,
+        "AbsDiff": 0.04042658118885127
+      },
+      {
+        "Feature": "Area_E_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.12237467327669004,
+        "Actual": 0.1628012544655413,
+        "Diff": -0.04042658118885127,
+        "AbsDiff": 0.04042658118885127
+      },
+      {
+        "Feature": "Region_R24_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10640326952586318,
+        "Actual": 0.146773850660327,
+        "Diff": -0.04037058113446382,
+        "AbsDiff": 0.04037058113446382
+      },
+      {
+        "Feature": "Region_R24_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10640326952586318,
+        "Actual": 0.146773850660327,
+        "Diff": -0.04037058113446382,
+        "AbsDiff": 0.04037058113446382
+      },
+      {
+        "Feature": "Region_R82_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.1018042234088672,
+        "Actual": 0.1421383559023836,
+        "Diff": -0.0403341324935164,
+        "AbsDiff": 0.0403341324935164
+      },
+      {
+        "Feature": "Region_R82_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.1018042234088672,
+        "Actual": 0.1421383559023836,
+        "Diff": -0.0403341324935164,
+        "AbsDiff": 0.0403341324935164
+      },
+      {
+        "Feature": "VehBrand_B6_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.09777951275499522,
+        "Actual": 0.13796533259872007,
+        "Diff": -0.04018581984372485,
+        "AbsDiff": 0.04018581984372485
+      },
+      {
+        "Feature": "VehBrand_B6_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.09777951275499522,
+        "Actual": 0.13796533259872007,
+        "Diff": -0.04018581984372485,
+        "AbsDiff": 0.04018581984372485
+      },
+      {
+        "Feature": "Region_R53_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10368285811670894,
+        "Actual": 0.14209033183609496,
+        "Diff": -0.03840747371938602,
+        "AbsDiff": 0.03840747371938602
+      },
+      {
+        "Feature": "Region_R53_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10368285811670894,
+        "Actual": 0.14209033183609496,
+        "Diff": -0.03840747371938602,
+        "AbsDiff": 0.03840747371938602
+      },
+      {
+        "Feature": "Region_R54_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.09068447489168807,
+        "Actual": 0.12907459401637508,
+        "Diff": -0.03839011912468701,
+        "AbsDiff": 0.03839011912468701
+      },
+      {
+        "Feature": "Region_R54_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.09068447489168807,
+        "Actual": 0.12907459401637508,
+        "Diff": -0.03839011912468701,
+        "AbsDiff": 0.03839011912468701
+      },
+      {
+        "Feature": "Region_R31_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10335031043275852,
+        "Actual": 0.141645036354333,
+        "Diff": -0.038294725921574485,
+        "AbsDiff": 0.038294725921574485
+      },
+      {
+        "Feature": "Region_R31_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10335031043275852,
+        "Actual": 0.141645036354333,
+        "Diff": -0.038294725921574485,
+        "AbsDiff": 0.038294725921574485
+      },
+      {
+        "Feature": "Region_R93_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.10813733713736146,
+        "Actual": 0.14639907833206825,
+        "Diff": -0.038261741194706794,
+        "AbsDiff": 0.038261741194706794
+      },
+      {
+        "Feature": "Region_R93_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.10813733713736146,
+        "Actual": 0.14639907833206825,
+        "Diff": -0.038261741194706794,
+        "AbsDiff": 0.038261741194706794
+      },
+      {
+        "Feature": "VehBrand_B10_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10370310080773576,
+        "Actual": 0.1414753353490372,
+        "Diff": -0.037772234541301436,
+        "AbsDiff": 0.037772234541301436
+      },
+      {
+        "Feature": "VehBrand_B10_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10370310080773576,
+        "Actual": 0.1414753353490372,
+        "Diff": -0.037772234541301436,
+        "AbsDiff": 0.037772234541301436
+      },
+      {
+        "Feature": "VehBrand_B4_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10352280121450459,
+        "Actual": 0.1410604764205077,
+        "Diff": -0.03753767520600311,
+        "AbsDiff": 0.03753767520600311
+      },
+      {
+        "Feature": "VehBrand_B4_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10352280121450459,
+        "Actual": 0.1410604764205077,
+        "Diff": -0.03753767520600311,
+        "AbsDiff": 0.03753767520600311
+      },
+      {
+        "Feature": "VehBrand_B14_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10346189509851682,
+        "Actual": 0.14099009019450817,
+        "Diff": -0.037528195095991354,
+        "AbsDiff": 0.037528195095991354
+      },
+      {
+        "Feature": "VehBrand_B14_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10346189509851682,
+        "Actual": 0.14099009019450817,
+        "Diff": -0.037528195095991354,
+        "AbsDiff": 0.037528195095991354
+      },
+      {
+        "Feature": "Region_R73_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10358242468203868,
+        "Actual": 0.1411081285032735,
+        "Diff": -0.037525703821234824,
+        "AbsDiff": 0.037525703821234824
+      },
+      {
+        "Feature": "Region_R73_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10358242468203868,
+        "Actual": 0.1411081285032735,
+        "Diff": -0.037525703821234824,
+        "AbsDiff": 0.037525703821234824
+      },
+      {
+        "Feature": "Area_A_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10683458425485752,
+        "Actual": 0.1442817673848873,
+        "Diff": -0.037447183130029774,
+        "AbsDiff": 0.037447183130029774
+      },
+      {
+        "Feature": "Area_A_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10683458425485752,
+        "Actual": 0.1442817673848873,
+        "Diff": -0.037447183130029774,
+        "AbsDiff": 0.037447183130029774
+      },
+      {
+        "Feature": "Region_R23_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10344913939447922,
+        "Actual": 0.14080215104109425,
+        "Diff": -0.03735301164661503,
+        "AbsDiff": 0.03735301164661503
+      },
+      {
+        "Feature": "Region_R23_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10344913939447922,
+        "Actual": 0.14080215104109425,
+        "Diff": -0.03735301164661503,
+        "AbsDiff": 0.03735301164661503
+      },
+      {
+        "Feature": "Region_R74_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.1033205760983681,
+        "Actual": 0.14065109188612626,
+        "Diff": -0.03733051578775816,
+        "AbsDiff": 0.03733051578775816
+      },
+      {
+        "Feature": "Region_R74_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.1033205760983681,
+        "Actual": 0.14065109188612626,
+        "Diff": -0.03733051578775816,
+        "AbsDiff": 0.03733051578775816
+      },
+      {
+        "Feature": "VehBrand_B3_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.1035014234169708,
+        "Actual": 0.1407891359939291,
+        "Diff": -0.03728771257695829,
+        "AbsDiff": 0.03728771257695829
+      },
+      {
+        "Feature": "VehBrand_B3_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.1035014234169708,
+        "Actual": 0.1407891359939291,
+        "Diff": -0.03728771257695829,
+        "AbsDiff": 0.03728771257695829
+      },
+      {
+        "Feature": "VehBrand_B5_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10334473798503159,
+        "Actual": 0.14062382933863396,
+        "Diff": -0.03727909135360237,
+        "AbsDiff": 0.03727909135360237
+      },
+      {
+        "Feature": "VehBrand_B5_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10334473798503159,
+        "Actual": 0.14062382933863396,
+        "Diff": -0.03727909135360237,
+        "AbsDiff": 0.03727909135360237
+      },
+      {
+        "Feature": "Area_F_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10226402670899438,
+        "Actual": 0.13954089107863465,
+        "Diff": -0.03727686436964027,
+        "AbsDiff": 0.03727686436964027
+      },
+      {
+        "Feature": "Area_F_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10226402670899438,
+        "Actual": 0.13954089107863465,
+        "Diff": -0.03727686436964027,
+        "AbsDiff": 0.03727686436964027
+      },
+      {
+        "Feature": "Region_R83_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10344327845080842,
+        "Actual": 0.14066617115584595,
+        "Diff": -0.037222892705037536,
+        "AbsDiff": 0.037222892705037536
+      },
+      {
+        "Feature": "Region_R83_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10344327845080842,
+        "Actual": 0.14066617115584595,
+        "Diff": -0.037222892705037536,
+        "AbsDiff": 0.037222892705037536
+      },
+      {
+        "Feature": "Region_R54_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.1036983421553249,
+        "Actual": 0.14084921704544598,
+        "Diff": -0.037150874890121074,
+        "AbsDiff": 0.037150874890121074
+      },
+      {
+        "Feature": "Region_R54_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.1036983421553249,
+        "Actual": 0.14084921704544598,
+        "Diff": -0.037150874890121074,
+        "AbsDiff": 0.037150874890121074
+      },
+      {
+        "Feature": "VehBrand_B11_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10327423269904124,
+        "Actual": 0.1403841030589834,
+        "Diff": -0.037109870359942176,
+        "AbsDiff": 0.037109870359942176
+      },
+      {
+        "Feature": "VehBrand_B11_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10327423269904124,
+        "Actual": 0.1403841030589834,
+        "Diff": -0.037109870359942176,
+        "AbsDiff": 0.037109870359942176
+      },
+      {
+        "Feature": "VehBrand_B6_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10356771998738869,
+        "Actual": 0.1406260856413771,
+        "Diff": -0.037058365653988415,
+        "AbsDiff": 0.037058365653988415
+      },
+      {
+        "Feature": "VehBrand_B6_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10356771998738869,
+        "Actual": 0.1406260856413771,
+        "Diff": -0.037058365653988415,
+        "AbsDiff": 0.037058365653988415
+      },
+      {
+        "Feature": "Region_R93_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10268972540035992,
+        "Actual": 0.13973169632738566,
+        "Diff": -0.03704197092702574,
+        "AbsDiff": 0.03704197092702574
+      },
+      {
+        "Feature": "Region_R93_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10268972540035992,
+        "Actual": 0.13973169632738566,
+        "Diff": -0.03704197092702574,
+        "AbsDiff": 0.03704197092702574
+      },
+      {
+        "Feature": "Region_R42_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10331097942599513,
+        "Actual": 0.14032617835549527,
+        "Diff": -0.03701519892950014,
+        "AbsDiff": 0.03701519892950014
+      },
+      {
+        "Feature": "Region_R42_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10331097942599513,
+        "Actual": 0.14032617835549527,
+        "Diff": -0.03701519892950014,
+        "AbsDiff": 0.03701519892950014
+      },
+      {
+        "Feature": "Region_R25_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10342588837141564,
+        "Actual": 0.14037299886161542,
+        "Diff": -0.036947110490199775,
+        "AbsDiff": 0.036947110490199775
+      },
+      {
+        "Feature": "Region_R25_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10342588837141564,
+        "Actual": 0.14037299886161542,
+        "Diff": -0.036947110490199775,
+        "AbsDiff": 0.036947110490199775
+      },
+      {
+        "Feature": "VehBrand_B13_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.1034684837424491,
+        "Actual": 0.1404114494688333,
+        "Diff": -0.0369429657263842,
+        "AbsDiff": 0.0369429657263842
+      },
+      {
+        "Feature": "VehBrand_B13_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.1034684837424491,
+        "Actual": 0.1404114494688333,
+        "Diff": -0.0369429657263842,
+        "AbsDiff": 0.0369429657263842
+      },
+      {
+        "Feature": "Region_R91_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10351890482924302,
+        "Actual": 0.14045712568035668,
+        "Diff": -0.03693822085111366,
+        "AbsDiff": 0.03693822085111366
+      },
+      {
+        "Feature": "Region_R91_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10351890482924302,
+        "Actual": 0.14045712568035668,
+        "Diff": -0.03693822085111366,
+        "AbsDiff": 0.03693822085111366
+      },
+      {
+        "Feature": "Region_R52_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10379073299924253,
+        "Actual": 0.14062099067033465,
+        "Diff": -0.03683025767109212,
+        "AbsDiff": 0.03683025767109212
+      },
+      {
+        "Feature": "Region_R52_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10379073299924253,
+        "Actual": 0.14062099067033465,
+        "Diff": -0.03683025767109212,
+        "AbsDiff": 0.03683025767109212
+      },
+      {
+        "Feature": "Region_R22_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10314705720615978,
+        "Actual": 0.13997160455539087,
+        "Diff": -0.03682454734923109,
+        "AbsDiff": 0.03682454734923109
+      },
+      {
+        "Feature": "Region_R22_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10314705720615978,
+        "Actual": 0.13997160455539087,
+        "Diff": -0.03682454734923109,
+        "AbsDiff": 0.03682454734923109
+      },
+      {
+        "Feature": "Region_R43_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10333029209842473,
+        "Actual": 0.14011970338704519,
+        "Diff": -0.036789411288620455,
+        "AbsDiff": 0.036789411288620455
+      },
+      {
+        "Feature": "Region_R43_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10333029209842473,
+        "Actual": 0.14011970338704519,
+        "Diff": -0.036789411288620455,
+        "AbsDiff": 0.036789411288620455
+      },
+      {
+        "Feature": "Region_R94_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10322523698160808,
+        "Actual": 0.13982932158596417,
+        "Diff": -0.03660408460435609,
+        "AbsDiff": 0.03660408460435609
+      },
+      {
+        "Feature": "Region_R94_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10322523698160808,
+        "Actual": 0.13982932158596417,
+        "Diff": -0.03660408460435609,
+        "AbsDiff": 0.03660408460435609
+      },
+      {
+        "Feature": "Region_R21_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10327594784724625,
+        "Actual": 0.13984281418970232,
+        "Diff": -0.03656686634245607,
+        "AbsDiff": 0.03656686634245607
+      },
+      {
+        "Feature": "Region_R21_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10327594784724625,
+        "Actual": 0.13984281418970232,
+        "Diff": -0.03656686634245607,
+        "AbsDiff": 0.03656686634245607
+      },
+      {
+        "Feature": "Region_R26_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10334043559472035,
+        "Actual": 0.13983746365943708,
+        "Diff": -0.03649702806471673,
+        "AbsDiff": 0.03649702806471673
+      },
+      {
+        "Feature": "Region_R26_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10334043559472035,
+        "Actual": 0.13983746365943708,
+        "Diff": -0.03649702806471673,
+        "AbsDiff": 0.03649702806471673
+      },
+      {
+        "Feature": "Area_E_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.09852525281938578,
+        "Actual": 0.1348929884641042,
+        "Diff": -0.036367735644718416,
+        "AbsDiff": 0.036367735644718416
+      },
+      {
+        "Feature": "Area_E_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.09852525281938578,
+        "Actual": 0.1348929884641042,
+        "Diff": -0.036367735644718416,
+        "AbsDiff": 0.036367735644718416
+      },
+      {
+        "Feature": "Region_R41_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10386351056153109,
+        "Actual": 0.14019119366658053,
+        "Diff": -0.03632768310504944,
+        "AbsDiff": 0.03632768310504944
+      },
+      {
+        "Feature": "Region_R41_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10386351056153109,
+        "Actual": 0.14019119366658053,
+        "Diff": -0.03632768310504944,
+        "AbsDiff": 0.03632768310504944
+      },
+      {
+        "Feature": "Region_R72_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10378625181355462,
+        "Actual": 0.14000652221794233,
+        "Diff": -0.0362202704043877,
+        "AbsDiff": 0.0362202704043877
+      },
+      {
+        "Feature": "Region_R72_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10378625181355462,
+        "Actual": 0.14000652221794233,
+        "Diff": -0.0362202704043877,
+        "AbsDiff": 0.0362202704043877
+      },
+      {
+        "Feature": "VehBrand_B3_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.10132119417993836,
+        "Actual": 0.1372975518718365,
+        "Diff": -0.03597635769189815,
+        "AbsDiff": 0.03597635769189815
+      },
+      {
+        "Feature": "VehBrand_B3_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.10132119417993836,
+        "Actual": 0.1372975518718365,
+        "Diff": -0.03597635769189815,
+        "AbsDiff": 0.03597635769189815
+      },
+      {
+        "Feature": "Area_B_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10511871680783491,
+        "Actual": 0.140971662829861,
+        "Diff": -0.0358529460220261,
+        "AbsDiff": 0.0358529460220261
+      },
+      {
+        "Feature": "Area_B_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10511871680783491,
+        "Actual": 0.140971662829861,
+        "Diff": -0.0358529460220261,
+        "AbsDiff": 0.0358529460220261
+      },
+      {
+        "Feature": "Area_C_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.1063179566722095,
+        "Actual": 0.14212004288733307,
+        "Diff": -0.03580208621512357,
+        "AbsDiff": 0.03580208621512357
+      },
+      {
+        "Feature": "Area_C_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.1063179566722095,
+        "Actual": 0.14212004288733307,
+        "Diff": -0.03580208621512357,
+        "AbsDiff": 0.03580208621512357
+      },
+      {
+        "Feature": "Area_A_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.08385790474259039,
+        "Actual": 0.11959024905310536,
+        "Diff": -0.035732344310514974,
+        "AbsDiff": 0.035732344310514974
+      },
+      {
+        "Feature": "Area_A_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.08385790474259039,
+        "Actual": 0.11959024905310536,
+        "Diff": -0.035732344310514974,
+        "AbsDiff": 0.035732344310514974
+      },
+      {
+        "Feature": "VehBrand_B5_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.10309754110144062,
+        "Actual": 0.1385754325082245,
+        "Diff": -0.03547789140678387,
+        "AbsDiff": 0.03547789140678387
+      },
+      {
+        "Feature": "VehBrand_B5_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.10309754110144062,
+        "Actual": 0.1385754325082245,
+        "Diff": -0.03547789140678387,
+        "AbsDiff": 0.03547789140678387
+      },
+      {
+        "Feature": "Region_R11_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10009027972481786,
+        "Actual": 0.13442866383774002,
+        "Diff": -0.03433838411292216,
+        "AbsDiff": 0.03433838411292216
+      },
+      {
+        "Feature": "Region_R11_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10009027972481786,
+        "Actual": 0.13442866383774002,
+        "Diff": -0.03433838411292216,
+        "AbsDiff": 0.03433838411292216
+      },
+      {
+        "Feature": "Area_F_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.1424672378615868,
+        "Actual": 0.17631455117815903,
+        "Diff": -0.03384731331657223,
+        "AbsDiff": 0.03384731331657223
+      },
+      {
+        "Feature": "Area_F_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.1424672378615868,
+        "Actual": 0.17631455117815903,
+        "Diff": -0.03384731331657223,
+        "AbsDiff": 0.03384731331657223
+      },
+      {
+        "Feature": "Region_R83_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.08837413012215542,
+        "Actual": 0.12057260238172117,
+        "Diff": -0.03219847225956575,
+        "AbsDiff": 0.03219847225956575
+      },
+      {
+        "Feature": "Region_R83_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.08837413012215542,
+        "Actual": 0.12057260238172117,
+        "Diff": -0.03219847225956575,
+        "AbsDiff": 0.03219847225956575
+      },
+      {
+        "Feature": "VehBrand_B4_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.09851643922735437,
+        "Actual": 0.12682389479171333,
+        "Diff": -0.028307455564358958,
+        "AbsDiff": 0.028307455564358958
+      },
+      {
+        "Feature": "VehBrand_B4_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.09851643922735437,
+        "Actual": 0.12682389479171333,
+        "Diff": -0.028307455564358958,
+        "AbsDiff": 0.028307455564358958
+      },
+      {
+        "Feature": "Region_R24_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.09335137618938441,
+        "Actual": 0.12018784227933914,
+        "Diff": -0.026836466089954727,
+        "AbsDiff": 0.026836466089954727
+      },
+      {
+        "Feature": "Region_R24_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.09335137618938441,
+        "Actual": 0.12018784227933914,
+        "Diff": -0.026836466089954727,
+        "AbsDiff": 0.026836466089954727
+      },
+      {
+        "Feature": "VehBrand_B12_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.09530538941030678,
+        "Actual": 0.12137827796676932,
+        "Diff": -0.026072888556462545,
+        "AbsDiff": 0.026072888556462545
+      },
+      {
+        "Feature": "VehBrand_B12_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.09530538941030678,
+        "Actual": 0.12137827796676932,
+        "Diff": -0.026072888556462545,
+        "AbsDiff": 0.026072888556462545
+      },
+      {
+        "Feature": "Area_D_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.11139186776316101,
+        "Actual": 0.13743797620732934,
+        "Diff": -0.026046108444168325,
+        "AbsDiff": 0.026046108444168325
+      },
+      {
+        "Feature": "Area_D_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.11139186776316101,
+        "Actual": 0.13743797620732934,
+        "Diff": -0.026046108444168325,
+        "AbsDiff": 0.026046108444168325
+      },
+      {
+        "Feature": "Region_R73_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0938717122277618,
+        "Actual": 0.11821935204465732,
+        "Diff": -0.024347639816895514,
+        "AbsDiff": 0.024347639816895514
+      },
+      {
+        "Feature": "Region_R73_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0938717122277618,
+        "Actual": 0.11821935204465732,
+        "Diff": -0.024347639816895514,
+        "AbsDiff": 0.024347639816895514
+      },
+      {
+        "Feature": "Region_R23_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.09409969584692243,
+        "Actual": 0.1181120497052802,
+        "Diff": -0.024012353858357774,
+        "AbsDiff": 0.024012353858357774
+      },
+      {
+        "Feature": "Region_R23_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.09409969584692243,
+        "Actual": 0.1181120497052802,
+        "Diff": -0.024012353858357774,
+        "AbsDiff": 0.024012353858357774
+      },
+      {
+        "Feature": "VehBrand_B1_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.09320990774667666,
+        "Actual": 0.11495489887199448,
+        "Diff": -0.021744991125317817,
+        "AbsDiff": 0.021744991125317817
+      },
+      {
+        "Feature": "VehBrand_B1_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.09320990774667666,
+        "Actual": 0.11495489887199448,
+        "Diff": -0.021744991125317817,
+        "AbsDiff": 0.021744991125317817
+      },
+      {
+        "Feature": "VehBrand_B2_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.09281008919494987,
+        "Actual": 0.11437341788425731,
+        "Diff": -0.021563328689307437,
+        "AbsDiff": 0.021563328689307437
+      },
+      {
+        "Feature": "VehBrand_B2_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.09281008919494987,
+        "Actual": 0.11437341788425731,
+        "Diff": -0.021563328689307437,
+        "AbsDiff": 0.021563328689307437
+      },
+      {
+        "Feature": "VehGas_Regular_True",
+        "Value": 0.0,
+        "Cur_Pred": 0.10098094627398789,
+        "Actual": 0.12196893647522013,
+        "Diff": -0.020987990201232237,
+        "AbsDiff": 0.020987990201232237
+      },
+      {
+        "Feature": "VehGas_Regular_False",
+        "Value": 1.0,
+        "Cur_Pred": 0.10098094627398789,
+        "Actual": 0.12196893647522013,
+        "Diff": -0.020987990201232237,
+        "AbsDiff": 0.020987990201232237
+      },
+      {
+        "Feature": "VehGas_Diesel_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.10098094627398789,
+        "Actual": 0.12196893647522013,
+        "Diff": -0.020987990201232237,
+        "AbsDiff": 0.020987990201232237
+      },
+      {
+        "Feature": "VehGas_Diesel_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.10098094627398789,
+        "Actual": 0.12196893647522013,
+        "Diff": -0.020987990201232237,
+        "AbsDiff": 0.020987990201232237
+      },
+      {
+        "Feature": "VehBrand_B14_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.0814321719470646,
+        "Actual": 0.06091699865647831,
+        "Diff": 0.020515173290586296,
+        "AbsDiff": 0.020515173290586296
+      },
+      {
+        "Feature": "VehBrand_B14_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.0814321719470646,
+        "Actual": 0.06091699865647831,
+        "Diff": 0.020515173290586296,
+        "AbsDiff": 0.020515173290586296
+      },
+      {
+        "Feature": "Region_R53_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.09805655785186103,
+        "Actual": 0.11687684864903439,
+        "Diff": -0.01882029079717336,
+        "AbsDiff": 0.01882029079717336
+      },
+      {
+        "Feature": "Region_R53_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.09805655785186103,
+        "Actual": 0.11687684864903439,
+        "Diff": -0.01882029079717336,
+        "AbsDiff": 0.01882029079717336
+      },
+      {
+        "Feature": "Region_R74_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.10484799988309486,
+        "Actual": 0.12270570833394037,
+        "Diff": -0.017857708450845514,
+        "AbsDiff": 0.017857708450845514
+      },
+      {
+        "Feature": "Region_R74_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.10484799988309486,
+        "Actual": 0.12270570833394037,
+        "Diff": -0.017857708450845514,
+        "AbsDiff": 0.017857708450845514
+      },
+      {
+        "Feature": "VehBrand_B10_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.08957277023106931,
+        "Actual": 0.10501838499384909,
+        "Diff": -0.01544561476277978,
+        "AbsDiff": 0.01544561476277978
+      },
+      {
+        "Feature": "VehBrand_B10_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.08957277023106931,
+        "Actual": 0.10501838499384909,
+        "Diff": -0.01544561476277978,
+        "AbsDiff": 0.01544561476277978
+      },
+      {
+        "Feature": "Region_R82_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.11399315805714243,
+        "Actual": 0.1292077901056569,
+        "Diff": -0.015214632048514462,
+        "AbsDiff": 0.015214632048514462
+      },
+      {
+        "Feature": "Region_R82_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.11399315805714243,
+        "Actual": 0.1292077901056569,
+        "Diff": -0.015214632048514462,
+        "AbsDiff": 0.015214632048514462
+      },
+      {
+        "Feature": "Region_R31_True",
+        "Value": 1.0,
+        "Cur_Pred": 0.10289230758349859,
+        "Actual": 0.11355393156063325,
+        "Diff": -0.01066162397713466,
+        "AbsDiff": 0.01066162397713466
+      },
+      {
+        "Feature": "Region_R31_False",
+        "Value": 0.0,
+        "Cur_Pred": 0.10289230758349859,
+        "Actual": 0.11355393156063325,
+        "Diff": -0.01066162397713466,
+        "AbsDiff": 0.01066162397713466
+      }
+    ]
+  },
+  "evaluation": "* **Model Goodness-of-Fit and Calibration Quality:**\n  * The model's R-squared value is 0.002, indicating a very low goodness-of-fit. This suggests that the model is not able to explain a significant portion of the variability in the data.\n  * The Mean Absolute Error (MAE) is 0.232, indicating a moderate level of error in the model's predictions.\n  * The Root Mean Squared Error (RMSE) is 0.887, which is relatively high. This suggests that the model's predictions are not very accurate.\n  * The Poisson Deviance is 0.948, which is close to 1, indicating that the model is not a good fit for the data.\n* **Overfitting or Underfitting:**\n  * The low R-squared value and high RMSE suggest that the model is underfitting the data. The model is not able to capture the underlying patterns in the data, resulting in poor predictions.\n  * The low Poisson Deviance suggests that the model is not complex enough to capture the variability in the data.\n* **Most Influential Variables:**\n  * The variables with the largest absolute differences between actual and predicted values are DrivAge and VehBrand. This suggests that these variables are most influential in determining claim frequency.\n  * DrivAge is the most influential variable, with a mean absolute difference of 9.96. This suggests that the model is not accurately capturing the relationship between DrivAge and claim frequency.\n* **Comparison of Actual vs Predicted Values:**\n  * The model is consistently underestimating claim frequency for most features. This suggests that the model is not accurately capturing the underlying patterns in the data.\n  * The model is most inaccurate for features with large absolute differences between actual and predicted values. These features are likely the most influential variables, such as DrivAge and VehBrand.",
+  "impact_analysis": "* **Model Performance Comparison:**\nThe comparison of the current model's predictions with the previous model's predictions reveals both similarities and differences.\n* **Similarities:**\n\t+ The current model and the previous model show similar performance for features present in both models (Present_in_Both), with an average absolute difference (AbsDiff) of 0.0143.\n\t+ The current model's standard deviation (StdPrediction_cur) is close to the previous model's standard deviation (StdPrediction_prev) for most features, indicating similar variability in predictions.\n* **Differences:**\n\t+ The current model outperforms the previous model for some features, such as VehPower (Absolute difference of -0.0191), indicating an improvement in predictions.\n\t+ The current model underperforms the previous model for some features, such as VehAge (Absolute difference of 0.0228), indicating a potential decline in predictions.\n* **Feature Changes:**\n\t+ The current model introduces new features (New_in_Current) that were not present in the previous model, which may contribute to the differences in performance.\n\t+ The previous model has removed features (Removed_in_Current) that are not present in the current model, which may also contribute to the differences in performance.\n* **Count and Relative Count Changes:**\n\t+ The current model has a significant increase in count for some features (CountChange), which may indicate a shift in the data distribution.\n\t+ The relative count change (RelativeCountChange) is mostly 0, indicating that the count changes are not significant in relation to the total count.\n* **Future Directions:**\n\t+ Investigate the reasons behind the underperformance of the current model for certain features, such as VehAge.\n\t+ Analyze the impact of new features introduced in the current model on the overall performance.\n\t+ Consider retraining the model with a different set of features or adjusting the model architecture to improve performance.",
+  "consistency_snapshot": {
+    "RMSE": 0.8867900431238354,
+    "MAE": 0.23235866066448366,
+    "R2": 0.002189701046953818,
+    "Poisson_Deviance": 0.947765051709296,
+    "Gini_score": null,
+    "Feature_Importance": [
+      {
+        "Feature": "VehPower",
+        "Coefficient": 0.03756193944565642
+      },
+      {
+        "Feature": "VehAge",
+        "Coefficient": -0.20354584041376725
+      },
+      {
+        "Feature": "DrivAge",
+        "Coefficient": 0.10819785858772678
+      },
+      {
+        "Feature": "BonusMalus",
+        "Coefficient": 0.36224805340180893
+      },
+      {
+        "Feature": "Density",
+        "Coefficient": 0.008195579024703583
+      },
+      {
+        "Feature": "Area_A_False",
+        "Coefficient": 0.05457943446730933
+      },
+      {
+        "Feature": "Area_A_True",
+        "Coefficient": -0.05713738222974736
+      },
+      {
+        "Feature": "Area_B_False",
+        "Coefficient": 0.03349044879332055
+      },
+      {
+        "Feature": "Area_B_True",
+        "Coefficient": -0.03604839655575868
+      },
+      {
+        "Feature": "Area_C_False",
+        "Coefficient": 0.011217797442150085
+      },
+      {
+        "Feature": "Area_C_True",
+        "Coefficient": -0.01377574520458814
+      },
+      {
+        "Feature": "Area_D_False",
+        "Coefficient": -0.03569772596870592
+      },
+      {
+        "Feature": "Area_D_True",
+        "Coefficient": 0.03313977820626791
+      },
+      {
+        "Feature": "Area_E_False",
+        "Coefficient": -0.052828895132602194
+      },
+      {
+        "Feature": "Area_E_True",
+        "Coefficient": 0.05027094737016409
+      },
+      {
+        "Feature": "Area_F_False",
+        "Coefficient": -0.023550798413662276
+      },
+      {
+        "Feature": "Area_F_True",
+        "Coefficient": 0.020992850651224134
+      },
+      {
+        "Feature": "VehBrand_B1_False",
+        "Coefficient": -0.0016569864748610915
+      },
+      {
+        "Feature": "VehBrand_B1_True",
+        "Coefficient": -0.0009009612875771161
+      },
+      {
+        "Feature": "VehBrand_B10_False",
+        "Coefficient": 0.022621757139013775
+      },
+      {
+        "Feature": "VehBrand_B10_True",
+        "Coefficient": -0.025179704901451456
+      },
+      {
+        "Feature": "VehBrand_B11_False",
+        "Coefficient": -0.029614299405636486
+      },
+      {
+        "Feature": "VehBrand_B11_True",
+        "Coefficient": 0.027056351643198546
+      },
+      {
+        "Feature": "VehBrand_B12_False",
+        "Coefficient": -0.05161605058091373
+      },
+      {
+        "Feature": "VehBrand_B12_True",
+        "Coefficient": 0.049058102818475544
+      },
+      {
+        "Feature": "VehBrand_B13_False",
+        "Coefficient": -0.007509625122081295
+      },
+      {
+        "Feature": "VehBrand_B13_True",
+        "Coefficient": 0.00495167735964305
+      },
+      {
+        "Feature": "VehBrand_B14_False",
+        "Coefficient": 0.04552382322358344
+      },
+      {
+        "Feature": "VehBrand_B14_True",
+        "Coefficient": -0.04808177098602142
+      },
+      {
+        "Feature": "VehBrand_B2_False",
+        "Coefficient": 0.0019824331412784412
+      },
+      {
+        "Feature": "VehBrand_B2_True",
+        "Coefficient": -0.004540380903716545
+      },
+      {
+        "Feature": "VehBrand_B3_False",
+        "Coefficient": 0.002068770144355159
+      },
+      {
+        "Feature": "VehBrand_B3_True",
+        "Coefficient": -0.004626717906793131
+      },
+      {
+        "Feature": "VehBrand_B4_False",
+        "Coefficient": 0.015514152809357983
+      },
+      {
+        "Feature": "VehBrand_B4_True",
+        "Coefficient": -0.01807210057179614
+      },
+      {
+        "Feature": "VehBrand_B5_False",
+        "Coefficient": -0.03902359227789929
+      },
+      {
+        "Feature": "VehBrand_B5_True",
+        "Coefficient": 0.03646564451546117
+      },
+      {
+        "Feature": "VehBrand_B6_False",
+        "Coefficient": 0.016130139779422435
+      },
+      {
+        "Feature": "VehBrand_B6_True",
+        "Coefficient": -0.018688087541860382
+      },
+      {
+        "Feature": "VehGas_Diesel_False",
+        "Coefficient": 0.0052811829163163
+      },
+      {
+        "Feature": "VehGas_Diesel_True",
+        "Coefficient": -0.007839130678754316
+      },
+      {
+        "Feature": "VehGas_Regular_False",
+        "Coefficient": -0.007839130678754316
+      },
+      {
+        "Feature": "VehGas_Regular_True",
+        "Coefficient": 0.0052811829163162275
+      },
+      {
+        "Feature": "Region_R11_False",
+        "Coefficient": -0.014242670382331443
+      },
+      {
+        "Feature": "Region_R11_True",
+        "Coefficient": 0.011684722619893232
+      },
+      {
+        "Feature": "Region_R21_False",
+        "Coefficient": -0.008332438668103749
+      },
+      {
+        "Feature": "Region_R21_True",
+        "Coefficient": 0.005774490905665772
+      },
+      {
+        "Feature": "Region_R22_False",
+        "Coefficient": -0.03867648227396813
+      },
+      {
+        "Feature": "Region_R22_True",
+        "Coefficient": 0.03611853451153005
+      },
+      {
+        "Feature": "Region_R23_False",
+        "Coefficient": 0.021161237306163285
+      },
+      {
+        "Feature": "Region_R23_True",
+        "Coefficient": -0.02371918506860133
+      },
+      {
+        "Feature": "Region_R24_False",
+        "Coefficient": -0.05845429976919364
+      },
+      {
+        "Feature": "Region_R24_True",
+        "Coefficient": 0.05589635200675542
+      },
+      {
+        "Feature": "Region_R25_False",
+        "Coefficient": -0.029568343237110765
+      },
+      {
+        "Feature": "Region_R25_True",
+        "Coefficient": 0.027010395474672384
+      },
+      {
+        "Feature": "Region_R26_False",
+        "Coefficient": -0.0034360526148226114
+      },
+      {
+        "Feature": "Region_R26_True",
+        "Coefficient": 0.0008781048523844748
+      },
+      {
+        "Feature": "Region_R31_False",
+        "Coefficient": 0.03816404943966492
+      },
+      {
+        "Feature": "Region_R31_True",
+        "Coefficient": -0.04072199720210297
+      },
+      {
+        "Feature": "Region_R41_False",
+        "Coefficient": 0.12484417471884157
+      },
+      {
+        "Feature": "Region_R41_True",
+        "Coefficient": -0.12740212248127988
+      },
+      {
+        "Feature": "Region_R42_False",
+        "Coefficient": -0.005085485553912737
+      },
+      {
+        "Feature": "Region_R42_True",
+        "Coefficient": 0.002527537791474649
+      },
+      {
+        "Feature": "Region_R43_False",
+        "Coefficient": 0.018513555801847846
+      },
+      {
+        "Feature": "Region_R43_True",
+        "Coefficient": -0.021071503564285655
+      },
+      {
+        "Feature": "Region_R52_False",
+        "Coefficient": -0.01923367510386775
+      },
+      {
+        "Feature": "Region_R52_True",
+        "Coefficient": 0.016675727341429757
+      },
+      {
+        "Feature": "Region_R53_False",
+        "Coefficient": -0.06231321842658236
+      },
+      {
+        "Feature": "Region_R53_True",
+        "Coefficient": 0.05975527066414417
+      },
+      {
+        "Feature": "Region_R54_False",
+        "Coefficient": 0.0004599778835139469
+      },
+      {
+        "Feature": "Region_R54_True",
+        "Coefficient": -0.0030179256459521415
+      },
+      {
+        "Feature": "Region_R72_False",
+        "Coefficient": 0.0318182116570079
+      },
+      {
+        "Feature": "Region_R72_True",
+        "Coefficient": -0.03437615941944589
+      },
+      {
+        "Feature": "Region_R73_False",
+        "Coefficient": 0.053530785589513956
+      },
+      {
+        "Feature": "Region_R73_True",
+        "Coefficient": -0.05608873335195217
+      },
+      {
+        "Feature": "Region_R74_False",
+        "Coefficient": -0.08034646111234889
+      },
+      {
+        "Feature": "Region_R74_True",
+        "Coefficient": 0.07778851334991081
+      },
+      {
+        "Feature": "Region_R82_False",
+        "Coefficient": -0.06365836390633849
+      },
+      {
+        "Feature": "Region_R82_True",
+        "Coefficient": 0.06110041614390022
+      },
+      {
+        "Feature": "Region_R83_False",
+        "Coefficient": 0.09045227166611879
+      },
+      {
+        "Feature": "Region_R83_True",
+        "Coefficient": -0.09301021942855682
+      },
+      {
+        "Feature": "Region_R91_False",
+        "Coefficient": 0.00518845955233706
+      },
+      {
+        "Feature": "Region_R91_True",
+        "Coefficient": -0.007746407314775102
+      },
+      {
+        "Feature": "Region_R93_False",
+        "Coefficient": -0.013979715253301774
+      },
+      {
+        "Feature": "Region_R93_True",
+        "Coefficient": 0.011421767490863526
+      },
+      {
+        "Feature": "Region_R94_False",
+        "Coefficient": -0.04052242032432764
+      },
+      {
+        "Feature": "Region_R94_True",
+        "Coefficient": 0.037964472561889555
+      }
+    ],
+    "Calibration_table": [
+      {
+        "Decile": 0,
+        "ActualRate": 0.043520559955862514,
+        "PredictedRate": 0.05863912856392945,
+        "Exposure": 6679.76
+      },
+      {
+        "Decile": 1,
+        "ActualRate": 0.06004795727181024,
+        "PredictedRate": 0.07821099155860996,
+        "Exposure": 6490.25
+      },
+      {
+        "Decile": 2,
+        "ActualRate": 0.08607048125585275,
+        "PredictedRate": 0.09810319671179539,
+        "Exposure": 6063.16
+      },
+      {
+        "Decile": 3,
+        "ActualRate": 0.13408125189784517,
+        "PredictedRate": 0.1284564863857752,
+        "Exposure": 5056.15
+      },
+      {
+        "Decile": 4,
+        "ActualRate": 0.17314481396813017,
+        "PredictedRate": 0.17571647955243833,
+        "Exposure": 3952.04
+      },
+      {
+        "Decile": 5,
+        "ActualRate": 0.2929354201935277,
+        "PredictedRate": 0.24779704290974092,
+        "Exposure": 3054.71
+      },
+      {
+        "Decile": 6,
+        "ActualRate": 0.6220694814978908,
+        "PredictedRate": 0.37523063330998274,
+        "Exposure": 2213.7400000000002
+      },
+      {
+        "Decile": 7,
+        "ActualRate": 1.2665210696073552,
+        "PredictedRate": 0.6452354137695704,
+        "Exposure": 1327.35
+      },
+      {
+        "Decile": 8,
+        "ActualRate": 2.840382757117574,
+        "PredictedRate": 1.1901020887244804,
+        "Exposure": 699.41
+      },
+      {
+        "Decile": 9,
+        "ActualRate": 15.949766178322658,
+        "PredictedRate": 6.7921869771053816,
+        "Exposure": 294.86627739388797
+      }
+    ]
+  },
+  "model_predictions_path": "data/preds",
+  "unc_modelling_layer1": 0.22297629681152986,
+  "unc_modelling_layer2": 0.03830064085140439,
+  "unc_modelling_layer3": 0.19201759338595847,
+  "unc_modelling_layer4": 0.22500073319012714
+}
