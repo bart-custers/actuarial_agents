@@ -53,10 +53,10 @@ def group_fairness(df, pred_col='Prediction', true_col='ClaimNb', storage_dir='s
     
     # Group by predicted bin and feature, compute mean actual and predicted
     agg_age = df.groupby(['pred_bin', 'age_group'])[[true_col, pred_col]].mean().reset_index()
-    agg_age['diff'] = agg_age[true_col] - agg_age[pred_col]
+    agg_age['diff'] = agg_age[pred_col] - agg_age[true_col]
 
     agg_density = df.groupby(['pred_bin', 'density_group'])[[true_col, pred_col]].mean().reset_index()
-    agg_density['diff'] = agg_density[true_col] - agg_density[pred_col]
+    agg_density['diff'] = agg_density[pred_col] - agg_density[true_col]
     
     # Create a table
     table_age = agg_age.pivot(index='pred_bin', columns='age_group', values='diff')
