@@ -1,0 +1,220 @@
+{
+  "timestamp": "20260219_081229",
+  "status": "success",
+  "used_pipeline": "deterministic",
+  "plan_dataprep": "**Re-statement of the assignment:**\nPrepare the insurance claims dataset for claim frequency modeling by identifying key actions to take before analysis.\n\n**Top 6 actions to prepare the dataset:**\n\n* Check for and handle missing values in categorical variables (\"Area\", \"VehBrand\", \"VehGas\", \"Region\") as they have 0% missing values but still need encoding.\n* Perform exploratory data analysis to identify any outliers or anomalies in numeric variables (\"IDpol\", \"ClaimNb\", \"Exposure\", \"VehPower\", \"VehAge\", \"DrivAge\", \"BonusMalus\", \"Density\").\n* Scale or transform numeric variables to improve model performance (e.g., log transformation for \"Exposure\" and \"ClaimNb\").\n* Encode categorical variables using one-hot encoding or label encoding.\n* Identify and handle any multicollinearity issues among numeric variables.\n* Split the dataset into training and testing sets (e.g., 80% for training and 20% for testing).\n\n**Immediate warnings:**\n\n* The dataset has a relatively large number of rows (697461), which may lead to overfitting if not handled properly.\n* There are no missing values in any of the variables, but the distribution of variables should still be examined to identify any potential issues.\n* The \"Exposure\" variable may be highly skewed, which could impact model performance if not transformed or scaled properly.",
+  "adaptive_suggestion": "```python\nimport pandas as pd\nimport numpy as np\nfrom sklearn.preprocessing import OneHotEncoder\n\nclass DataCleaning:\n    def __init__(self):\n        self.actions_log = []\n\n    def clean(self, data: pd.DataFrame):\n        # Clip outliers / right-censoring \n        self.actions_log.append(\"Clipping VehAge (<=20), DrivAge (<=90), BonusMalus (<=150), ClaimNb (<=5).\")\n        data['VehAge'] = data['VehAge'].clip(upper=20)\n        data['DrivAge'] = data['DrivAge'].clip(upper=90)\n        data['BonusMalus'] = data['BonusMalus'].clip(upper=150)\n        data['ClaimNb'] = data['ClaimNb'].clip(upper=5)\n\n        # Scale or transform numeric variables\n        self.actions_log.append(\"Log transforming Exposure and ClaimNb.\")\n        data['Exposure'] = np.log(data['Exposure'])\n        data['ClaimNb'] = np.log(data['ClaimNb'])\n\n        # Encode categorical variables using one-hot encoding\n        encoder = OneHotEncoder(sparse_output=False)\n        encoded_data = encoder.fit_transform(data[['Area', 'VehBrand', 'VehGas', 'Region']])\n        encoded_data = pd.DataFrame(encoded_data.toarray(), columns=encoder.get_feature_names_out())\n        data = pd.concat([data.drop(['Area', 'VehBrand', 'VehGas', 'Region'], axis=1), encoded_data], axis=1)\n\n        # Identify and handle multicollinearity issues\n        # This can be done using correlation matrix and variance inflation factor (VIF) analysis\n        # For simplicity, we will not include this step in the code\n\n        # Split the dataset into training and testing sets\n        from sklearn.model_selection import train_test_split\n        self.actions_log.append(\"Splitting data into training and testing sets (80% for training and 20% for testing).\")\n        train_data, test_data = train_test_split(data, test_size=0.2, random_state=42)\n\n        return train_data, test_data\n```",
+  "comparison": {
+    "status": "adaptive_failed"
+  },
+  "verification": "Forced decision due to status=adaptive_failed",
+  "explanation": "To summarize the data preparation and reasoning for the context of \"Forced decision due to status = adaptive_failed,\" I will break down the process into steps and provide a detailed analysis.\n\n**Step 1: Understanding the Context**\n\nThe context of \"Forced decision due to status = adaptive_failed\" suggests that the adaptive learning algorithm used in the model has failed to converge or adapt to the data, resulting in a forced decision. This could be due to various reasons such as:\n\n* Insufficient data quality or quantity\n* Model overfitting or underfitting\n* Poor feature engineering or selection\n* Incorrect hyperparameter tuning\n\n**Step 2: Data Preparation**\n\nTo prepare the data for analysis, I will focus on the following steps:\n\n* **Data Quality Check**: Verify the integrity and consistency of the data, including checks for missing values, outliers, and data types.\n* **Feature Engineering**: Review the feature engineering process to ensure that the relevant features are included and correctly extracted from the data.\n* **Data Transformation**: Check for any data transformations that may have been applied, such as normalization, scaling, or encoding.\n* **Model Evaluation Metrics**: Review the model evaluation metrics, such as accuracy, precision, recall, and F1 score, to identify potential issues.\n\n**Step 3: Identifying Differences**\n\nBased on the context, I will identify the following differences:\n\n* **Model Performance**: The model's performance is likely to be suboptimal due to the adaptive learning failure.\n* **Data Quality**: The data quality may be a contributing factor to the model's failure, such as missing values, outliers, or incorrect feature engineering.\n* **Hyperparameter Tuning**: The hyperparameters may not be optimized for the model, leading to poor performance.\n\n**Step 4: Stability Analysis**\n\nTo assess the stability of the model, I will analyze the following:\n\n* **Model Variance**: The model's variance may be high due to the adaptive learning failure, leading to inconsistent results.\n* **Model Drift**: The model may be sensitive to changes in the data distribution, leading to drift in performance.\n* **Model Robustness**: The model's robustness to outliers and noisy data may be compromised due to the adaptive learning failure.\n\n**Step 5: Final Rationale**\n\nBased on the analysis, the final rationale for the data preparation and reasoning is:\n\n* The adaptive learning algorithm failed due to insufficient data quality or quantity, poor feature engineering, or incorrect hyperparameter tuning.\n* The model's performance is suboptimal, and the data quality may be a contributing factor.\n* The model's variance, drift, and robustness are compromised due to the adaptive learning failure.\n\nTo address these issues, I recommend:\n\n* Improving data quality through data cleaning and feature engineering\n* Re-tuning the hyperparameters for the model\n* Implementing regularization techniques to reduce overfitting and improve model robustness.\n\nBy following these steps and recommendations, we can improve the model's performance and ensure more accurate predictions.",
+  "consistency_snapshot": {
+    "n_rows": 697461,
+    "n_columns": 12,
+    "memory_MB": 156.1082,
+    "dtypes": {
+      "IDpol": "float64",
+      "ClaimNb": "int64",
+      "Exposure": "float64",
+      "Area": "int8",
+      "VehPower": "int64",
+      "VehAge": "int64",
+      "DrivAge": "int64",
+      "BonusMalus": "int64",
+      "VehBrand": "object",
+      "VehGas": "object",
+      "Density": "int64",
+      "Region": "object"
+    },
+    "missing_counts": {
+      "IDpol": 0,
+      "ClaimNb": 0,
+      "Exposure": 0,
+      "Area": 0,
+      "VehPower": 0,
+      "VehAge": 0,
+      "DrivAge": 0,
+      "BonusMalus": 0,
+      "VehBrand": 0,
+      "VehGas": 0,
+      "Density": 0,
+      "Region": 0
+    },
+    "missing_pct": {
+      "IDpol": 0.0,
+      "ClaimNb": 0.0,
+      "Exposure": 0.0,
+      "Area": 0.0,
+      "VehPower": 0.0,
+      "VehAge": 0.0,
+      "DrivAge": 0.0,
+      "BonusMalus": 0.0,
+      "VehBrand": 0.0,
+      "VehGas": 0.0,
+      "Density": 0.0,
+      "Region": 0.0
+    },
+    "numeric_summary": {
+      "IDpol": {
+        "count": 697461.0,
+        "mean": 2616739.075,
+        "std": 1642308.1252,
+        "min": 1.0,
+        "25%": 1155255.0,
+        "50%": 2271394.0,
+        "75%": 4045668.0,
+        "max": 6114330.0
+      },
+      "ClaimNb": {
+        "count": 697461.0,
+        "mean": 0.0538,
+        "std": 0.2398,
+        "min": 0.0,
+        "25%": 0.0,
+        "50%": 0.0,
+        "75%": 0.0,
+        "max": 5.0
+      },
+      "Exposure": {
+        "count": 697461.0,
+        "mean": 0.5257,
+        "std": 0.3638,
+        "min": 0.0027,
+        "25%": 0.17,
+        "50%": 0.49,
+        "75%": 0.98,
+        "max": 2.01
+      },
+      "Area": {
+        "count": 697461.0,
+        "mean": 3.2903,
+        "std": 1.3814,
+        "min": 1.0,
+        "25%": 2.0,
+        "50%": 3.0,
+        "75%": 4.0,
+        "max": 6.0
+      },
+      "VehPower": {
+        "count": 697461.0,
+        "mean": 6.4392,
+        "std": 2.045,
+        "min": 4.0,
+        "25%": 5.0,
+        "50%": 6.0,
+        "75%": 7.0,
+        "max": 15.0
+      },
+      "VehAge": {
+        "count": 697461.0,
+        "mean": 7.01,
+        "std": 5.399,
+        "min": 0.0,
+        "25%": 2.0,
+        "50%": 6.0,
+        "75%": 11.0,
+        "max": 20.0
+      },
+      "DrivAge": {
+        "count": 697461.0,
+        "mean": 44.8601,
+        "std": 14.4337,
+        "min": 18.0,
+        "25%": 34.0,
+        "50%": 44.0,
+        "75%": 54.0,
+        "max": 90.0
+      },
+      "BonusMalus": {
+        "count": 697461.0,
+        "mean": 60.5743,
+        "std": 16.3172,
+        "min": 50.0,
+        "25%": 50.0,
+        "50%": 50.0,
+        "75%": 68.0,
+        "max": 150.0
+      },
+      "Density": {
+        "count": 697461.0,
+        "mean": 1785.206,
+        "std": 3939.3042,
+        "min": 1.0,
+        "25%": 92.0,
+        "50%": 393.0,
+        "75%": 1635.0,
+        "max": 27000.0
+      }
+    },
+    "categorical_summary": {
+      "VehBrand": {
+        "B12": 0.2421,
+        "B1": 0.2402,
+        "B2": 0.2369,
+        "B3": 0.0801,
+        "B5": 0.0515,
+        "B6": 0.0424,
+        "B4": 0.0375,
+        "B10": 0.0256,
+        "B11": 0.0201,
+        "B13": 0.0177,
+        "B14": 0.0059
+      },
+      "VehGas": {
+        "Regular": 0.5119,
+        "Diesel": 0.4881
+      },
+      "Region": {
+        "R24": 0.2386,
+        "R82": 0.1248,
+        "R93": 0.1159,
+        "R11": 0.1024,
+        "R53": 0.0621,
+        "R52": 0.0572,
+        "R91": 0.0526,
+        "R72": 0.0461,
+        "R31": 0.0407,
+        "R54": 0.0282,
+        "R73": 0.025,
+        "R41": 0.0191,
+        "R25": 0.0162,
+        "R26": 0.0156,
+        "R23": 0.0129,
+        "R22": 0.0119,
+        "R83": 0.0078,
+        "R74": 0.0067,
+        "R94": 0.0066,
+        "R21": 0.0044,
+        "R42": 0.0033,
+        "R43": 0.002
+      }
+    },
+    "target_distribution": {
+      "0": 0.9492,
+      "1": 0.0479,
+      "2": 0.0027,
+      "3": 0.0001,
+      "5": 0.0,
+      "4": 0.0
+    },
+    "target_mean": 0.05381949671737918,
+    "target_variance": 0.05748971633046945
+  },
+  "unc_dataprep_layer1": 0.2528636398561884,
+  "unc_dataprep_layer2": 0.0683042695099133,
+  "unc_dataprep_layer3": 0,
+  "unc_dataprep_layer4": 0.21242256159075212,
+  "processed_paths": {
+    "X_train": "data/processed/T14_distribution_shift_X_train.csv",
+    "X_test": "data/processed/T14_distribution_shift_X_test.csv",
+    "y_train": "data/processed/T14_distribution_shift_y_train.csv",
+    "y_test": "data/processed/T14_distribution_shift_y_test.csv",
+    "exposure_train": "data/processed/T14_distribution_shift_exposure_train.csv",
+    "exposure_test": "data/processed/T14_distribution_shift_exposure_test.csv"
+  },
+  "artifacts": {
+    "preprocessor": "data/artifacts/preprocessor.pkl",
+    "features": "data/artifacts/feature_names.pkl"
+  }
+}
