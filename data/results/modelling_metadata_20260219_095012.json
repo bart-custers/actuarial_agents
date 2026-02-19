@@ -1,0 +1,2092 @@
+{
+  "timestamp": "20260219_095012",
+  "status": "success",
+  "plan_modelling": " Great, let's get started! Here are my responses to each of the tasks:\n\n1. Restate the modelling goal in one short sentence:\nThe goal is to predict the number of claims (claim_count) for a given exposure (exposure) using a regression model.\n\n2. Confirm that this modelling task is about regression, with claim_count/exposure as target variable:\nYes, that is correct. The target variable is the number of claims (claim_count) per unit of exposure (exposure).\n\n3. Propose the most appropriate modelling approach for this problem:\nBased on the dataset and the goal of the analysis, the most appropriate modelling approach for this problem is Generalized Linear Models (GLMs). Here are five reasons why:\n\t* GLMs are well-suited for modeling count data, which is the type of data we have here. They can handle the non-normality and skewness of count data, and provide more accurate predictions than other models like GBMs.\n\t* GLMs provide a flexible framework for modeling the relationship between the predictors and the target variable. We can include interaction terms and non-linear effects, which can help to capture the complex relationships between the predictors and the target variable.\n\t* GLMs are widely used in actuarial science and have been shown to be effective in predicting claim frequencies. They are a standard tool in the field and are well-understood by actuaries.\n\t* GLMs are relatively easy to interpret and communicate the results to stakeholders. The coefficients of the predictors can be easily interpreted as the change in the expected value of the target variable per unit change in the predictor, which can help to inform decision-making.\n\t* GLMs are computationally efficient and can handle large datasets with ease. They are well-suited for predictive modeling tasks where the dataset is too large to fit in memory.\n\n4. Justify your choice in maximum 5 bullet points (actuarial + ML reasoning):\n\n* Actuarial reasoning: GLMs are a standard tool in actuarial science for modeling claim frequencies. They are well-understood by actuaries and have been shown to be effective in predicting claim frequencies.\n* ML reasoning: GLMs are a type of generalized linear model, which is a widely used and well-established class of machine learning models. They have been shown to be effective in modeling count data and have good interpretability.\n* Data preparation: GLMs are well-suited for handling the categorical and continuous predictors in the dataset. They can handle interaction terms and non-linear effects, which can help to capture the complex relationships between the predictors and the target variable.\n* Model evaluation: GLMs have been shown to be effective in predicting claim frequencies in previous studies. They have been used in a variety of applications, including insurance and finance, and have been shown to be reliable and accurate.\n* Computational efficiency: GLMs are computationally efficient and can handle large datasets with ease. They are well-suited for predictive modeling tasks where the dataset is too large to fit in memory.\n\n5. State any risks or pitfalls you anticipate for this model type:\n\n* Overfitting: GLMs can suffer from overfitting, especially when there are a large number of predictors in the model. This can result in poor generalization performance on new data.\n* Non-normality: GLMs assume that the response variable is normally distributed, which may not always be the case. Non-normality can result in poor model performance and bias.\n* Interpretation: GLMs can be difficult to interpret, especially for non-experts. The coefficients of the predictors may not be easy to interpret, which can make it difficult to understand the results.\n* Computational complexity: While GLMs are computationally efficient, they can still be computationally intensive for large datasets. This can be a challenge for large-scale applications.\n* Model selection: Choosing the appropriate GLM can be challenging, especially for non-experts. There are many different types of GLMs, each with its own strengths and weaknesses, and selecting the appropriate one can be difficult.\n\nBased on these reasons, I recommend using Generalized Linear Models (GLMs) for this problem.\n\nDecision: USE_GLM",
+  "model_type_used": "glm",
+  "model_code": " ```python\nclass GLMTrainer:\n    def __init__(self):\n        self.model = glm(alpha=1e-6, max_iter=500)\n    \n    def train(self, X, y, exposure=None):\n        if exposure is not None:\n            self.model.fit(X, y, sample_weight=exposure)\n        else:\n            self.model.fit(X, y)\n    \n    def predict(self, X):\n        return self.model.predict(X)\n    \n    def save(self, path):\n        joblib.dump(self.model, path)\n\ntrainer = GLMTrainer()\ntrainer.train(X_train, y_train, exposure_train)\npreds_train = trainer.predict(X_train)\npreds_test = trainer.predict(X_test)\nmodel = trainer.model\nresult = {\"preds_train\": preds_train, \"preds_test\": preds_test, \"model\": model}\n```",
+  "model_used": "deterministic_fallback",
+  "model_reason": "Adaptive model training code failed: name 'glm' is not defined",
+  "model_metrics": {
+    "RMSE": 0.8868117479391955,
+    "MAE": 0.23235596571223952,
+    "R2": 0.002140856219455256,
+    "Poisson_Deviance": 0.9480936774723899,
+    "Gini_score": null,
+    "Feature_Importance": [
+      {
+        "Feature": "Area",
+        "Coefficient": 0.0859399890527661
+      },
+      {
+        "Feature": "VehPower",
+        "Coefficient": 0.037152893899643505
+      },
+      {
+        "Feature": "VehAge",
+        "Coefficient": -0.20524087813505032
+      },
+      {
+        "Feature": "DrivAge",
+        "Coefficient": 0.1056861575317529
+      },
+      {
+        "Feature": "BonusMalus",
+        "Coefficient": 0.3605228639201851
+      },
+      {
+        "Feature": "Density",
+        "Coefficient": -0.012757066753862527
+      },
+      {
+        "Feature": "VehBrand_B1",
+        "Coefficient": -0.008227412298006602
+      },
+      {
+        "Feature": "VehBrand_B10",
+        "Coefficient": -0.05743923195092484
+      },
+      {
+        "Feature": "VehBrand_B11",
+        "Coefficient": 0.04550470894368633
+      },
+      {
+        "Feature": "VehBrand_B12",
+        "Coefficient": 0.08798997284358286
+      },
+      {
+        "Feature": "VehBrand_B13",
+        "Coefficient": 0.00382513172077876
+      },
+      {
+        "Feature": "VehBrand_B14",
+        "Coefficient": -0.08209443230066589
+      },
+      {
+        "Feature": "VehBrand_B2",
+        "Coefficient": -0.011562417554881469
+      },
+      {
+        "Feature": "VehBrand_B3",
+        "Coefficient": -0.009797944088853369
+      },
+      {
+        "Feature": "VehBrand_B4",
+        "Coefficient": -0.04468853065970939
+      },
+      {
+        "Feature": "VehBrand_B5",
+        "Coefficient": 0.06838818537197006
+      },
+      {
+        "Feature": "VehBrand_B6",
+        "Coefficient": -0.044471138662718034
+      },
+      {
+        "Feature": "VehGas_Diesel",
+        "Coefficient": -0.039386751226897825
+      },
+      {
+        "Feature": "VehGas_Regular",
+        "Coefficient": -0.013186357408843188
+      },
+      {
+        "Feature": "Region_R11",
+        "Coefficient": 0.022823404196108663
+      },
+      {
+        "Feature": "Region_R21",
+        "Coefficient": 0.00927165488102435
+      },
+      {
+        "Feature": "Region_R22",
+        "Coefficient": 0.06002442454564045
+      },
+      {
+        "Feature": "Region_R23",
+        "Coefficient": -0.04503535996987379
+      },
+      {
+        "Feature": "Region_R24",
+        "Coefficient": 0.10807341245571359
+      },
+      {
+        "Feature": "Region_R25",
+        "Coefficient": 0.042972651871473894
+      },
+      {
+        "Feature": "Region_R26",
+        "Coefficient": -0.0054266568784683234
+      },
+      {
+        "Feature": "Region_R31",
+        "Coefficient": -0.08250960913259084
+      },
+      {
+        "Feature": "Region_R41",
+        "Coefficient": -0.24245674817213853
+      },
+      {
+        "Feature": "Region_R42",
+        "Coefficient": 0.0007825630078582172
+      },
+      {
+        "Feature": "Region_R43",
+        "Coefficient": -0.03393577510034236
+      },
+      {
+        "Feature": "Region_R52",
+        "Coefficient": 0.04107802411598212
+      },
+      {
+        "Feature": "Region_R53",
+        "Coefficient": 0.10634179748671681
+      },
+      {
+        "Feature": "Region_R54",
+        "Coefficient": -0.00964091025587856
+      },
+      {
+        "Feature": "Region_R72",
+        "Coefficient": -0.0734396798660314
+      },
+      {
+        "Feature": "Region_R73",
+        "Coefficient": -0.11313146101490917
+      },
+      {
+        "Feature": "Region_R74",
+        "Coefficient": 0.12889638169511272
+      },
+      {
+        "Feature": "Region_R82",
+        "Coefficient": 0.12497296238420759
+      },
+      {
+        "Feature": "Region_R83",
+        "Coefficient": -0.15687507216312535
+      },
+      {
+        "Feature": "Region_R91",
+        "Coefficient": -0.020175571276429473
+      },
+      {
+        "Feature": "Region_R93",
+        "Coefficient": 0.02029345171831059
+      },
+      {
+        "Feature": "Region_R94",
+        "Coefficient": 0.06452300683589814
+      }
+    ],
+    "Calibration_table": [
+      {
+        "Decile": 0,
+        "ActualRate": 0.0439658685588611,
+        "PredictedRate": 0.058682544991450376,
+        "Exposure": 6678.22
+      },
+      {
+        "Decile": 1,
+        "ActualRate": 0.06103639026465724,
+        "PredictedRate": 0.07834142091171586,
+        "Exposure": 6491.26
+      },
+      {
+        "Decile": 2,
+        "ActualRate": 0.0859868456375078,
+        "PredictedRate": 0.09819983296267933,
+        "Exposure": 6064.88
+      },
+      {
+        "Decile": 3,
+        "ActualRate": 0.12988324715261584,
+        "PredictedRate": 0.12838309741010281,
+        "Exposure": 5051.68
+      },
+      {
+        "Decile": 4,
+        "ActualRate": 0.17352587073823106,
+        "PredictedRate": 0.17551503155302758,
+        "Exposure": 3956.24
+      },
+      {
+        "Decile": 5,
+        "ActualRate": 0.29188259584157106,
+        "PredictedRate": 0.24757544234880066,
+        "Exposure": 3051.05
+      },
+      {
+        "Decile": 6,
+        "ActualRate": 0.6205329651423002,
+        "PredictedRate": 0.3749917453252744,
+        "Exposure": 2223.35
+      },
+      {
+        "Decile": 7,
+        "ActualRate": 1.3147736594488655,
+        "PredictedRate": 0.6453186354654854,
+        "Exposure": 1321.22
+      },
+      {
+        "Decile": 8,
+        "ActualRate": 2.814913936474357,
+        "PredictedRate": 1.1905043981420582,
+        "Exposure": 698.8100000000001
+      },
+      {
+        "Decile": 9,
+        "ActualRate": 15.932041140462173,
+        "PredictedRate": 6.786644837134297,
+        "Exposure": 294.726277393888
+      }
+    ]
+  },
+  "act_vs_exp": {
+    "train_act_vs_exp": [
+      {
+        "Feature": "BonusMalus",
+        "Value": -0.6155350511844568,
+        "Cur_Pred": 0.03714009956370023,
+        "Actual": 10.0,
+        "Diff": -9.9628599004363,
+        "AbsDiff": 9.9628599004363
+      },
+      {
+        "Feature": "BonusMalus",
+        "Value": -0.645766355246658,
+        "Cur_Pred": 0.038300510531254155,
+        "Actual": 10.0,
+        "Diff": -9.961699489468746,
+        "AbsDiff": 9.961699489468746
+      },
+      {
+        "Feature": "BonusMalus",
+        "Value": -0.6216697342985069,
+        "Cur_Pred": 0.03834630470073124,
+        "Actual": 10.0,
+        "Diff": -9.961653695299269,
+        "AbsDiff": 9.961653695299269
+      },
+      {
+        "Feature": "BonusMalus",
+        "Value": -0.5834256601345057,
+        "Cur_Pred": 0.041125383655562495,
+        "Actual": 10.0,
+        "Diff": -9.958874616344438,
+        "AbsDiff": 9.958874616344438
+      },
+      {
+        "Feature": "BonusMalus",
+        "Value": -0.6316625388346281,
+        "Cur_Pred": 0.04323798303863713,
+        "Actual": 10.0,
+        "Diff": -9.956762016961363,
+        "AbsDiff": 9.956762016961363
+      },
+      {
+        "Feature": "Density",
+        "Value": -0.2395836047666518,
+        "Cur_Pred": 0.11165101016085832,
+        "Actual": 3.4236111111111116,
+        "Diff": -3.3119601009502535,
+        "AbsDiff": 3.3119601009502535
+      },
+      {
+        "Feature": "Density",
+        "Value": 0.2498176661067992,
+        "Cur_Pred": 0.127156900801798,
+        "Actual": 2.5925925925925926,
+        "Diff": -2.4654356917907947,
+        "AbsDiff": 2.4654356917907947
+      },
+      {
+        "Feature": "Density",
+        "Value": -0.3356979780670564,
+        "Cur_Pred": 0.09728909635163,
+        "Actual": 2.380952380952381,
+        "Diff": -2.2836632846007507,
+        "AbsDiff": 2.2836632846007507
+      },
+      {
+        "Feature": "Density",
+        "Value": -0.0264165563707414,
+        "Cur_Pred": 0.08540227550431076,
+        "Actual": 2.0,
+        "Diff": -1.9145977244956893,
+        "AbsDiff": 1.9145977244956893
+      },
+      {
+        "Feature": "Density",
+        "Value": 0.1670735337117002,
+        "Cur_Pred": 0.1341807935709236,
+        "Actual": 1.4314194577352473,
+        "Diff": -1.2972386641643237,
+        "AbsDiff": 1.2972386641643237
+      },
+      {
+        "Feature": "VehAge",
+        "Value": -1.2920474551086096,
+        "Cur_Pred": 0.13302711691429653,
+        "Actual": 0.46733903903697177,
+        "Diff": -0.33431192212267524,
+        "AbsDiff": 0.33431192212267524
+      },
+      {
+        "Feature": "DrivAge",
+        "Value": -1.945880052846976,
+        "Cur_Pred": 0.15283348931205792,
+        "Actual": 0.35387976308278735,
+        "Diff": -0.20104627377072942,
+        "AbsDiff": 0.20104627377072942
+      },
+      {
+        "Feature": "DrivAge",
+        "Value": -1.8751108148887508,
+        "Cur_Pred": 0.1661124412787011,
+        "Actual": 0.32542599548391804,
+        "Diff": -0.15931355420521695,
+        "AbsDiff": 0.15931355420521695
+      },
+      {
+        "Feature": "DrivAge",
+        "Value": 2.937197366270571,
+        "Cur_Pred": 0.1082238584584667,
+        "Actual": 0.26518703613928696,
+        "Diff": -0.15696317768082024,
+        "AbsDiff": 0.15696317768082024
+      },
+      {
+        "Feature": "DrivAge",
+        "Value": -1.804341576930525,
+        "Cur_Pred": 0.16644920979351382,
+        "Actual": 0.2857536717256635,
+        "Diff": -0.11930446193214969,
+        "AbsDiff": 0.11930446193214969
+      },
+      {
+        "Feature": "Region_R21",
+        "Value": 1.0,
+        "Cur_Pred": 0.10956393801353263,
+        "Actual": 0.20870057974661468,
+        "Diff": -0.09913664173308205,
+        "AbsDiff": 0.09913664173308205
+      },
+      {
+        "Feature": "DrivAge",
+        "Value": 2.8664281283123456,
+        "Cur_Pred": 0.11111502824940332,
+        "Actual": 0.20913562209242792,
+        "Diff": -0.0980205938430246,
+        "AbsDiff": 0.0980205938430246
+      },
+      {
+        "Feature": "VehBrand_B12",
+        "Value": 1.0,
+        "Cur_Pred": 0.12704869490307413,
+        "Actual": 0.22214713067480008,
+        "Diff": -0.09509843577172594,
+        "AbsDiff": 0.09509843577172594
+      },
+      {
+        "Feature": "Region_R94",
+        "Value": 1.0,
+        "Cur_Pred": 0.12258387876000458,
+        "Actual": 0.20428829753250433,
+        "Diff": -0.08170441877249975,
+        "AbsDiff": 0.08170441877249975
+      },
+      {
+        "Feature": "Region_R42",
+        "Value": 1.0,
+        "Cur_Pred": 0.11242611823726863,
+        "Actual": 0.18296937389202675,
+        "Diff": -0.07054325565475812,
+        "AbsDiff": 0.07054325565475812
+      },
+      {
+        "Feature": "Area",
+        "Value": 1.9601540758199227,
+        "Cur_Pred": 0.14262273900816477,
+        "Actual": 0.21284802454181426,
+        "Diff": -0.07022528553364948,
+        "AbsDiff": 0.07022528553364948
+      },
+      {
+        "Feature": "VehPower",
+        "Value": 1.242007668051376,
+        "Cur_Pred": 0.10123919564407355,
+        "Actual": 0.1696060395965313,
+        "Diff": -0.06836684395245776,
+        "AbsDiff": 0.06836684395245776
+      },
+      {
+        "Feature": "Region_R74",
+        "Value": 1.0,
+        "Cur_Pred": 0.10081852159047805,
+        "Actual": 0.16887002877305235,
+        "Diff": -0.0680515071825743,
+        "AbsDiff": 0.0680515071825743
+      },
+      {
+        "Feature": "VehPower",
+        "Value": 1.7298263044327,
+        "Cur_Pred": 0.10861078550350799,
+        "Actual": 0.17657541008825345,
+        "Diff": -0.06796462458474546,
+        "AbsDiff": 0.06796462458474546
+      },
+      {
+        "Feature": "Region_R11",
+        "Value": 1.0,
+        "Cur_Pred": 0.130304328556932,
+        "Actual": 0.19557197085378616,
+        "Diff": -0.06526764229685417,
+        "AbsDiff": 0.06526764229685417
+      },
+      {
+        "Feature": "Region_R22",
+        "Value": 1.0,
+        "Cur_Pred": 0.11939451155503342,
+        "Actual": 0.18364868480888674,
+        "Diff": -0.06425417325385333,
+        "AbsDiff": 0.06425417325385333
+      },
+      {
+        "Feature": "Region_R73",
+        "Value": 1.0,
+        "Cur_Pred": 0.09348980885676482,
+        "Actual": 0.1568493476720153,
+        "Diff": -0.06335953881525049,
+        "AbsDiff": 0.06335953881525049
+      },
+      {
+        "Feature": "VehPower",
+        "Value": -0.7092668774739205,
+        "Cur_Pred": 0.103699932020447,
+        "Actual": 0.16173271355856655,
+        "Diff": -0.058032781538119554,
+        "AbsDiff": 0.058032781538119554
+      },
+      {
+        "Feature": "VehGas_Regular",
+        "Value": 1.0,
+        "Cur_Pred": 0.10540281329987519,
+        "Actual": 0.16238239670514013,
+        "Diff": -0.05697958340526493,
+        "AbsDiff": 0.05697958340526493
+      },
+      {
+        "Feature": "VehGas_Diesel",
+        "Value": 0.0,
+        "Cur_Pred": 0.10540281329987519,
+        "Actual": 0.16238239670514013,
+        "Diff": -0.05697958340526493,
+        "AbsDiff": 0.05697958340526493
+      },
+      {
+        "Feature": "Region_R41",
+        "Value": 1.0,
+        "Cur_Pred": 0.0759449540319826,
+        "Actual": 0.12843675078801142,
+        "Diff": -0.052491796756028816,
+        "AbsDiff": 0.052491796756028816
+      },
+      {
+        "Feature": "Region_R91",
+        "Value": 1.0,
+        "Cur_Pred": 0.10050336877570101,
+        "Actual": 0.14965219413835393,
+        "Diff": -0.049148825362652915,
+        "AbsDiff": 0.049148825362652915
+      },
+      {
+        "Feature": "Area",
+        "Value": 0.5138722893387196,
+        "Cur_Pred": 0.10902639361625473,
+        "Actual": 0.15609658361733902,
+        "Diff": -0.0470701900010843,
+        "AbsDiff": 0.0470701900010843
+      },
+      {
+        "Feature": "Region_R26",
+        "Value": 1.0,
+        "Cur_Pred": 0.10155516243047816,
+        "Actual": 0.14849196922333618,
+        "Diff": -0.04693680679285803,
+        "AbsDiff": 0.04693680679285803
+      },
+      {
+        "Feature": "VehBrand_B1",
+        "Value": 0.0,
+        "Cur_Pred": 0.10625561415417109,
+        "Actual": 0.15313778050242907,
+        "Diff": -0.04688216634825798,
+        "AbsDiff": 0.04688216634825798
+      },
+      {
+        "Feature": "VehBrand_B2",
+        "Value": 0.0,
+        "Cur_Pred": 0.1061411594460666,
+        "Actual": 0.15249767915219872,
+        "Diff": -0.046356519706132124,
+        "AbsDiff": 0.046356519706132124
+      },
+      {
+        "Feature": "Region_R24",
+        "Value": 0.0,
+        "Cur_Pred": 0.10622156102494665,
+        "Actual": 0.15094902854906486,
+        "Diff": -0.044727467524118214,
+        "AbsDiff": 0.044727467524118214
+      },
+      {
+        "Feature": "Region_R43",
+        "Value": 1.0,
+        "Cur_Pred": 0.102631569807132,
+        "Actual": 0.14639993034272902,
+        "Diff": -0.04376836053559702,
+        "AbsDiff": 0.04376836053559702
+      },
+      {
+        "Feature": "Region_R82",
+        "Value": 1.0,
+        "Cur_Pred": 0.1147548530000338,
+        "Actual": 0.15778392152570364,
+        "Diff": -0.043029068525669845,
+        "AbsDiff": 0.043029068525669845
+      },
+      {
+        "Feature": "VehPower",
+        "Value": -0.2214482410925963,
+        "Cur_Pred": 0.09900219654803942,
+        "Actual": 0.14119148564757528,
+        "Diff": -0.04218928909953586,
+        "AbsDiff": 0.04218928909953586
+      },
+      {
+        "Feature": "VehBrand_B3",
+        "Value": 0.0,
+        "Cur_Pred": 0.1032550086821353,
+        "Actual": 0.1453525244266164,
+        "Diff": -0.04209751574448109,
+        "AbsDiff": 0.04209751574448109
+      },
+      {
+        "Feature": "Region_R93",
+        "Value": 1.0,
+        "Cur_Pred": 0.10775009815456933,
+        "Actual": 0.14930008805725054,
+        "Diff": -0.0415499899026812,
+        "AbsDiff": 0.0415499899026812
+      },
+      {
+        "Feature": "Area",
+        "Value": 1.2370131825793211,
+        "Cur_Pred": 0.12251228590387675,
+        "Actual": 0.16394147414698565,
+        "Diff": -0.0414291882431089,
+        "AbsDiff": 0.0414291882431089
+      },
+      {
+        "Feature": "VehBrand_B10",
+        "Value": 0.0,
+        "Cur_Pred": 0.10349317843196425,
+        "Actual": 0.144910852282459,
+        "Diff": -0.04141767385049476,
+        "AbsDiff": 0.04141767385049476
+      },
+      {
+        "Feature": "Region_R72",
+        "Value": 0.0,
+        "Cur_Pred": 0.1036233000097104,
+        "Actual": 0.14499669890434727,
+        "Diff": -0.04137339889463687,
+        "AbsDiff": 0.04137339889463687
+      },
+      {
+        "Feature": "VehBrand_B5",
+        "Value": 0.0,
+        "Cur_Pred": 0.10308471836251651,
+        "Actual": 0.14445687153400374,
+        "Diff": -0.041372153171487236,
+        "AbsDiff": 0.041372153171487236
+      },
+      {
+        "Feature": "VehBrand_B6",
+        "Value": 0.0,
+        "Cur_Pred": 0.10346041703744477,
+        "Actual": 0.14482940634457037,
+        "Diff": -0.0413689893071256,
+        "AbsDiff": 0.0413689893071256
+      },
+      {
+        "Feature": "VehBrand_B4",
+        "Value": 0.0,
+        "Cur_Pred": 0.10338018425389599,
+        "Actual": 0.14472450850839944,
+        "Diff": -0.04134432425450345,
+        "AbsDiff": 0.04134432425450345
+      },
+      {
+        "Feature": "VehBrand_B11",
+        "Value": 0.0,
+        "Cur_Pred": 0.10308263559987492,
+        "Actual": 0.14442081622376288,
+        "Diff": -0.04133818062388796,
+        "AbsDiff": 0.04133818062388796
+      },
+      {
+        "Feature": "Region_R31",
+        "Value": 0.0,
+        "Cur_Pred": 0.10316561508844188,
+        "Actual": 0.1444694409495145,
+        "Diff": -0.04130382586107262,
+        "AbsDiff": 0.04130382586107262
+      },
+      {
+        "Feature": "VehBrand_B13",
+        "Value": 0.0,
+        "Cur_Pred": 0.10326139844273481,
+        "Actual": 0.14453957042787766,
+        "Diff": -0.041278171985142845,
+        "AbsDiff": 0.041278171985142845
+      },
+      {
+        "Feature": "Region_R53",
+        "Value": 0.0,
+        "Cur_Pred": 0.10342815888976356,
+        "Actual": 0.1446104504801821,
+        "Diff": -0.04118229159041853,
+        "AbsDiff": 0.04118229159041853
+      },
+      {
+        "Feature": "Region_R52",
+        "Value": 0.0,
+        "Cur_Pred": 0.10358360489873365,
+        "Actual": 0.14473967191916878,
+        "Diff": -0.04115606702043513,
+        "AbsDiff": 0.04115606702043513
+      },
+      {
+        "Feature": "Region_R83",
+        "Value": 0.0,
+        "Cur_Pred": 0.10324800319320913,
+        "Actual": 0.14427256237392272,
+        "Diff": -0.041024559180713585,
+        "AbsDiff": 0.041024559180713585
+      },
+      {
+        "Feature": "Region_R54",
+        "Value": 0.0,
+        "Cur_Pred": 0.10352823090009529,
+        "Actual": 0.14452086158518637,
+        "Diff": -0.04099263068509108,
+        "AbsDiff": 0.04099263068509108
+      },
+      {
+        "Feature": "Region_R25",
+        "Value": 0.0,
+        "Cur_Pred": 0.10321048121192085,
+        "Actual": 0.14419320155684653,
+        "Diff": -0.040982720344925685,
+        "AbsDiff": 0.040982720344925685
+      },
+      {
+        "Feature": "VehBrand_B14",
+        "Value": 0.0,
+        "Cur_Pred": 0.10327131175947007,
+        "Actual": 0.1442343274357988,
+        "Diff": -0.040963015676328735,
+        "AbsDiff": 0.040963015676328735
+      },
+      {
+        "Feature": "Region_R23",
+        "Value": 0.0,
+        "Cur_Pred": 0.10323195436527205,
+        "Actual": 0.14416772871218841,
+        "Diff": -0.040935774346916365,
+        "AbsDiff": 0.040935774346916365
+      },
+      {
+        "Feature": "Region_R43",
+        "Value": 0.0,
+        "Cur_Pred": 0.10313459376879132,
+        "Actual": 0.14394619518705057,
+        "Diff": -0.04081160141825925,
+        "AbsDiff": 0.04081160141825925
+      },
+      {
+        "Feature": "Region_R42",
+        "Value": 0.0,
+        "Cur_Pred": 0.1031035112126782,
+        "Actual": 0.14382448888863336,
+        "Diff": -0.04072097767595516,
+        "AbsDiff": 0.04072097767595516
+      },
+      {
+        "Feature": "Region_R26",
+        "Value": 0.0,
+        "Cur_Pred": 0.10315850082506708,
+        "Actual": 0.14387935904863977,
+        "Diff": -0.04072085822357269,
+        "AbsDiff": 0.04072085822357269
+      },
+      {
+        "Feature": "Region_R93",
+        "Value": 0.0,
+        "Cur_Pred": 0.10252263274712389,
+        "Actual": 0.1432429663198624,
+        "Diff": -0.04072033357273852,
+        "AbsDiff": 0.04072033357273852
+      },
+      {
+        "Feature": "Region_R74",
+        "Value": 0.0,
+        "Cur_Pred": 0.10314914160538834,
+        "Actual": 0.14378389573282208,
+        "Diff": -0.04063475412743374,
+        "AbsDiff": 0.04063475412743374
+      },
+      {
+        "Feature": "Region_R41",
+        "Value": 0.0,
+        "Cur_Pred": 0.10366586263478615,
+        "Actual": 0.14425463000581662,
+        "Diff": -0.04058876737103047,
+        "AbsDiff": 0.04058876737103047
+      },
+      {
+        "Feature": "Region_R21",
+        "Value": 0.0,
+        "Cur_Pred": 0.10310487474530702,
+        "Actual": 0.14366144409908185,
+        "Diff": -0.04055656935377483,
+        "AbsDiff": 0.04055656935377483
+      },
+      {
+        "Feature": "Region_R94",
+        "Value": 0.0,
+        "Cur_Pred": 0.10300192424871184,
+        "Actual": 0.14354237879531198,
+        "Diff": -0.040540454546600144,
+        "AbsDiff": 0.040540454546600144
+      },
+      {
+        "Feature": "Region_R22",
+        "Value": 0.0,
+        "Cur_Pred": 0.10293957635198962,
+        "Actual": 0.1434772001056007,
+        "Diff": -0.04053762375361107,
+        "AbsDiff": 0.04053762375361107
+      },
+      {
+        "Feature": "Region_R82",
+        "Value": 0.0,
+        "Cur_Pred": 0.1014740044205441,
+        "Actual": 0.14197544859519126,
+        "Diff": -0.040501444174647155,
+        "AbsDiff": 0.040501444174647155
+      },
+      {
+        "Feature": "Region_R91",
+        "Value": 0.0,
+        "Cur_Pred": 0.10327982385373664,
+        "Actual": 0.14363402831708116,
+        "Diff": -0.04035420446334452,
+        "AbsDiff": 0.04035420446334452
+      },
+      {
+        "Feature": "Region_R73",
+        "Value": 0.0,
+        "Cur_Pred": 0.10338317437930147,
+        "Actual": 0.14361715849392148,
+        "Diff": -0.04023398411462001,
+        "AbsDiff": 0.04023398411462001
+      },
+      {
+        "Feature": "VehAge",
+        "Value": 0.5594993088577624,
+        "Cur_Pred": 0.09447190710977862,
+        "Actual": 0.13324388424920464,
+        "Diff": -0.03877197713942601,
+        "AbsDiff": 0.03877197713942601
+      },
+      {
+        "Feature": "Area",
+        "Value": -0.9324094971424834,
+        "Cur_Pred": 0.08929347736618887,
+        "Actual": 0.12745594513789077,
+        "Diff": -0.0381624677717019,
+        "AbsDiff": 0.0381624677717019
+      },
+      {
+        "Feature": "Region_R11",
+        "Value": 0.0,
+        "Cur_Pred": 0.10001754598967855,
+        "Actual": 0.1380307588443819,
+        "Diff": -0.038013212854703354,
+        "AbsDiff": 0.038013212854703354
+      },
+      {
+        "Feature": "VehPower",
+        "Value": -1.1970855138552443,
+        "Cur_Pred": 0.10536208493764174,
+        "Actual": 0.1430220835616098,
+        "Diff": -0.03765999862396807,
+        "AbsDiff": 0.03765999862396807
+      },
+      {
+        "Feature": "VehAge",
+        "Value": 0.3743446324611252,
+        "Cur_Pred": 0.09406239515948246,
+        "Actual": 0.13079784442407805,
+        "Diff": -0.036735449264595585,
+        "AbsDiff": 0.036735449264595585
+      },
+      {
+        "Feature": "Area",
+        "Value": -0.2092686039018819,
+        "Cur_Pred": 0.09771708199188114,
+        "Actual": 0.13426646645962728,
+        "Diff": -0.03654938446774614,
+        "AbsDiff": 0.03654938446774614
+      },
+      {
+        "Feature": "VehAge",
+        "Value": 1.8555820436342227,
+        "Cur_Pred": 0.07300658847202479,
+        "Actual": 0.10917080556492535,
+        "Diff": -0.03616421709290056,
+        "AbsDiff": 0.03616421709290056
+      },
+      {
+        "Feature": "VehAge",
+        "Value": 0.9298086616510368,
+        "Cur_Pred": 0.08531490730179346,
+        "Actual": 0.1207457109570066,
+        "Diff": -0.035430803655213144,
+        "AbsDiff": 0.035430803655213144
+      },
+      {
+        "Feature": "Region_R53",
+        "Value": 1.0,
+        "Cur_Pred": 0.0986851001391642,
+        "Actual": 0.13398981235707622,
+        "Diff": -0.03530471221791201,
+        "AbsDiff": 0.03530471221791201
+      },
+      {
+        "Feature": "Region_R52",
+        "Value": 1.0,
+        "Cur_Pred": 0.09574149631884807,
+        "Actual": 0.13099373646751064,
+        "Diff": -0.03525224014866257,
+        "AbsDiff": 0.03525224014866257
+      },
+      {
+        "Feature": "Region_R54",
+        "Value": 1.0,
+        "Cur_Pred": 0.08947712704685377,
+        "Actual": 0.12422677795359231,
+        "Diff": -0.03474965090673854,
+        "AbsDiff": 0.03474965090673854
+      },
+      {
+        "Feature": "Region_R23",
+        "Value": 1.0,
+        "Cur_Pred": 0.09566924121402758,
+        "Actual": 0.12749339702203805,
+        "Diff": -0.03182415580801047,
+        "AbsDiff": 0.03182415580801047
+      },
+      {
+        "Feature": "Region_R25",
+        "Value": 1.0,
+        "Cur_Pred": 0.0984160207986731,
+        "Actual": 0.12907993661702516,
+        "Diff": -0.030663915818352053,
+        "AbsDiff": 0.030663915818352053
+      },
+      {
+        "Feature": "VehBrand_B5",
+        "Value": 1.0,
+        "Cur_Pred": 0.10403998284188547,
+        "Actual": 0.13457427620518106,
+        "Diff": -0.030534293363295592,
+        "AbsDiff": 0.030534293363295592
+      },
+      {
+        "Feature": "Region_R72",
+        "Value": 1.0,
+        "Cur_Pred": 0.0930130456534732,
+        "Actual": 0.1223370554998625,
+        "Diff": -0.029324009846389304,
+        "AbsDiff": 0.029324009846389304
+      },
+      {
+        "Feature": "Region_R31",
+        "Value": 1.0,
+        "Cur_Pred": 0.10237089070771559,
+        "Actual": 0.13158871005549758,
+        "Diff": -0.02921781934778199,
+        "AbsDiff": 0.02921781934778199
+      },
+      {
+        "Feature": "VehBrand_B6",
+        "Value": 1.0,
+        "Cur_Pred": 0.09572703451238623,
+        "Actual": 0.12404071801124678,
+        "Diff": -0.028313683498860542,
+        "AbsDiff": 0.028313683498860542
+      },
+      {
+        "Feature": "Region_R24",
+        "Value": 1.0,
+        "Cur_Pred": 0.09319463020384774,
+        "Actual": 0.12142648452856057,
+        "Diff": -0.028231854324712827,
+        "AbsDiff": 0.028231854324712827
+      },
+      {
+        "Feature": "VehBrand_B4",
+        "Value": 1.0,
+        "Cur_Pred": 0.09672115642752248,
+        "Actual": 0.1238319129584574,
+        "Diff": -0.02711075653093492,
+        "AbsDiff": 0.02711075653093492
+      },
+      {
+        "Feature": "VehBrand_B3",
+        "Value": 1.0,
+        "Cur_Pred": 0.10171584809927817,
+        "Actual": 0.12758032084157642,
+        "Diff": -0.02586447274229825,
+        "AbsDiff": 0.02586447274229825
+      },
+      {
+        "Feature": "VehGas_Regular",
+        "Value": 0.0,
+        "Cur_Pred": 0.10077002587620783,
+        "Actual": 0.12475263265212791,
+        "Diff": -0.02398260677592008,
+        "AbsDiff": 0.02398260677592008
+      },
+      {
+        "Feature": "VehGas_Diesel",
+        "Value": 1.0,
+        "Cur_Pred": 0.10077002587620783,
+        "Actual": 0.12475263265212791,
+        "Diff": -0.02398260677592008,
+        "AbsDiff": 0.02398260677592008
+      },
+      {
+        "Feature": "VehBrand_B12",
+        "Value": 0.0,
+        "Cur_Pred": 0.09539108601562844,
+        "Actual": 0.1186347990994149,
+        "Diff": -0.023243713083786463,
+        "AbsDiff": 0.023243713083786463
+      },
+      {
+        "Feature": "VehBrand_B2",
+        "Value": 1.0,
+        "Cur_Pred": 0.09340330741070568,
+        "Actual": 0.1162995244461819,
+        "Diff": -0.022896217035476216,
+        "AbsDiff": 0.022896217035476216
+      },
+      {
+        "Feature": "VehBrand_B1",
+        "Value": 1.0,
+        "Cur_Pred": 0.09323988636316728,
+        "Actual": 0.11483735471926623,
+        "Diff": -0.02159746835609895,
+        "AbsDiff": 0.02159746835609895
+      },
+      {
+        "Feature": "VehBrand_B10",
+        "Value": 1.0,
+        "Cur_Pred": 0.08971668935107235,
+        "Actual": 0.10813097506482482,
+        "Diff": -0.018414285713752462,
+        "AbsDiff": 0.018414285713752462
+      },
+      {
+        "Feature": "VehBrand_B14",
+        "Value": 1.0,
+        "Cur_Pred": 0.08023350506548826,
+        "Actual": 0.09681633419130385,
+        "Diff": -0.016582829125815587,
+        "AbsDiff": 0.016582829125815587
+      },
+      {
+        "Feature": "VehBrand_B13",
+        "Value": 1.0,
+        "Cur_Pred": 0.09616679734222498,
+        "Actual": 0.11185567117381835,
+        "Diff": -0.01568887383159337,
+        "AbsDiff": 0.01568887383159337
+      },
+      {
+        "Feature": "VehBrand_B11",
+        "Value": 1.0,
+        "Cur_Pred": 0.1056287392831626,
+        "Actual": 0.12095674657114314,
+        "Diff": -0.015328007287980533,
+        "AbsDiff": 0.015328007287980533
+      },
+      {
+        "Feature": "Region_R83",
+        "Value": 1.0,
+        "Cur_Pred": 0.08866468988641954,
+        "Actual": 0.10326445514654978,
+        "Diff": -0.014599765260130237,
+        "AbsDiff": 0.014599765260130237
+      }
+    ],
+    "test_act_vs_exp": [
+      {
+        "Feature": "BonusMalus",
+        "Value": -0.4809810738317909,
+        "Cur_Pred": 0.04596413511605519,
+        "Actual": 10.0,
+        "Diff": -9.954035864883945,
+        "AbsDiff": 9.954035864883945
+      },
+      {
+        "Feature": "BonusMalus",
+        "Value": -0.4355007444911474,
+        "Cur_Pred": 0.04617018605275278,
+        "Actual": 10.0,
+        "Diff": -9.953829813947248,
+        "AbsDiff": 9.953829813947248
+      },
+      {
+        "Feature": "BonusMalus",
+        "Value": -0.3664762753584955,
+        "Cur_Pred": 0.0489163209198384,
+        "Actual": 10.0,
+        "Diff": -9.951083679080162,
+        "AbsDiff": 9.951083679080162
+      },
+      {
+        "Feature": "BonusMalus",
+        "Value": -0.5583801263875902,
+        "Cur_Pred": 0.053610736647753135,
+        "Actual": 10.0,
+        "Diff": -9.946389263352247,
+        "AbsDiff": 9.946389263352247
+      },
+      {
+        "Feature": "BonusMalus",
+        "Value": -0.5033416858561341,
+        "Cur_Pred": 0.05461759739638313,
+        "Actual": 10.0,
+        "Diff": -9.945382402603617,
+        "AbsDiff": 9.945382402603617
+      },
+      {
+        "Feature": "Density",
+        "Value": -0.1321171401315538,
+        "Cur_Pred": 0.09134128112321567,
+        "Actual": 5.0,
+        "Diff": -4.908658718876785,
+        "AbsDiff": 4.908658718876785
+      },
+      {
+        "Feature": "Density",
+        "Value": -0.0236416007111497,
+        "Cur_Pred": 0.13165938438338506,
+        "Actual": 3.3333333333333335,
+        "Diff": -3.2016739489499484,
+        "AbsDiff": 3.2016739489499484
+      },
+      {
+        "Feature": "Density",
+        "Value": -0.0546706503593118,
+        "Cur_Pred": 0.08907699267114674,
+        "Actual": 2.769230769230769,
+        "Diff": -2.6801537765596226,
+        "AbsDiff": 2.6801537765596226
+      },
+      {
+        "Feature": "Density",
+        "Value": -0.360672579003382,
+        "Cur_Pred": 0.11747446719086324,
+        "Actual": 2.777777777777778,
+        "Diff": -2.6603033105869147,
+        "AbsDiff": 2.6603033105869147
+      },
+      {
+        "Feature": "Density",
+        "Value": -0.3447796511348112,
+        "Cur_Pred": 0.15806545678883144,
+        "Actual": 2.7777777777777777,
+        "Diff": -2.6197123209889464,
+        "AbsDiff": 2.6197123209889464
+      },
+      {
+        "Feature": "DrivAge",
+        "Value": -1.945880052846976,
+        "Cur_Pred": 0.16916668578786284,
+        "Actual": 0.7044734233330616,
+        "Diff": -0.5353067375451988,
+        "AbsDiff": 0.5353067375451988
+      },
+      {
+        "Feature": "VehAge",
+        "Value": -1.2920474551086096,
+        "Cur_Pred": 0.13301755113200064,
+        "Actual": 0.4296373815980603,
+        "Diff": -0.29661983046605966,
+        "AbsDiff": 0.29661983046605966
+      },
+      {
+        "Feature": "DrivAge",
+        "Value": 2.8664281283123456,
+        "Cur_Pred": 0.09574663560413262,
+        "Actual": 0.37373737373737376,
+        "Diff": -0.27799073813324116,
+        "AbsDiff": 0.27799073813324116
+      },
+      {
+        "Feature": "DrivAge",
+        "Value": -1.8751108148887508,
+        "Cur_Pred": 0.15845075301414951,
+        "Actual": 0.40349233653386635,
+        "Diff": -0.24504158351971683,
+        "AbsDiff": 0.24504158351971683
+      },
+      {
+        "Feature": "Region_R43",
+        "Value": 1.0,
+        "Cur_Pred": 0.10540349918584196,
+        "Actual": 0.32122527187290617,
+        "Diff": -0.2158217726870642,
+        "AbsDiff": 0.2158217726870642
+      },
+      {
+        "Feature": "DrivAge",
+        "Value": -1.7335723389723,
+        "Cur_Pred": 0.16262056599949287,
+        "Actual": 0.3383770047001008,
+        "Diff": -0.17575643870060792,
+        "AbsDiff": 0.17575643870060792
+      },
+      {
+        "Feature": "DrivAge",
+        "Value": -1.804341576930525,
+        "Cur_Pred": 0.16806644847218294,
+        "Actual": 0.3431858371298213,
+        "Diff": -0.17511938865763838,
+        "AbsDiff": 0.17511938865763838
+      },
+      {
+        "Feature": "Region_R21",
+        "Value": 1.0,
+        "Cur_Pred": 0.11477914570733327,
+        "Actual": 0.28745046277884334,
+        "Diff": -0.17267131707151007,
+        "AbsDiff": 0.17267131707151007
+      },
+      {
+        "Feature": "Region_R94",
+        "Value": 1.0,
+        "Cur_Pred": 0.11873040437895954,
+        "Actual": 0.2531137793075386,
+        "Diff": -0.13438337492857905,
+        "AbsDiff": 0.13438337492857905
+      },
+      {
+        "Feature": "Region_R42",
+        "Value": 1.0,
+        "Cur_Pred": 0.10920297750841486,
+        "Actual": 0.19703060583820034,
+        "Diff": -0.08782762832978548,
+        "AbsDiff": 0.08782762832978548
+      },
+      {
+        "Feature": "Region_R26",
+        "Value": 1.0,
+        "Cur_Pred": 0.10243425495802423,
+        "Actual": 0.18487764697552853,
+        "Diff": -0.0824433920175043,
+        "AbsDiff": 0.0824433920175043
+      },
+      {
+        "Feature": "Region_R41",
+        "Value": 1.0,
+        "Cur_Pred": 0.0764381687695949,
+        "Actual": 0.1575676032202217,
+        "Diff": -0.0811294344506268,
+        "AbsDiff": 0.0811294344506268
+      },
+      {
+        "Feature": "VehAge",
+        "Value": 1.6704273672375856,
+        "Cur_Pred": 0.07557986319929678,
+        "Actual": 0.14919235548830267,
+        "Diff": -0.07361249228900589,
+        "AbsDiff": 0.07361249228900589
+      },
+      {
+        "Feature": "VehPower",
+        "Value": 1.242007668051376,
+        "Cur_Pred": 0.10330823352460076,
+        "Actual": 0.17628465691618564,
+        "Diff": -0.07297642339158487,
+        "AbsDiff": 0.07297642339158487
+      },
+      {
+        "Feature": "VehBrand_B12",
+        "Value": 1.0,
+        "Cur_Pred": 0.12744240834739326,
+        "Actual": 0.19869541667327176,
+        "Diff": -0.0712530083258785,
+        "AbsDiff": 0.0712530083258785
+      },
+      {
+        "Feature": "VehPower",
+        "Value": 4.168919486339321,
+        "Cur_Pred": 0.1390732612399059,
+        "Actual": 0.06829561237973411,
+        "Diff": 0.0707776488601718,
+        "AbsDiff": 0.0707776488601718
+      },
+      {
+        "Feature": "Region_R22",
+        "Value": 1.0,
+        "Cur_Pred": 0.11744034465302708,
+        "Actual": 0.18637025955315942,
+        "Diff": -0.06892991490013234,
+        "AbsDiff": 0.06892991490013234
+      },
+      {
+        "Feature": "VehAge",
+        "Value": 0.0040352796678508,
+        "Cur_Pred": 0.10075966130198319,
+        "Actual": 0.16490324047668053,
+        "Diff": -0.06414357917469735,
+        "AbsDiff": 0.06414357917469735
+      },
+      {
+        "Feature": "Region_R11",
+        "Value": 1.0,
+        "Cur_Pred": 0.13166095026876856,
+        "Actual": 0.19333130233486961,
+        "Diff": -0.06167035206610105,
+        "AbsDiff": 0.06167035206610105
+      },
+      {
+        "Feature": "Region_R72",
+        "Value": 1.0,
+        "Cur_Pred": 0.09376689678174707,
+        "Actual": 0.15095020372470105,
+        "Diff": -0.05718330694295398,
+        "AbsDiff": 0.05718330694295398
+      },
+      {
+        "Feature": "VehPower",
+        "Value": 1.7298263044327,
+        "Cur_Pred": 0.10765589145994002,
+        "Actual": 0.1646920221371959,
+        "Diff": -0.05703613067725587,
+        "AbsDiff": 0.05703613067725587
+      },
+      {
+        "Feature": "VehPower",
+        "Value": -0.7092668774739205,
+        "Cur_Pred": 0.1040146284829963,
+        "Actual": 0.15993571758235056,
+        "Diff": -0.05592108909935427,
+        "AbsDiff": 0.05592108909935427
+      },
+      {
+        "Feature": "VehAge",
+        "Value": 1.4852726908409484,
+        "Cur_Pred": 0.08082846144942155,
+        "Actual": 0.13647470404103082,
+        "Diff": -0.055646242591609274,
+        "AbsDiff": 0.055646242591609274
+      },
+      {
+        "Feature": "VehGas_Diesel",
+        "Value": 0.0,
+        "Cur_Pred": 0.10551425602662741,
+        "Actual": 0.15836538921180504,
+        "Diff": -0.05285113318517763,
+        "AbsDiff": 0.05285113318517763
+      },
+      {
+        "Feature": "VehGas_Regular",
+        "Value": 1.0,
+        "Cur_Pred": 0.10551425602662741,
+        "Actual": 0.15836538921180504,
+        "Diff": -0.05285113318517763,
+        "AbsDiff": 0.05285113318517763
+      },
+      {
+        "Feature": "Region_R25",
+        "Value": 1.0,
+        "Cur_Pred": 0.09708546712933062,
+        "Actual": 0.14920359286484006,
+        "Diff": -0.05211812573550943,
+        "AbsDiff": 0.05211812573550943
+      },
+      {
+        "Feature": "VehBrand_B13",
+        "Value": 1.0,
+        "Cur_Pred": 0.0954521409978247,
+        "Actual": 0.14647522208414968,
+        "Diff": -0.05102308108632497,
+        "AbsDiff": 0.05102308108632497
+      },
+      {
+        "Feature": "Area",
+        "Value": -0.9324094971424834,
+        "Cur_Pred": 0.08945967190892759,
+        "Actual": 0.13690831966980738,
+        "Diff": -0.047448647760879786,
+        "AbsDiff": 0.047448647760879786
+      },
+      {
+        "Feature": "VehPower",
+        "Value": 2.705463577195348,
+        "Cur_Pred": 0.11484919808676503,
+        "Actual": 0.06802893233367058,
+        "Diff": 0.04682026575309445,
+        "AbsDiff": 0.04682026575309445
+      },
+      {
+        "Feature": "VehAge",
+        "Value": 0.7446539852543996,
+        "Cur_Pred": 0.08826241804141739,
+        "Actual": 0.13092258583749877,
+        "Diff": -0.04266016779608138,
+        "AbsDiff": 0.04266016779608138
+      },
+      {
+        "Feature": "Region_R52",
+        "Value": 1.0,
+        "Cur_Pred": 0.09652750458908366,
+        "Actual": 0.1387468802402575,
+        "Diff": -0.04221937565117384,
+        "AbsDiff": 0.04221937565117384
+      },
+      {
+        "Feature": "VehBrand_B1",
+        "Value": 0.0,
+        "Cur_Pred": 0.10654914204568364,
+        "Actual": 0.14865327939488565,
+        "Diff": -0.042104137349202014,
+        "AbsDiff": 0.042104137349202014
+      },
+      {
+        "Feature": "VehBrand_B2",
+        "Value": 0.0,
+        "Cur_Pred": 0.10641946624852983,
+        "Actual": 0.14845074456664448,
+        "Diff": -0.04203127831811465,
+        "AbsDiff": 0.04203127831811465
+      },
+      {
+        "Feature": "Region_R91",
+        "Value": 1.0,
+        "Cur_Pred": 0.10030605666617218,
+        "Actual": 0.14157523713510403,
+        "Diff": -0.041269180468931854,
+        "AbsDiff": 0.041269180468931854
+      },
+      {
+        "Feature": "VehBrand_B11",
+        "Value": 1.0,
+        "Cur_Pred": 0.10577959369183823,
+        "Actual": 0.1470199295407686,
+        "Diff": -0.04124033584893036,
+        "AbsDiff": 0.04124033584893036
+      },
+      {
+        "Feature": "Area",
+        "Value": 1.2370131825793211,
+        "Cur_Pred": 0.12177980710134369,
+        "Actual": 0.1628012544655413,
+        "Diff": -0.04102144736419762,
+        "AbsDiff": 0.04102144736419762
+      },
+      {
+        "Feature": "VehBrand_B6",
+        "Value": 1.0,
+        "Cur_Pred": 0.09752140979357264,
+        "Actual": 0.13796533259872007,
+        "Diff": -0.04044392280514743,
+        "AbsDiff": 0.04044392280514743
+      },
+      {
+        "Feature": "Region_R82",
+        "Value": 0.0,
+        "Cur_Pred": 0.10176262975150992,
+        "Actual": 0.1421383559023836,
+        "Diff": -0.04037572615087369,
+        "AbsDiff": 0.04037572615087369
+      },
+      {
+        "Feature": "Region_R24",
+        "Value": 0.0,
+        "Cur_Pred": 0.10640927265788704,
+        "Actual": 0.146773850660327,
+        "Diff": -0.04036457800243996,
+        "AbsDiff": 0.04036457800243996
+      },
+      {
+        "Feature": "Area",
+        "Value": -0.2092686039018819,
+        "Cur_Pred": 0.09768050602113418,
+        "Actual": 0.13642600257841656,
+        "Diff": -0.03874549655728238,
+        "AbsDiff": 0.03874549655728238
+      },
+      {
+        "Feature": "Region_R54",
+        "Value": 1.0,
+        "Cur_Pred": 0.09038910437987836,
+        "Actual": 0.12907459401637508,
+        "Diff": -0.03868548963649672,
+        "AbsDiff": 0.03868548963649672
+      },
+      {
+        "Feature": "Region_R53",
+        "Value": 0.0,
+        "Cur_Pred": 0.10367515622474914,
+        "Actual": 0.14209033183609496,
+        "Diff": -0.03841517561134582,
+        "AbsDiff": 0.03841517561134582
+      },
+      {
+        "Feature": "Region_R93",
+        "Value": 1.0,
+        "Cur_Pred": 0.10803907454805947,
+        "Actual": 0.14639907833206825,
+        "Diff": -0.03836000378400878,
+        "AbsDiff": 0.03836000378400878
+      },
+      {
+        "Feature": "Region_R31",
+        "Value": 0.0,
+        "Cur_Pred": 0.1033365322812623,
+        "Actual": 0.141645036354333,
+        "Diff": -0.03830850407307071,
+        "AbsDiff": 0.03830850407307071
+      },
+      {
+        "Feature": "VehBrand_B10",
+        "Value": 0.0,
+        "Cur_Pred": 0.1036769709687365,
+        "Actual": 0.1414753353490372,
+        "Diff": -0.037798364380300695,
+        "AbsDiff": 0.037798364380300695
+      },
+      {
+        "Feature": "VehBrand_B14",
+        "Value": 0.0,
+        "Cur_Pred": 0.10342622670119381,
+        "Actual": 0.14099009019450817,
+        "Diff": -0.037563863493314364,
+        "AbsDiff": 0.037563863493314364
+      },
+      {
+        "Feature": "Region_R73",
+        "Value": 0.0,
+        "Cur_Pred": 0.10355570862595408,
+        "Actual": 0.1411081285032735,
+        "Diff": -0.03755241987731943,
+        "AbsDiff": 0.03755241987731943
+      },
+      {
+        "Feature": "VehBrand_B4",
+        "Value": 0.0,
+        "Cur_Pred": 0.103511085330875,
+        "Actual": 0.1410604764205077,
+        "Diff": -0.037549391089632705,
+        "AbsDiff": 0.037549391089632705
+      },
+      {
+        "Feature": "Region_R23",
+        "Value": 0.0,
+        "Cur_Pred": 0.1034187658489077,
+        "Actual": 0.14080215104109425,
+        "Diff": -0.03738338519218655,
+        "AbsDiff": 0.03738338519218655
+      },
+      {
+        "Feature": "VehBrand_B3",
+        "Value": 0.0,
+        "Cur_Pred": 0.10343255167941907,
+        "Actual": 0.1407891359939291,
+        "Diff": -0.037356584314510013,
+        "AbsDiff": 0.037356584314510013
+      },
+      {
+        "Feature": "Region_R74",
+        "Value": 0.0,
+        "Cur_Pred": 0.10331545806481739,
+        "Actual": 0.14065109188612626,
+        "Diff": -0.037335633821308875,
+        "AbsDiff": 0.037335633821308875
+      },
+      {
+        "Feature": "VehBrand_B5",
+        "Value": 0.0,
+        "Cur_Pred": 0.10330725928255736,
+        "Actual": 0.14062382933863396,
+        "Diff": -0.037316570056076595,
+        "AbsDiff": 0.037316570056076595
+      },
+      {
+        "Feature": "Region_R83",
+        "Value": 0.0,
+        "Cur_Pred": 0.10339732191446145,
+        "Actual": 0.14066617115584595,
+        "Diff": -0.0372688492413845,
+        "AbsDiff": 0.0372688492413845
+      },
+      {
+        "Feature": "Region_R54",
+        "Value": 0.0,
+        "Cur_Pred": 0.10367908269893071,
+        "Actual": 0.14084921704544598,
+        "Diff": -0.03717013434651527,
+        "AbsDiff": 0.03717013434651527
+      },
+      {
+        "Feature": "VehBrand_B11",
+        "Value": 0.0,
+        "Cur_Pred": 0.10325405197634557,
+        "Actual": 0.1403841030589834,
+        "Diff": -0.03713005108263784,
+        "AbsDiff": 0.03713005108263784
+      },
+      {
+        "Feature": "Area",
+        "Value": -1.655550390383085,
+        "Cur_Pred": 0.08246173790780525,
+        "Actual": 0.11959024905310536,
+        "Diff": -0.03712851114530011,
+        "AbsDiff": 0.03712851114530011
+      },
+      {
+        "Feature": "VehBrand_B6",
+        "Value": 0.0,
+        "Cur_Pred": 0.10355049911888041,
+        "Actual": 0.1406260856413771,
+        "Diff": -0.03707558652249669,
+        "AbsDiff": 0.03707558652249669
+      },
+      {
+        "Feature": "Region_R93",
+        "Value": 0.0,
+        "Cur_Pred": 0.10267221109998813,
+        "Actual": 0.13973169632738566,
+        "Diff": -0.037059485227397534,
+        "AbsDiff": 0.037059485227397534
+      },
+      {
+        "Feature": "Region_R42",
+        "Value": 0.0,
+        "Cur_Pred": 0.10328490839081293,
+        "Actual": 0.14032617835549527,
+        "Diff": -0.037041269964682336,
+        "AbsDiff": 0.037041269964682336
+      },
+      {
+        "Feature": "Region_R91",
+        "Value": 0.0,
+        "Cur_Pred": 0.10347665565355733,
+        "Actual": 0.14045712568035668,
+        "Diff": -0.03698047002679934,
+        "AbsDiff": 0.03698047002679934
+      },
+      {
+        "Feature": "VehBrand_B13",
+        "Value": 0.0,
+        "Cur_Pred": 0.1034449433007538,
+        "Actual": 0.1404114494688333,
+        "Diff": -0.036966506168079505,
+        "AbsDiff": 0.036966506168079505
+      },
+      {
+        "Feature": "Region_R25",
+        "Value": 0.0,
+        "Cur_Pred": 0.10340850553389727,
+        "Actual": 0.14037299886161542,
+        "Diff": -0.036964493327718145,
+        "AbsDiff": 0.036964493327718145
+      },
+      {
+        "Feature": "Region_R52",
+        "Value": 0.0,
+        "Cur_Pred": 0.10370023120100559,
+        "Actual": 0.14062099067033465,
+        "Diff": -0.03692075946932906,
+        "AbsDiff": 0.03692075946932906
+      },
+      {
+        "Feature": "Region_R22",
+        "Value": 0.0,
+        "Cur_Pred": 0.10313654709433338,
+        "Actual": 0.13997160455539087,
+        "Diff": -0.03683505746105749,
+        "AbsDiff": 0.03683505746105749
+      },
+      {
+        "Feature": "Region_R43",
+        "Value": 0.0,
+        "Cur_Pred": 0.10330027456525415,
+        "Actual": 0.14011970338704519,
+        "Diff": -0.03681942882179104,
+        "AbsDiff": 0.03681942882179104
+      },
+      {
+        "Feature": "Region_R94",
+        "Value": 0.0,
+        "Cur_Pred": 0.10321059014598157,
+        "Actual": 0.13982932158596417,
+        "Diff": -0.03661873143998261,
+        "AbsDiff": 0.03661873143998261
+      },
+      {
+        "Feature": "Region_R21",
+        "Value": 0.0,
+        "Cur_Pred": 0.10325219376181705,
+        "Actual": 0.13984281418970232,
+        "Diff": -0.03659062042788527,
+        "AbsDiff": 0.03659062042788527
+      },
+      {
+        "Feature": "Region_R26",
+        "Value": 0.0,
+        "Cur_Pred": 0.10331824731894955,
+        "Actual": 0.13983746365943708,
+        "Diff": -0.036519216340487534,
+        "AbsDiff": 0.036519216340487534
+      },
+      {
+        "Feature": "Region_R41",
+        "Value": 0.0,
+        "Cur_Pred": 0.10381938987387816,
+        "Actual": 0.14019119366658053,
+        "Diff": -0.03637180379270237,
+        "AbsDiff": 0.03637180379270237
+      },
+      {
+        "Feature": "Region_R72",
+        "Value": 0.0,
+        "Cur_Pred": 0.10377224157861897,
+        "Actual": 0.14000652221794233,
+        "Diff": -0.03623428063932335,
+        "AbsDiff": 0.03623428063932335
+      },
+      {
+        "Feature": "VehBrand_B3",
+        "Value": 1.0,
+        "Cur_Pred": 0.10179049658054924,
+        "Actual": 0.1372975518718365,
+        "Diff": -0.03550705529128727,
+        "AbsDiff": 0.03550705529128727
+      },
+      {
+        "Feature": "VehBrand_B5",
+        "Value": 1.0,
+        "Cur_Pred": 0.103261657991887,
+        "Actual": 0.1385754325082245,
+        "Diff": -0.03531377451633749,
+        "AbsDiff": 0.03531377451633749
+      },
+      {
+        "Feature": "Region_R11",
+        "Value": 0.0,
+        "Cur_Pred": 0.100035645487277,
+        "Actual": 0.13442866383774002,
+        "Diff": -0.03439301835046302,
+        "AbsDiff": 0.03439301835046302
+      },
+      {
+        "Feature": "Area",
+        "Value": 1.9601540758199227,
+        "Cur_Pred": 0.14590442761370692,
+        "Actual": 0.17631455117815903,
+        "Diff": -0.030410123564452107,
+        "AbsDiff": 0.030410123564452107
+      },
+      {
+        "Feature": "Region_R83",
+        "Value": 1.0,
+        "Cur_Pred": 0.09088909057217388,
+        "Actual": 0.12057260238172117,
+        "Diff": -0.029683511809547286,
+        "AbsDiff": 0.029683511809547286
+      },
+      {
+        "Feature": "VehBrand_B4",
+        "Value": 1.0,
+        "Cur_Pred": 0.09810295726040787,
+        "Actual": 0.12682389479171333,
+        "Diff": -0.02872093753130546,
+        "AbsDiff": 0.02872093753130546
+      },
+      {
+        "Feature": "Region_R24",
+        "Value": 1.0,
+        "Cur_Pred": 0.0932169875931282,
+        "Actual": 0.12018784227933914,
+        "Diff": -0.026970854686210938,
+        "AbsDiff": 0.026970854686210938
+      },
+      {
+        "Feature": "VehBrand_B12",
+        "Value": 0.0,
+        "Cur_Pred": 0.09536409139596184,
+        "Actual": 0.12137827796676932,
+        "Diff": -0.02601418657080748,
+        "AbsDiff": 0.02601418657080748
+      },
+      {
+        "Feature": "Region_R73",
+        "Value": 1.0,
+        "Cur_Pred": 0.09383268992091746,
+        "Actual": 0.11821935204465732,
+        "Diff": -0.024386662123739855,
+        "AbsDiff": 0.024386662123739855
+      },
+      {
+        "Feature": "Region_R23",
+        "Value": 1.0,
+        "Cur_Pred": 0.09433574755971887,
+        "Actual": 0.1181120497052802,
+        "Diff": -0.02377630214556134,
+        "AbsDiff": 0.02377630214556134
+      },
+      {
+        "Feature": "VehBrand_B14",
+        "Value": 1.0,
+        "Cur_Pred": 0.08286016106991062,
+        "Actual": 0.06091699865647831,
+        "Diff": 0.02194316241343231,
+        "AbsDiff": 0.02194316241343231
+      },
+      {
+        "Feature": "VehBrand_B1",
+        "Value": 1.0,
+        "Cur_Pred": 0.0931111597352424,
+        "Actual": 0.11495489887199448,
+        "Diff": -0.021843739136752083,
+        "AbsDiff": 0.021843739136752083
+      },
+      {
+        "Feature": "VehBrand_B2",
+        "Value": 1.0,
+        "Cur_Pred": 0.09304047144106722,
+        "Actual": 0.11437341788425731,
+        "Diff": -0.021332946443190087,
+        "AbsDiff": 0.021332946443190087
+      },
+      {
+        "Feature": "VehGas_Regular",
+        "Value": 0.0,
+        "Cur_Pred": 0.1010087522196146,
+        "Actual": 0.12196893647522013,
+        "Diff": -0.02096018425560553,
+        "AbsDiff": 0.02096018425560553
+      },
+      {
+        "Feature": "VehGas_Diesel",
+        "Value": 1.0,
+        "Cur_Pred": 0.1010087522196146,
+        "Actual": 0.12196893647522013,
+        "Diff": -0.02096018425560553,
+        "AbsDiff": 0.02096018425560553
+      },
+      {
+        "Feature": "Region_R74",
+        "Value": 1.0,
+        "Cur_Pred": 0.10189464225346928,
+        "Actual": 0.12270570833394037,
+        "Diff": -0.02081106608047109,
+        "AbsDiff": 0.02081106608047109
+      },
+      {
+        "Feature": "Region_R53",
+        "Value": 1.0,
+        "Cur_Pred": 0.09773891933455962,
+        "Actual": 0.11687684864903439,
+        "Diff": -0.019137929314474764,
+        "AbsDiff": 0.019137929314474764
+      },
+      {
+        "Feature": "VehBrand_B10",
+        "Value": 1.0,
+        "Cur_Pred": 0.08951223818915081,
+        "Actual": 0.10501838499384909,
+        "Diff": -0.015506146804698279,
+        "AbsDiff": 0.015506146804698279
+      },
+      {
+        "Feature": "Region_R82",
+        "Value": 1.0,
+        "Cur_Pred": 0.11406773379127855,
+        "Actual": 0.1292077901056569,
+        "Diff": -0.015140056314378342,
+        "AbsDiff": 0.015140056314378342
+      },
+      {
+        "Feature": "Region_R31",
+        "Value": 1.0,
+        "Cur_Pred": 0.10254823195332534,
+        "Actual": 0.11355393156063325,
+        "Diff": -0.011005699607307906,
+        "AbsDiff": 0.011005699607307906
+      }
+    ]
+  },
+  "evaluation": "1. Goodness-of-fit and calibration quality:\nThe model's goodness-of-fit and calibration quality are mixed. The RMSE and MAE indicate that the model is able to capture some of the variation in the data, but the R2 is low, suggesting that the model is not well-suited to explain the variance in the dependent variable. The Poisson deviance and Gini score are both high, indicating that the model is overdispersed and has poor calibration.\n2. Overfitting and underfitting:\nBased on the high Poisson deviance and Gini score, it appears that the model is overfitting to the training data. This is supported by the low R2 and the fact that the model is able to accurately predict the actual values for some features but not others.\n3. Influential variables:\nThe most influential variables in the model are BonusMalus and VehBrand_B10. BonusMalus is a significant predictor of the dependent variable, while VehBrand_B10 is a significant predictor of both the actual and predicted values. This suggests that these variables are important for predicting the frequency of claims, but the model may be overfitting to these variables.\n4. Comparison of actual and predicted values:\nThe comparison of actual and predicted values shows that the model is able to accurately predict the actual values for some features, but not others. For example, the model is able to accurately predict the actual values for BonusMalus, but not for VehBrand_B10. This suggests that the model may be capturing some of the variation in the dependent variable, but is not able to capture all of it.\n\nIn conclusion, the model appears to be overfitting to the training data and is not well-suited to explain the variance in the dependent variable. The most influential variables in the model are BonusMalus and VehBrand_B10, but the model may be overfitting to these variables. The comparison of actual and predicted values shows that the model is able to accurately predict some of the actual values, but not all of them.",
+  "impact_analysis": "Comparing the Performance of the Two Models\n\n* The current model (Model 2) has improved upon the previous model (Model 1) in terms of prediction accuracy, as evident from the higher mean prediction and lower standard deviation of predictions.\n* The current model has a better ability to capture the relationship between the bonus malus feature and the claim frequency, as seen from the higher mean prediction for this feature in the current model.\n* The current model has a better ability to capture the relationship between the vehicle age and claim frequency, as seen from the higher mean prediction for this feature in the current model.\n* The current model has a better ability to capture the relationship between the vehicle brand and claim frequency, as seen from the higher mean prediction for this feature in the current model.\n* The current model has a better ability to capture the relationship between the region and claim frequency, as seen from the higher mean prediction for this feature in the current model.\n* The current model has a better ability to capture the relationship between the density and claim frequency, as seen from the higher mean prediction for this feature in the current model.\n* The current model has a better ability to capture the relationship between the drivage and claim frequency, as seen from the higher mean prediction for this feature in the current model.\n* The current model has a better ability to capture the relationship between the bonus malus and claim frequency, as seen from the higher mean prediction for this feature in the current model.\n* The current model has a better ability to capture the relationship between the vehicle age and claim frequency, as seen from the higher mean prediction for this feature in the current model.\n* The current model has a better ability to capture the relationship between the vehicle brand and claim frequency, as seen from the higher mean prediction for this feature in the current model.\n* The current model has a better ability to capture the relationship between the region and claim frequency, as seen from the higher mean prediction for this feature in the current model.\n\nIn conclusion, the current model (Model 2) has shown improved performance in predicting claim frequencies compared to the previous model (Model 1). The current model has a better ability to capture the relationships between various features and claim frequency, which is reflected in the higher mean predictions and lower standard deviations of predictions.",
+  "consistency_snapshot": {
+    "RMSE": 0.8868117479391955,
+    "MAE": 0.23235596571223952,
+    "R2": 0.002140856219455256,
+    "Poisson_Deviance": 0.9480936774723899,
+    "Gini_score": null,
+    "Feature_Importance": [
+      {
+        "Feature": "Area",
+        "Coefficient": 0.0859399890527661
+      },
+      {
+        "Feature": "VehPower",
+        "Coefficient": 0.037152893899643505
+      },
+      {
+        "Feature": "VehAge",
+        "Coefficient": -0.20524087813505032
+      },
+      {
+        "Feature": "DrivAge",
+        "Coefficient": 0.1056861575317529
+      },
+      {
+        "Feature": "BonusMalus",
+        "Coefficient": 0.3605228639201851
+      },
+      {
+        "Feature": "Density",
+        "Coefficient": -0.012757066753862527
+      },
+      {
+        "Feature": "VehBrand_B1",
+        "Coefficient": -0.008227412298006602
+      },
+      {
+        "Feature": "VehBrand_B10",
+        "Coefficient": -0.05743923195092484
+      },
+      {
+        "Feature": "VehBrand_B11",
+        "Coefficient": 0.04550470894368633
+      },
+      {
+        "Feature": "VehBrand_B12",
+        "Coefficient": 0.08798997284358286
+      },
+      {
+        "Feature": "VehBrand_B13",
+        "Coefficient": 0.00382513172077876
+      },
+      {
+        "Feature": "VehBrand_B14",
+        "Coefficient": -0.08209443230066589
+      },
+      {
+        "Feature": "VehBrand_B2",
+        "Coefficient": -0.011562417554881469
+      },
+      {
+        "Feature": "VehBrand_B3",
+        "Coefficient": -0.009797944088853369
+      },
+      {
+        "Feature": "VehBrand_B4",
+        "Coefficient": -0.04468853065970939
+      },
+      {
+        "Feature": "VehBrand_B5",
+        "Coefficient": 0.06838818537197006
+      },
+      {
+        "Feature": "VehBrand_B6",
+        "Coefficient": -0.044471138662718034
+      },
+      {
+        "Feature": "VehGas_Diesel",
+        "Coefficient": -0.039386751226897825
+      },
+      {
+        "Feature": "VehGas_Regular",
+        "Coefficient": -0.013186357408843188
+      },
+      {
+        "Feature": "Region_R11",
+        "Coefficient": 0.022823404196108663
+      },
+      {
+        "Feature": "Region_R21",
+        "Coefficient": 0.00927165488102435
+      },
+      {
+        "Feature": "Region_R22",
+        "Coefficient": 0.06002442454564045
+      },
+      {
+        "Feature": "Region_R23",
+        "Coefficient": -0.04503535996987379
+      },
+      {
+        "Feature": "Region_R24",
+        "Coefficient": 0.10807341245571359
+      },
+      {
+        "Feature": "Region_R25",
+        "Coefficient": 0.042972651871473894
+      },
+      {
+        "Feature": "Region_R26",
+        "Coefficient": -0.0054266568784683234
+      },
+      {
+        "Feature": "Region_R31",
+        "Coefficient": -0.08250960913259084
+      },
+      {
+        "Feature": "Region_R41",
+        "Coefficient": -0.24245674817213853
+      },
+      {
+        "Feature": "Region_R42",
+        "Coefficient": 0.0007825630078582172
+      },
+      {
+        "Feature": "Region_R43",
+        "Coefficient": -0.03393577510034236
+      },
+      {
+        "Feature": "Region_R52",
+        "Coefficient": 0.04107802411598212
+      },
+      {
+        "Feature": "Region_R53",
+        "Coefficient": 0.10634179748671681
+      },
+      {
+        "Feature": "Region_R54",
+        "Coefficient": -0.00964091025587856
+      },
+      {
+        "Feature": "Region_R72",
+        "Coefficient": -0.0734396798660314
+      },
+      {
+        "Feature": "Region_R73",
+        "Coefficient": -0.11313146101490917
+      },
+      {
+        "Feature": "Region_R74",
+        "Coefficient": 0.12889638169511272
+      },
+      {
+        "Feature": "Region_R82",
+        "Coefficient": 0.12497296238420759
+      },
+      {
+        "Feature": "Region_R83",
+        "Coefficient": -0.15687507216312535
+      },
+      {
+        "Feature": "Region_R91",
+        "Coefficient": -0.020175571276429473
+      },
+      {
+        "Feature": "Region_R93",
+        "Coefficient": 0.02029345171831059
+      },
+      {
+        "Feature": "Region_R94",
+        "Coefficient": 0.06452300683589814
+      }
+    ],
+    "Calibration_table": [
+      {
+        "Decile": 0,
+        "ActualRate": 0.0439658685588611,
+        "PredictedRate": 0.058682544991450376,
+        "Exposure": 6678.22
+      },
+      {
+        "Decile": 1,
+        "ActualRate": 0.06103639026465724,
+        "PredictedRate": 0.07834142091171586,
+        "Exposure": 6491.26
+      },
+      {
+        "Decile": 2,
+        "ActualRate": 0.0859868456375078,
+        "PredictedRate": 0.09819983296267933,
+        "Exposure": 6064.88
+      },
+      {
+        "Decile": 3,
+        "ActualRate": 0.12988324715261584,
+        "PredictedRate": 0.12838309741010281,
+        "Exposure": 5051.68
+      },
+      {
+        "Decile": 4,
+        "ActualRate": 0.17352587073823106,
+        "PredictedRate": 0.17551503155302758,
+        "Exposure": 3956.24
+      },
+      {
+        "Decile": 5,
+        "ActualRate": 0.29188259584157106,
+        "PredictedRate": 0.24757544234880066,
+        "Exposure": 3051.05
+      },
+      {
+        "Decile": 6,
+        "ActualRate": 0.6205329651423002,
+        "PredictedRate": 0.3749917453252744,
+        "Exposure": 2223.35
+      },
+      {
+        "Decile": 7,
+        "ActualRate": 1.3147736594488655,
+        "PredictedRate": 0.6453186354654854,
+        "Exposure": 1321.22
+      },
+      {
+        "Decile": 8,
+        "ActualRate": 2.814913936474357,
+        "PredictedRate": 1.1905043981420582,
+        "Exposure": 698.8100000000001
+      },
+      {
+        "Decile": 9,
+        "ActualRate": 15.932041140462173,
+        "PredictedRate": 6.786644837134297,
+        "Exposure": 294.726277393888
+      }
+    ]
+  },
+  "model_predictions_path": "data/preds",
+  "unc_modelling_layer1": 0.09697732063183273,
+  "unc_modelling_layer2": 0.009637202051842708,
+  "unc_modelling_layer3": 0.09645615592666013,
+  "unc_modelling_layer4": 0.047078936177940234
+}
