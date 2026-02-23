@@ -268,8 +268,7 @@ PROMPTS = {
         historical variability or are plausibly explained by data updates.
 
     3. Deterministic pipeline rule
-    - YOU MUST ALWAYS APPROVE if the deterministic pipeline is used,
-        or if outcomes are consistent with previous approved runs.
+    - YOU MUST ALWAYS APPROVE if outcomes are consistent with previous approved runs.
 
     4. Decision discipline
     - APPROVE_WITH_NOTES is appropriate when the workflow is acceptable to proceed,
