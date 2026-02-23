@@ -6,23 +6,38 @@ class DataCleaning:
         self.actions_log = []
 
     def clean(self, data: pd.DataFrame):
-        # Clip outliers / right-censoring 
-        self.actions_log.append("Clipping VehAge (<=20), DrivAge (<=90), BonusMalus (<=150), ClaimNb (<=5).")
-        data['VehAge'] = data['VehAge'].clip(upper=20)
-        data['DrivAge'] = data['DrivAge'].clip(upper=90)
-        data['BonusMalus'] = data['BonusMalus'].clip(upper=150)
-        data['ClaimNb'] = data['ClaimNb'].clip(upper=5)
+        data = data.copy() 
 
-        # Encode Area as ordinal numeric 
-        data['Area'] = data['Area'].astype('category').cat.codes + 1
+        clip_rules = {
+            "VehAge": 20,
+            "DrivAge": 90,
+            "BonusMalus": 150,
+            "ClaimNb": 5
+        }
 
-        self.actions_log.append("Mapped Area categories to numeric scale (A→1,...,F→6).")
-        
+        for col, upper_bound in clip_rules.items():
+            if col in data.columns:
+                data[col] = data[col].clip(upper=upper_bound)
+                self.actions_log.append(f"Clipped {col} at upper={upper_bound}.")
+            else:
+                self.actions_log.append(f"Skipped clipping: {col} not found.")
+
+        if "Area" in data.columns:
+            data["Area"] = data["Area"].astype("category").cat.codes + 1
+            self.actions_log.append("Mapped Area categories to numeric scale.")
+        else:
+            self.actions_log.append("Skipped encoding: Area not found.")
+
         empty_cols = data.columns[data.isna().all()].tolist()
         if empty_cols:
             data = data.drop(columns=empty_cols)
-        
-        # Remove missing values
+            self.actions_log.append(f"Dropped fully empty columns: {empty_cols}")
+
+        before_rows = len(data)
         data = data.dropna()
-    
+        after_rows = len(data)
+        self.actions_log.append(
+            f"Dropped {before_rows - after_rows} rows containing missing values."
+        )
+
         return data
