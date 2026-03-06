@@ -219,7 +219,8 @@ class DataPrepAgent(BaseAgent):
         # --------------------
         # Load dataset
         # --------------------
-        dataset_path = message.metadata.get("dataset_path", "data/raw/freMTPL2freq.csv")
+        #dataset_path = message.metadata.get("dataset_path", "data/raw/freMTPL2freq.csv")
+        dataset_path = message.metadata.get("dataset_path", "data/raw/T6_missing_columns.csv")
         try:
             df = pd.read_csv(dataset_path)
         except Exception as e:
