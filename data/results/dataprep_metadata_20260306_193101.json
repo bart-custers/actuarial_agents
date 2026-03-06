@@ -1,0 +1,204 @@
+{
+  "timestamp": "20260306_193101",
+  "status": "success",
+  "used_pipeline": "deterministic",
+  "plan_dataprep": "1) The task is to prepare an actuarial dataset containing insurance claims for claim frequency modelling.\n2) Top 6 actions for dataset preparation:\n   - Convert categorical variables to appropriate format (e.g., one-hot encoding).\n   - Log-transform right-skewed numerical variables like `ClaimNb` and `Exposure`.\n   - Check and handle any outliers in numerical variables.\n   - Encode or drop unused categories in `Area`, `VehGas`, and `Region`.\n   - Normalize numerical variables if necessary for model performance.\n   - Split the dataset into training and testing sets.\n3) Immediate warnings:\n   - No missing values detected, but ensure no implicit missing values exist (e.g., non-numeric entries in numeric columns).",
+  "adaptive_suggestion": "```python\nimport pandas as pd\nimport numpy as np\n\nclass DataCleaning:\n    def __init__(self):\n        self.actions_log = []\n\n    def clean(self, data: pd.DataFrame):\n        data = data.copy() \n\n        log_transform = [\"ClaimNb\", \"Exposure\"]\n        for col in log_transform:\n            if col in data.columns:\n                data[col] = np.log1p(data[col])\n                self.actions_log.append(f\"Log-transformed {col}.\")\n            else:\n                self.actions_log.append(f\"Skipped log-transformation: {col} not found.\")\n\n        clip_rules = {\n            \"VehPower\": 200,\n            \"DrivAge\": 90,\n            \"BonusMalus\": 150,\n            \"Density\": 1000\n        }\n\n        for col, upper_bound in clip_rules.items():\n            if col in data.columns:\n                data[col] = data[col].clip(upper=upper_bound)\n                self.actions_log.append(f\"Clipped {col} at upper={upper_bound}.\")\n            else:\n                self.actions_log.append(f\"Skipped clipping: {col} not found.\")\n\n        cat_vars = [\"Area\", \"VehGas\", \"Region\"]\n        for col in cat_vars:\n            if col in data.columns:\n                data[col] = data[col].astype(\"category\").cat.codes + 1\n                self.actions_log.append(f\"Mapped {col} categories to numeric scale.\")\n            else:\n                self.actions_log.append(f\"Skipped encoding: {col} not found.\")\n\n        empty_cols = data.columns[data.isna().all()].tolist()\n        if empty_cols:\n            data = data.drop(columns=empty_cols)\n            self.actions_log.append(f\"Dropped fully empty columns: {empty_cols}\")\n\n        before_rows = len(data)\n        data = data.dropna()\n        after_rows = len(data)\n        self.actions_log.append(\n            f\"Dropped {before_rows - after_rows} rows containing missing values.\"\n        )\n\n        return data\n```",
+  "comparison": {
+    "status": "adaptive_succeeded",
+    "n_rows_det": 678013,
+    "n_rows_adapt": 678013,
+    "n_cols_det": 10,
+    "n_cols_adapt": 10,
+    "feature_overlap": 10,
+    "shape_det": [
+      678013,
+      10
+    ],
+    "shape_adapt": [
+      678013,
+      10
+    ]
+  },
+  "verification": "- The status of the adaptive pipeline is \"adaptive_succeeded\", which indicates it has successfully processed without errors.\n- Both deterministic and adaptive pipelines have processed the same number of rows (678,013) and columns (10), suggesting consistency in the dataset handling.\n- The feature overlap is 10, indicating all features are preserved in both pipelines.\n- The shape of the output from both pipelines matches ([678013, 10]), confirming consistent output dimensions.\n- There is no indication of failure or producing an empty dataframe from the adaptive pipeline.\n\nDecision: KEEP_DETERMINISTIC",
+  "explanation": "### Step-by-Step Data Preparation and Reasoning Summary\n\n#### 1. **Pipeline Status**\n   - **Adaptive Pipeline Status:** The adaptive pipeline status is \"adaptive_succeeded\". This indicates that the pipeline executed without any errors, ensuring the integrity and reliability of the processing steps.\n\n#### 2. **Data Consistency Across Pipelines**\n   - **Rows Processed:** Both the deterministic and adaptive pipelines have processed the same number of rows, which is 678,013. This consistency suggests that there are no discrepancies in the dataset size, which is crucial for accurate analysis.\n   - **Columns Processed:** Both pipelines have handled the same number of columns, which is 10. This further confirms that the dataset structure remains intact across both processing methods.\n\n#### 3. **Feature Preservation**\n   - **Feature Overlap:** The feature overlap is reported as 10, meaning all original features are preserved in both the deterministic and adaptive pipelines. This ensures that no important information is lost during the transformation process.\n\n#### 4. **Output Dimensions**\n   - **Shape Match:** The shape of the output from both pipelines matches ([678013, 10]). This consistency in output dimensions confirms that the transformations applied by both pipelines do not alter the fundamental structure of the dataset, maintaining its integrity.\n\n#### 5. **Failure Indicators**\n   - **No Failure Indication:** There is no indication of failure or production of an empty dataframe from the adaptive pipeline. This absence of failure signals that the pipeline has handled the data effectively and produced valid results.\n\n### Decision: KEEP_DETERMINISTIC\n\n#### Rationale:\n1. **Stability and Reliability:** The adaptive pipeline's success (\"adaptive_succeeded\") ensures that the processing was stable and error-free. This is a strong indicator of the pipeline\u2019s robustness.\n   \n2. **Consistent Output:** The fact that both deterministic and adaptive pipelines process the same number of rows and columns, and produce outputs with matching shapes, indicates that they are handling the data consistently. This consistency builds confidence in the pipeline\u2019s ability to produce reliable results.\n\n3. **Feature Preservation:** All features are preserved in both pipelines, ensuring that no critical information is lost during the processing stages.\n\n4. **No Failures:** The absence of any failure indicators or empty dataframe production from the adaptive pipeline further reinforces the decision to keep the deterministic approach.\n\nGiven these factors, the decision to keep the deterministic pipeline is justified by its consistent performance, reliability, and preservation of the dataset's integrity. The deterministic pipeline appears to be a reliable choice for further analysis and modeling.",
+  "consistency_snapshot": {
+    "n_rows": 678013,
+    "n_columns": 10,
+    "memory_MB": 111.5401,
+    "dtypes": {
+      "IDpol": "float64",
+      "ClaimNb": "int64",
+      "Exposure": "float64",
+      "Area": "int8",
+      "VehPower": "int64",
+      "DrivAge": "int64",
+      "BonusMalus": "int64",
+      "VehGas": "object",
+      "Density": "int64",
+      "Region": "object"
+    },
+    "missing_counts": {
+      "IDpol": 0,
+      "ClaimNb": 0,
+      "Exposure": 0,
+      "Area": 0,
+      "VehPower": 0,
+      "DrivAge": 0,
+      "BonusMalus": 0,
+      "VehGas": 0,
+      "Density": 0,
+      "Region": 0
+    },
+    "missing_pct": {
+      "IDpol": 0.0,
+      "ClaimNb": 0.0,
+      "Exposure": 0.0,
+      "Area": 0.0,
+      "VehPower": 0.0,
+      "DrivAge": 0.0,
+      "BonusMalus": 0.0,
+      "VehGas": 0.0,
+      "Density": 0.0,
+      "Region": 0.0
+    },
+    "numeric_summary": {
+      "IDpol": {
+        "count": 678013.0,
+        "mean": 2621856.9211,
+        "std": 1641782.7527,
+        "min": 1.0,
+        "25%": 1157951.0,
+        "50%": 2272152.0,
+        "75%": 4046274.0,
+        "max": 6114330.0
+      },
+      "ClaimNb": {
+        "count": 678013.0,
+        "mean": 0.0532,
+        "std": 0.2382,
+        "min": 0.0,
+        "25%": 0.0,
+        "50%": 0.0,
+        "75%": 0.0,
+        "max": 5.0
+      },
+      "Exposure": {
+        "count": 678013.0,
+        "mean": 0.5288,
+        "std": 0.3644,
+        "min": 0.0027,
+        "25%": 0.18,
+        "50%": 0.49,
+        "75%": 0.99,
+        "max": 2.01
+      },
+      "Area": {
+        "count": 678013.0,
+        "mean": 3.2897,
+        "std": 1.3827,
+        "min": 1.0,
+        "25%": 2.0,
+        "50%": 3.0,
+        "75%": 4.0,
+        "max": 6.0
+      },
+      "VehPower": {
+        "count": 678013.0,
+        "mean": 6.4546,
+        "std": 2.0509,
+        "min": 4.0,
+        "25%": 5.0,
+        "50%": 6.0,
+        "75%": 7.0,
+        "max": 15.0
+      },
+      "DrivAge": {
+        "count": 678013.0,
+        "mean": 45.4969,
+        "std": 14.1299,
+        "min": 18.0,
+        "25%": 34.0,
+        "50%": 44.0,
+        "75%": 55.0,
+        "max": 90.0
+      },
+      "BonusMalus": {
+        "count": 678013.0,
+        "mean": 59.7572,
+        "std": 15.6079,
+        "min": 50.0,
+        "25%": 50.0,
+        "50%": 50.0,
+        "75%": 64.0,
+        "max": 150.0
+      },
+      "Density": {
+        "count": 678013.0,
+        "mean": 1792.4224,
+        "std": 3958.6466,
+        "min": 1.0,
+        "25%": 92.0,
+        "50%": 393.0,
+        "75%": 1658.0,
+        "max": 27000.0
+      }
+    },
+    "categorical_summary": {
+      "VehGas": {
+        "Regular": 0.5101,
+        "Diesel": 0.4899
+      },
+      "Region": {
+        "R24": 0.2369,
+        "R82": 0.125,
+        "R93": 0.117,
+        "R11": 0.1029,
+        "R53": 0.0621,
+        "R52": 0.0572,
+        "R91": 0.0528,
+        "R72": 0.0462,
+        "R31": 0.0402,
+        "R54": 0.0281,
+        "R73": 0.0253,
+        "R41": 0.0192,
+        "R25": 0.0161,
+        "R26": 0.0155,
+        "R23": 0.013,
+        "R22": 0.0118,
+        "R83": 0.0078,
+        "R74": 0.0067,
+        "R94": 0.0067,
+        "R21": 0.0045,
+        "R42": 0.0032,
+        "R43": 0.002
+      }
+    },
+    "target_distribution": {
+      "0": 0.9498,
+      "1": 0.0475,
+      "2": 0.0026,
+      "3": 0.0001,
+      "5": 0.0,
+      "4": 0.0
+    },
+    "target_mean": 0.053192195429881135,
+    "target_variance": 0.056740328301545774
+  },
+  "unc_dataprep_layer1": 0.18159129566334897,
+  "unc_dataprep_layer2": 0.015349478505807812,
+  "unc_dataprep_layer3": 0.19221751341605842,
+  "unc_dataprep_layer4": 0.204771102032567,
+  "processed_paths": {
+    "X_train": "data/processed/T6_missing_columns_X_train.csv",
+    "X_test": "data/processed/T6_missing_columns_X_test.csv",
+    "y_train": "data/processed/T6_missing_columns_y_train.csv",
+    "y_test": "data/processed/T6_missing_columns_y_test.csv",
+    "exposure_train": "data/processed/T6_missing_columns_exposure_train.csv",
+    "exposure_test": "data/processed/T6_missing_columns_exposure_test.csv"
+  },
+  "artifacts": {
+    "preprocessor": "data/artifacts/preprocessor.pkl",
+    "features": "data/artifacts/feature_names.pkl"
+  }
+}
