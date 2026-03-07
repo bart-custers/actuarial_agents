@@ -1,0 +1,220 @@
+{
+  "timestamp": "20260307_183752",
+  "status": "success",
+  "used_pipeline": "deterministic",
+  "plan_dataprep": "1) The task is to prepare an actuarial dataset containing insurance claims for modeling claim frequency.\n2) Top 6 actions for preparing the dataset:\n   - Convert categorical variables to appropriate formats.\n   - Standardize or normalize numerical variables if needed.\n   - Check for and handle any outliers in numerical features.\n   - Encode categorical variables using techniques like one-hot encoding.\n   - Verify the distribution of the target variable (ClaimNb) for model assumptions.\n   - Split the dataset into training and testing sets.\n3) Immediate warnings:\n   - No missing values detected, but ensure data integrity during preprocessing.",
+  "adaptive_suggestion": "```python\nimport pandas as pd\nimport numpy as np\n\nclass DataCleaning:\n    def __init__(self):\n        self.actions_log = []\n\n    def clean(self, data: pd.DataFrame):\n        data = data.copy()\n\n        clip_rules = {\n            \"VehAge\": 20,\n            \"DrivAge\": 90,\n            \"BonusMalus\": 150,\n            \"ClaimNb\": 5\n        }\n\n        for col, upper_bound in clip_rules.items():\n            if col in data.columns:\n                data[col] = data[col].clip(upper=upper_bound)\n                self.actions_log.append(f\"Clipped {col} at upper={upper_bound}.\")\n            else:\n                self.actions_log.append(f\"Skipped clipping: {col} not found.\")\n\n        for col in [\"VehBrand\", \"VehGas\", \"Region\"]:\n            if col in data.columns:\n                data[col] = pd.get_dummies(data[col], prefix=col, drop_first=True)\n                self.actions_log.append(f\"Encoded {col} using one-hot encoding.\")\n            else:\n                self.actions_log.append(f\"Skipped encoding: {col} not found.\")\n\n        if \"Area\" in data.columns:\n            data[\"Area\"] = data[\"Area\"].astype(\"category\").cat.codes + 1\n            self.actions_log.append(\"Mapped Area categories to numeric scale.\")\n        else:\n            self.actions_log.append(\"Skipped mapping: Area not found.\")\n\n        before_rows = len(data)\n        data = data.dropna()\n        after_rows = len(data)\n        self.actions_log.append(\n            f\"Dropped {before_rows - after_rows} rows containing missing values.\"\n        )\n\n        return data\n```",
+  "comparison": {
+    "status": "adaptive_failed"
+  },
+  "verification": "Forced decision due to status=adaptive_failed",
+  "explanation": "Certainly! Let's break down the process of summarizing the data preparation and reasoning when encountering a \"forced decision\" due to `status=adaptive_failed` in an actuarial dataset on insurance claims. We'll follow a step-by-step approach to ensure clarity and thoroughness.\n\n### Step 1: Understand the Context\n- **Context**: The dataset contains insurance claims with various statuses.\n- **Specific Issue**: Claims where `status=adaptive_failed` have resulted in a forced decision.\n\n### Step 2: Identify the Data Preparation Steps\n1. **Data Cleaning**:\n   - Remove or correct any missing values, inconsistencies, or outliers.\n   - Ensure all data fields are correctly formatted and standardized.\n\n2. **Feature Engineering**:\n   - Create new features from existing data (e.g., age bands, claim amount ranges).\n   - Transform categorical variables into numerical representations using encoding techniques.\n\n3. **Handling Adaptive Failures**:\n   - Identify claims where adaptive modeling failed (i.e., `status=adaptive_failed`).\n   - Determine if these failures are due to model limitations, data quality issues, or other factors.\n\n4. **Stability Checks**:\n   - Validate the consistency of the data across different time periods or batches.\n   - Check for any sudden changes or anomalies in the data.\n\n5. **Differences Analysis**:\n   - Compare claims with `status=adaptive_failed` against those without this status.\n   - Analyze any patterns or characteristics that differ between the two groups.\n\n### Step 3: Reasoning Through the Issues\n1. **Model Limitations**:\n   - Assess whether the adaptive models used are appropriate for the dataset.\n   - Consider if the model complexity is suitable or if it needs adjustment.\n\n2. **Data Quality**:\n   - Investigate if the data for `status=adaptive_failed` claims has inherent quality issues (e.g., noisy data, missing critical information).\n   - Evaluate the impact of data quality on model performance.\n\n3. **Algorithmic Issues**:\n   - Review the algorithmic implementation to identify potential bugs or errors.\n   - Check if the adaptive algorithms are robust enough to handle certain types of data.\n\n### Step 4: Final Rationale\n- **Forced Decision**: The forced decision likely stems from the inability of the adaptive models to make reliable predictions for `status=adaptive_failed` claims.\n- **Stability**: Ensuring data stability is crucial. Any significant changes in the dataset should be carefully monitored and addressed.\n- **Differences**: Understanding the specific differences between `status=adaptive_failed` and non-failed claims can provide insights into why the models are failing and how to improve them.\n- **Rationale**: The primary goal is to enhance the robustness of the adaptive models by addressing data quality issues, improving model design, and ensuring that the algorithms can handle a wide range of input scenarios.\n\n### Summary\nThe data preparation and reasoning process for claims with `status=adaptive_failed` involves thorough data cleaning, feature engineering, and stability checks. The main issue is the failure of adaptive models to generate reliable predictions, which could be due to model limitations, data quality issues, or algorithmic problems. By identifying and addressing these issues, we can improve the overall performance and reliability of the predictive models in handling insurance claims.",
+  "consistency_snapshot": {
+    "n_rows": 678013,
+    "n_columns": 12,
+    "memory_MB": 151.7564,
+    "dtypes": {
+      "IDpol": "float64",
+      "ClaimNb": "int64",
+      "Exposure": "float64",
+      "Area": "int8",
+      "VehPower": "int64",
+      "VehAge": "int64",
+      "DrivAge": "int64",
+      "BonusMalus": "int64",
+      "VehBrand": "object",
+      "VehGas": "object",
+      "Density": "int64",
+      "Region": "object"
+    },
+    "missing_counts": {
+      "IDpol": 0,
+      "ClaimNb": 0,
+      "Exposure": 0,
+      "Area": 0,
+      "VehPower": 0,
+      "VehAge": 0,
+      "DrivAge": 0,
+      "BonusMalus": 0,
+      "VehBrand": 0,
+      "VehGas": 0,
+      "Density": 0,
+      "Region": 0
+    },
+    "missing_pct": {
+      "IDpol": 0.0,
+      "ClaimNb": 0.0,
+      "Exposure": 0.0,
+      "Area": 0.0,
+      "VehPower": 0.0,
+      "VehAge": 0.0,
+      "DrivAge": 0.0,
+      "BonusMalus": 0.0,
+      "VehBrand": 0.0,
+      "VehGas": 0.0,
+      "Density": 0.0,
+      "Region": 0.0
+    },
+    "numeric_summary": {
+      "IDpol": {
+        "count": 678013.0,
+        "mean": 2621856.9211,
+        "std": 1641782.7527,
+        "min": 1.0,
+        "25%": 1157951.0,
+        "50%": 2272152.0,
+        "75%": 4046274.0,
+        "max": 6114330.0
+      },
+      "ClaimNb": {
+        "count": 678013.0,
+        "mean": 0.2094,
+        "std": 0.4389,
+        "min": 0.0,
+        "25%": 0.0,
+        "50%": 0.0,
+        "75%": 0.0,
+        "max": 5.0
+      },
+      "Exposure": {
+        "count": 678013.0,
+        "mean": 0.5288,
+        "std": 0.3644,
+        "min": 0.0027,
+        "25%": 0.18,
+        "50%": 0.49,
+        "75%": 0.99,
+        "max": 2.01
+      },
+      "Area": {
+        "count": 678013.0,
+        "mean": 3.2897,
+        "std": 1.3827,
+        "min": 1.0,
+        "25%": 2.0,
+        "50%": 3.0,
+        "75%": 4.0,
+        "max": 6.0
+      },
+      "VehPower": {
+        "count": 678013.0,
+        "mean": 6.4546,
+        "std": 2.0509,
+        "min": 4.0,
+        "25%": 5.0,
+        "50%": 6.0,
+        "75%": 7.0,
+        "max": 15.0
+      },
+      "VehAge": {
+        "count": 678013.0,
+        "mean": 6.9761,
+        "std": 5.399,
+        "min": 0.0,
+        "25%": 2.0,
+        "50%": 6.0,
+        "75%": 11.0,
+        "max": 20.0
+      },
+      "DrivAge": {
+        "count": 678013.0,
+        "mean": 45.4969,
+        "std": 14.1299,
+        "min": 18.0,
+        "25%": 34.0,
+        "50%": 44.0,
+        "75%": 55.0,
+        "max": 90.0
+      },
+      "BonusMalus": {
+        "count": 678013.0,
+        "mean": 59.7572,
+        "std": 15.6079,
+        "min": 50.0,
+        "25%": 50.0,
+        "50%": 50.0,
+        "75%": 64.0,
+        "max": 150.0
+      },
+      "Density": {
+        "count": 678013.0,
+        "mean": 1792.4224,
+        "std": 3958.6466,
+        "min": 1.0,
+        "25%": 92.0,
+        "50%": 393.0,
+        "75%": 1658.0,
+        "max": 27000.0
+      }
+    },
+    "categorical_summary": {
+      "VehBrand": {
+        "B12": 0.2449,
+        "B1": 0.24,
+        "B2": 0.2358,
+        "B3": 0.0788,
+        "B5": 0.0513,
+        "B6": 0.0421,
+        "B4": 0.0371,
+        "B10": 0.0261,
+        "B11": 0.02,
+        "B13": 0.018,
+        "B14": 0.006
+      },
+      "VehGas": {
+        "Regular": 0.5101,
+        "Diesel": 0.4899
+      },
+      "Region": {
+        "R24": 0.2369,
+        "R82": 0.125,
+        "R93": 0.117,
+        "R11": 0.1029,
+        "R53": 0.0621,
+        "R52": 0.0572,
+        "R91": 0.0528,
+        "R72": 0.0462,
+        "R31": 0.0402,
+        "R54": 0.0281,
+        "R73": 0.0253,
+        "R41": 0.0192,
+        "R25": 0.0161,
+        "R26": 0.0155,
+        "R23": 0.013,
+        "R22": 0.0118,
+        "R83": 0.0078,
+        "R74": 0.0067,
+        "R94": 0.0067,
+        "R21": 0.0045,
+        "R42": 0.0032,
+        "R43": 0.002
+      }
+    },
+    "target_distribution": {
+      "0": 0.8033,
+      "1": 0.1848,
+      "2": 0.0111,
+      "3": 0.0007,
+      "4": 0.0,
+      "5": 0.0
+    },
+    "target_mean": 0.209364717195688,
+    "target_variance": 0.19265774007403247
+  },
+  "unc_dataprep_layer1": 0.16032457116719234,
+  "unc_dataprep_layer2": 0.01780484986387887,
+  "unc_dataprep_layer3": 0,
+  "unc_dataprep_layer4": 0.2423953342162638,
+  "processed_paths": {
+    "X_train": "data/processed/T18_fairness_test_X_train.csv",
+    "X_test": "data/processed/T18_fairness_test_X_test.csv",
+    "y_train": "data/processed/T18_fairness_test_y_train.csv",
+    "y_test": "data/processed/T18_fairness_test_y_test.csv",
+    "exposure_train": "data/processed/T18_fairness_test_exposure_train.csv",
+    "exposure_test": "data/processed/T18_fairness_test_exposure_test.csv"
+  },
+  "artifacts": {
+    "preprocessor": "data/artifacts/preprocessor.pkl",
+    "features": "data/artifacts/feature_names.pkl"
+  }
+}

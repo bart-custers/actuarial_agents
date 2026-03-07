@@ -1,0 +1,65 @@
+==== MODEL REVIEW REPORT ====
+Phase: modelling
+
+=== ANALYSIS OF RESULTS ===
+- RMSE: 1.953789093641885
+- MAE: 0.8203652666340672
+- R2: 0.014057001002792613
+- Poisson_Deviance: 2.5222958406240794
+- Gini_score: None
+- Calibration_table:    Decile  ActualRate  PredictedRate     Exposure
+0       0    0.086779       0.152068  6524.340000
+1       1    0.122082       0.234948  6018.380000
+2       2    0.193139       0.319794  5433.730000
+3       3    0.373533       0.429742  4790.370000
+4       4    0.612949       0.584876  4169.590000
+5       5    1.179108       0.815296  3513.690000
+6       6    2.093088       1.218667  2546.920000
+7       7    4.512251       2.012222  1523.690000
+8       8   11.229590       3.730849   906.900000
+9       9  115.550637      23.738526   403.826277
+ANALYSIS:
+
+- **Model Fit**: The model exhibits a very poor fit, with an R² value of 0.014, indicating that it explains only about 1.4% of the variance in claim frequency. The high RMSE (1.95) and MAE (0.82) further confirm this, showing substantial deviations from actual values.
+  
+- **Deviance Score**: The Poisson Deviance score of 2.52 suggests that the model does not fit the data well, as a lower score would indicate better fit. This corroborates the poor goodness-of-fit observed.
+
+- **Underfitting**: Given the low R² and high RMSE/MAE, the model appears underfitted. It fails to capture the underlying structure of the data, leading to poor generalization and predictive power.
+
+- **Influential Variables**: Key variables like "Density" and "BonusMalus" show significant discrepancies, indicating their importance in claim frequency but poor modeling. Other variables like "Region" and "VehBrand" show smaller but still notable differences, suggesting they could still be valuable but require more nuanced treatment.
+
+- **Discrepancies**: Large discrepancies in training and testing sets for "Density" and "BonusMalus" highlight the need for better variable selection and modeling techniques. Smaller discrepancies for "Region" and "VehBrand" suggest these might still hold predictive value but need improvement.
+
+- **Generalizability**: The model’s poor performance on both training and testing sets indicates limited robustness and generalizability. More sophisticated modeling techniques, such as ensemble methods or incorporating interaction terms, are recommended to improve accuracy.
+
+=== CONSISTENCY CHECK ===
+### Model Metrics Consistency Summary
+- Analysis of scalar metrics:
+  • RMSE: 1.9538 vs hist avg 0.8634 (change +1.263)
+  • MAE: 0.8204 vs hist avg 0.2308 (change +2.555)
+  • R2: 0.0141 vs hist avg 0.0024 (change +4.844)
+  • Poisson_Deviance: 2.5223 vs hist avg 0.9302 (change +1.712)
+- New features introduced: Coefficient
+- **ANALYSIS:**
+  - **RMSE Increase:** The RMSE has increased significantly from 0.8634 to 1.9538, indicating a substantial deterioration in the model's predictive accuracy. This suggests the model may be overfitting or capturing noise in the training data.
+  - **MAE Increase:** Similarly, the Mean Absolute Error (MAE) has more than doubled from 0.2308 to 0.8204, further confirming the model’s poor performance in predicting claim frequencies accurately.
+  - **R2 Decrease:** The R-squared value has improved marginally from 0.0024 to 0.0141, but this small increase does not offset the significant rise in error metrics, indicating that the model explains very little variance in the data.
+  - **Poisson Deviance Increase:** The Poisson Deviance has also increased from 0.9302 to 2.5223, suggesting that the model's fit to the Poisson distribution is worse than before.
+  - **Coefficient Introduction:** The introduction of new coefficients might have added complexity without improving the model's overall performance, possibly due to overfitting or irrelevant features.
+  - **Overall Consistency:** Given the substantial changes in key metrics and the lack of improvement in predictive accuracy, the model appears inconsistent with historical performance. Further investigation into feature selection, model complexity, and potential data issues is warranted.
+
+=== IMPACT ANALYSIS ===
+ANALYSIS:
+- **Model Consistency**: The comparison between Run_cur and Run_prev shows no significant differences in mean and standard predictions across various features, indicating high consistency.
+- **Feature Interpretation**: Mean predictions for "Density" and "VehPower" are nearly identical, suggesting minimal changes in variable interpretation.
+- **Feature Selection**: Both models share most features, as indicated by "StructureChange," showing consistent feature selection.
+- **Prediction Accuracy**: Small "AbsDiff" values (close to zero) across all features imply negligible differences in predictions, maintaining accuracy.
+- **Instance Stability**: No significant change in the number of instances per feature category, as shown by "CountChange" and "RelativeCountChange."
+- **No Feature Changes**: "New_in_Current" and "Removed_in_Current" columns show zero values, indicating no new or removed features.
+- **Detailed Comparisons**: Minor variations in predictions for specific features like "Region_R73" and "VehPower" do not affect overall performance.
+- **Overall Performance**: The current model retains the same predictive power as the previous one, with subtle improvements that do not significantly alter performance.
+
+=== REVIEW FEEDBACK ===
+Decision: REQUEST_RETRAIN
+
+=== FINAL SUMMARY ===
