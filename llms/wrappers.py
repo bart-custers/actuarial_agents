@@ -115,7 +115,7 @@ class LLMWrapper:
         self,
         prompt,
         max_new_tokens=1024,
-        temperature=1.2,
+        temperature=0.7,
         do_sample=True,
     ):
         device = next(self.model.parameters()).device
@@ -210,7 +210,7 @@ class LLMWrapper:
             tokenizer=tokenizer,
             max_new_tokens=1024,
             do_sample=True,
-            temperature=1.2,
+            temperature=0.7,
             truncation=False,
             trust_remote_code=True
         )
