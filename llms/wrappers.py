@@ -14,13 +14,14 @@ logging.getLogger("transformers").setLevel(logging.ERROR)
 # ------------------------------------------------------------
 drive.mount("/content/drive", force_remount=False)
 
+# Specify a cache directory on your Google Drive to store downloaded models and tokenizers
 model_cache_dir = "/content/drive/MyDrive/Thesis/model_cache"
 os.makedirs(model_cache_dir, exist_ok=True)
-
 os.environ["HF_HOME"] = model_cache_dir
 os.environ["HF_DATASETS_CACHE"] = model_cache_dir
 os.environ["TRANSFORMERS_CACHE"] = model_cache_dir
 
+# Specify the path to your .env file to load the Hugging Face token for authentication
 load_dotenv("/content/drive/MyDrive/Thesis/.env")
 hf_token = os.getenv("HF_TOKEN")
 
