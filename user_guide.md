@@ -32,7 +32,7 @@ For executing the workflow in Google Colab the virtual environment is not strict
 Before connecting to a LLM backend, ensure you have:
 
 - A Hugging Face account and access token (for specific models you want to connect).
-- Optional: Google Drive storage for caching large models, but this functionality can be ignored in the llms/wrappers.py file.
+- Optional: Google Drive storage for caching large models, but this functionality can be ignored in the `llms/wrappers.py` file.
 
 #### Hugging Face account
 1. Create a Hugging Face account: https://huggingface.co/join
@@ -41,28 +41,28 @@ Before connecting to a LLM backend, ensure you have:
    - Select read scope
    - Copy the token
 3. Store your token in a .env file:
-   - HF_TOKEN=your_huggingface_token_here
-4. Specify the correct path to your .env file in the llms/wrapper.py file.
-   - load_dotenv("/path/to/.env")
+   - `HF_TOKEN=your_huggingface_token_here`
+4. Specify the correct path to your `.env` file in the `llms/wrapper.py` file.
+   - `load_dotenv("/path/to/.env")`
 
-The llms/wrapper.py file will then load the HF_TOKEN from your secret .env file for authentication.
+The `llms/wrapper.py` file will then load the HF_TOKEN from your secret `.env` file for authentication.
 
 #### Setting up Model Cache (optional but recommended)
-To connect your Google Drive, specify the path in the llms/wrapper.py file:
+To connect your Google Drive, specify the path in the `llms/wrapper.py` file:
 
-model_cache_dir = "/path/to/model_cache"
+`model_cache_dir = "/path/to/model_cache"`
 
 The wrapper currently supports the following backends:
 
-- llama7b → meta-llama/Llama-2-7b-chat-hf
-- llama31_8b → Meta-Llama-3.1-8B-Instruct
-- qwen25_7b → Qwen/Qwen2.5-7B-Instruct
+- llama7b → `meta-llama/Llama-2-7b-chat-hf`
+- llama31_8b → `Meta-Llama-3.1-8B-Instruct`
+- qwen25_7b → `Qwen/Qwen2.5-7B-Instruct`
 - mock → for testing without a real LLM
 
 The wrapper automatically downloads the model to the cache directory and initializes a HuggingFacePipeline for text generation.
 
 ## 3. Executing the workflow
-To execute the workflow, you can use the notebook 01_workflow_demo.ipynb.
+To execute the workflow, you can use the notebook `notebooks/01_workflow_demo.ipynb`.
 
 *Execute on Google Colab:*
 1. Run part 1 (Setup) to connect to the Git repo and install it. The code also installs the necessary packages.
