@@ -11,16 +11,18 @@ The project is a Python‑based codebase (Python notebooks + scripts). You’ll 
 - Google Colab for access to GPUs
 
 #### Clone the repo
-git clone https://github.com/bart-custers/actuarial_agents.git
+Go to your terminal and execute the following commands:
 
-cd actuarial_agents
+`git clone https://github.com/bart-custers/actuarial_agents.git`
+
+`cd actuarial_agents`
 
 #### Create the virtual environment
-For executing the workflow on a local machine, a virtual environment can be created that contains all needed packages and extensions:
+For executing the workflow on a local machine, a virtual environment can be created that contains all needed packages and extensions. Go to your terminal and execute the following commands:
 
-conda create -n actuarial_agents
+`conda create -n actuarial_agents`
 
-conda activate actuarial_agents
+`conda activate actuarial_agents`
 
 For executing the workflow in Google Colab the virtual environment is not strictly necessary.
 
