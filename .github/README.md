@@ -36,9 +36,11 @@ This thesis is grounded in three interconnected areas of research:
 ### Contributions to Existing Research
 
 - A working prototype of a generative AI agent team for actuarial risk classification.
-- A novel application of LLMs in predictive, explanatory, and reflective insurance tasks.
+- A novel application of LLMs in predictive and explanatory insurance tasks.
 - A modular and replicable framework for integrating performance and actuarial XAI needs into multi‑agent systems.
+- A novel approach to modelling uncertainty within the agent workflow. A Bayesian Network is utilized to model  dependencies between different stages of the workflow and to quantify uncertainty with log probabilities at each
+step.
 
 ### Architecture
 
-![alt text](project_architecture_v4.png)
+![alt text](project_architecture_v5.png)
