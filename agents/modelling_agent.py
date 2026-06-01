@@ -303,6 +303,13 @@ class ModellingAgent(BaseAgent):
             model_train_predictions = trainer.predict(X_train)
             model_test_predictions = trainer.predict(X_test)
             trainer = trainer.model
+        
+        # Fallback rule: LLM-generated code was not used, so layer 2 confidence
+        # is forced to 0 (maximum uncertainty) to reflect the code generation failure.      
+        if model_used == "llm_adaptive":
+            unc_modelling_layer2 = unc_modelling_layer2
+        else: 
+            unc_modelling_layer2 = 0
 
         # --------------------
         # Evaluate model

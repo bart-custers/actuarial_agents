@@ -305,6 +305,13 @@ class DataPrepAgent(BaseAgent):
 
         print(f"[{self.name}] Final decision: using {chosen_pipeline_name} pipeline.")
 
+        # Fallback rule: LLM-generated code was not used, so layer 2 confidence
+        # is forced to 0 (maximum uncertainty) to reflect the code generation failure.
+        if not use_adaptive:
+            unc_dataprep_layer2 = 0
+        else:
+            unc_dataprep_layer2 = unc_dataprep_layer2
+
         # --------------------
         # Preprocess the data
         # --------------------
