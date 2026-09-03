@@ -77,6 +77,9 @@ class CentralHub:
 
         audit = WorkflowAudit(log_dir="data/audit")
         uncertainty_BN = UncertaintyGraphBN()
+        # Load a previously-computed HIP-LLM operational-profile calibration if one exists
+        # (see utils/recalibrate_bn.py); no-op fallback to neutral priors otherwise.
+        uncertainty_BN.load_calibration("data/audit/bn_calibration.json")
 
         r1 = r2 = r3 = r4 = None
         summary_records = []
@@ -343,7 +346,8 @@ class CentralHub:
 
         audit.finalize()
         
-        print(f"P(WorkflowOK=True) = {posterior['WorkflowOK']:.2%}")
+        workflow_ok_lo, workflow_ok_hi = posterior["WorkflowOK"]
+        print(f"P(WorkflowOK=True) = [{workflow_ok_lo:.2%}, {workflow_ok_hi:.2%}]")
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         uncertainty_BN.save_structure(f"data/audit/bn_baseline_{timestamp}.svg")
